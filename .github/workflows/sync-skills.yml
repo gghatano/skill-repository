@@ -1,0 +1,61 @@
+name: Sync skills
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 1 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-skills
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync skill catalog
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SKILL_SOURCE_TOKEN: ${{ secrets.SKILL_SOURCE_TOKEN }}
+        run: |
+          export GH_TOKEN="${SKILL_SOURCE_TOKEN:-$GITHUB_TOKEN}"
+          python3 scripts/sync_skills.py
+
+      - name: Test
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Create or update pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          changes="$(git status --porcelain -- skills docs/index.html docs/skill-catalog.md catalog/manifest.json)"
+          if [ -z "$changes" ]; then
+            echo "Skill catalog is already up to date."
+            exit 0
+          fi
+
+          branch="automation/sync-skills"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add skills docs/index.html docs/skill-catalog.md catalog/manifest.json
+          git commit -m "chore: sync skill catalog"
+          git fetch origin "$branch" || true
+          git push --force-with-lease origin "HEAD:$branch"
+
+          open_prs="$(gh pr list --head "$branch" --base main --state open --json number --jq length)"
+          if [ "$open_prs" = "0" ]; then
+            gh pr create \
+              --base main \
+              --head "$branch" \
+              --title "chore: sync skill catalog" \
+              --body "GitHub 上の .claude/skills から生成物を定期同期します。"
+          fi
