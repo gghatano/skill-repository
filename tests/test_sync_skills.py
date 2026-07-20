@@ -233,6 +233,41 @@ class CategoryTest(unittest.TestCase):
         manifest = json.loads(render_manifest("gghatano", assigned))
         self.assertEqual("planning", manifest["skills"][0]["category"])
 
+    def test_from_manifest_refuses_when_taxonomy_missing(self) -> None:
+        from scripts.sync_skills import main
+
+        entries = self._entries()
+        with tempfile.TemporaryDirectory() as temp:
+            categories_path = self._write_categories(
+                temp,
+                {"categories": [{"id": "planning", "title": "計画", "skills": ["issue-planner"]}]},
+            )
+            assigned, _ = assign_categories(entries, load_categories(categories_path))
+            manifest = Path(temp) / "manifest.json"
+            manifest.write_text(render_manifest("gghatano", assigned), encoding="utf-8")
+            # The manifest starts with a real category assigned.
+            self.assertIn('"category": "planning"', manifest.read_text(encoding="utf-8"))
+
+            code = main(
+                [
+                    "--from-manifest",
+                    "--manifest",
+                    str(manifest),
+                    "--categories",
+                    str(Path(temp) / "absent.json"),  # deliberately missing
+                    "--catalog",
+                    str(Path(temp) / "catalog.md"),
+                    "--purpose-catalog",
+                    str(Path(temp) / "purpose.md"),
+                    "--html",
+                    str(Path(temp) / "index.html"),
+                ]
+            )
+            # Non-zero exit and the manifest is left untouched (category preserved).
+            self.assertEqual(1, code)
+            self.assertIn('"category": "planning"', manifest.read_text(encoding="utf-8"))
+            self.assertNotIn("uncategorized", manifest.read_text(encoding="utf-8"))
+
     def test_entries_from_manifest_round_trips(self) -> None:
         entries = self._entries()
         with tempfile.TemporaryDirectory() as temp:

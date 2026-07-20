@@ -681,6 +681,14 @@ def main(argv: list[str] | None = None, client: GitHubClient | None = None) -> i
         categories = load_categories(args.categories)
 
         if args.from_manifest:
+            # A rebuild re-derives every category from the taxonomy. If the
+            # taxonomy file is missing, refuse rather than silently rewrite the
+            # manifest with everything downgraded to "uncategorized".
+            if not args.categories.exists():
+                raise SyncError(
+                    f"categories file not found: {args.categories}; "
+                    "refusing to rebuild because existing categories would be lost"
+                )
             entries = entries_from_manifest(args.manifest)
             print(f"Rebuilding from {args.manifest} ({len(entries)} skill(s))")
             for path, content in _render_generated_files(args, entries, categories).items():
