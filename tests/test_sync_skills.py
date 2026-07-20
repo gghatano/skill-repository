@@ -319,6 +319,41 @@ class DuplicationTest(unittest.TestCase):
         self.assertIn("⚠", drift_line)
 
 
+class CommonBundleHtmlTest(unittest.TestCase):
+    def test_load_common_and_bundles(self) -> None:
+        from scripts.sync_skills import load_common_and_bundles
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "common/skills/report-review").mkdir(parents=True)
+            (root / "common/skills/report-review/SKILL.md").write_text("x", encoding="utf-8")
+            (root / "bundles").mkdir()
+            (root / "bundles/research.json").write_text(
+                json.dumps({"name": "research", "title": "研究", "skills": ["report-review"]}),
+                encoding="utf-8",
+            )
+            common, bundles = load_common_and_bundles(root / "common", root / "bundles")
+            self.assertEqual(["report-review"], common)
+            self.assertEqual(1, len(bundles))
+            self.assertEqual("research", bundles[0]["name"])
+            self.assertIn("--bundle research", bundles[0]["install"])
+
+    def test_html_marks_common_skills_and_bundles(self) -> None:
+        client = FakeClient()
+        with tempfile.TemporaryDirectory() as temp:
+            entries = stage_skills(client, discover_skills(client, "gghatano"), Path(temp))
+        html = render_html(
+            "gghatano",
+            entries,
+            "<script>__CATALOG_DATA__</script>",
+            common_skills=["issue-planner"],
+            bundles=[{"name": "b", "title": "B", "description": "", "skills": ["issue-planner"], "install": "cmd"}],
+        )
+        self.assertIn('"inCommon":true', html)
+        self.assertIn('"bundles":[', html)
+        self.assertIn('"commonSkills":["issue-planner"]', html)
+
+
 class PortabilityTest(unittest.TestCase):
     def _files(self, *paths: str) -> list:
         return [{"path": p, "sha": "x", "mode": "100644"} for p in paths]

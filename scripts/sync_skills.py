@@ -705,20 +705,51 @@ def render_manifest(owner: str, entries: list[CatalogEntry]) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
+def load_common_and_bundles(common_dir: Path, bundles_dir: Path) -> tuple[list[str], list[dict[str, Any]]]:
+    """Return (common skill names, bundle summaries) for the HTML/install view."""
+    common_skills: list[str] = []
+    skills_dir = common_dir / "skills"
+    if skills_dir.is_dir():
+        common_skills = sorted(p.name for p in skills_dir.iterdir() if (p / "SKILL.md").is_file())
+
+    bundles: list[dict[str, Any]] = []
+    if bundles_dir.is_dir():
+        for path in sorted(bundles_dir.glob("*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            bundles.append(
+                {
+                    "name": data.get("name", path.stem),
+                    "title": data.get("title", path.stem),
+                    "description": data.get("description", ""),
+                    "skills": list(data.get("skills", [])),
+                    "install": f"python3 <skill-repository>/scripts/install_skills.py --bundle {data.get('name', path.stem)} --into .",
+                }
+            )
+    return common_skills, bundles
+
+
 def render_html(
     owner: str,
     entries: list[CatalogEntry],
     template: str,
     categories: list[Category] | None = None,
+    common_skills: list[str] | None = None,
+    bundles: list[dict[str, Any]] | None = None,
 ) -> str:
     if "__CATALOG_DATA__" not in template:
         raise SyncError("HTML template is missing __CATALOG_DATA__")
+    common_set = set(common_skills or [])
     payload = {
         "owner": owner,
         "categories": [
             {"id": category.id, "title": category.title, "summary": category.summary}
             for category in (categories or [])
         ],
+        "commonSkills": sorted(common_set),
+        "bundles": bundles or [],
         "skills": [
             {
                 "repository": entry.repository,
@@ -733,6 +764,7 @@ def render_html(
                 "tools": list(entry.tools),
                 "projectPaths": list(entry.project_paths),
                 "portability": entry_portability(entry),
+                "inCommon": entry.name in common_set,
             }
             for entry in entries
         ],
@@ -833,6 +865,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Purpose taxonomy mapping skill names to categories",
     )
     parser.add_argument("--manifest", type=Path, default=Path("catalog/manifest.json"))
+    parser.add_argument("--common-dir", type=Path, default=Path("common"), help="Cultivated common skills root")
+    parser.add_argument("--bundles-dir", type=Path, default=Path("bundles"), help="Bundle definitions directory")
     parser.add_argument("--html", type=Path, default=Path("docs/index.html"))
     parser.add_argument("--html-template", type=Path, default=Path("web/index.template.html"))
     parser.add_argument("--dry-run", action="store_true", help="Discover skills without fetching files")
@@ -857,13 +891,14 @@ def _render_generated_files(
         html_template = args.html_template.read_text(encoding="utf-8")
     except OSError as exc:
         raise SyncError(f"cannot read HTML template: {args.html_template}") from exc
+    common_skills, bundles = load_common_and_bundles(args.common_dir, args.bundles_dir)
     return {
         args.catalog: render_catalog(args.owner, entries),
         args.purpose_catalog: render_purpose_catalog(args.owner, entries, categories),
         args.porting_guide: render_porting_guide(args.owner, entries),
         args.duplication_report: render_duplication_report(args.owner, entries),
         args.manifest: render_manifest(args.owner, entries),
-        args.html: render_html(args.owner, entries, html_template, categories),
+        args.html: render_html(args.owner, entries, html_template, categories, common_skills, bundles),
     }
 
 
