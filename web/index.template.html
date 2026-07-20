@@ -127,6 +127,16 @@
     .chip { padding: 3px 7px; border: 1px solid var(--line); color: #46515d; background: #fafbfc; font-size: 12px; }
     .cat-tag { display: inline-flex; align-items: center; margin-top: 8px; padding: 3px 9px; border: 1px solid #cfdcec; border-radius: 4px; color: var(--blue); background: #eaf1f9; font-size: 12px; font-weight: 600; }
     .cat-tag.uncategorized { color: var(--muted); background: var(--soft); border-color: var(--line); }
+    .common-tag { display: inline-flex; align-items: center; margin: 8px 0 0 6px; padding: 3px 9px; border: 1px solid #cfe0d6; border-radius: 4px; color: var(--green); background: var(--green-soft); font-size: 12px; font-weight: 600; }
+
+    .bundles { padding: 8px 0 22px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+    .bundles-intro { margin: 0 0 14px; color: var(--muted); line-height: 1.5; }
+    .bundle-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+    .bundle-card { border: 1px solid var(--line); border-radius: 6px; padding: 16px; background: #fbfcfd; }
+    .bundle-card h3 { margin: 0 0 4px; font-size: 15px; }
+    .bundle-card .bundle-desc { margin: 0 0 10px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .bundle-card .bundle-skills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+    .bundle-card .bundle-skills code { padding: 3px 6px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); font-size: 12px; }
 
     .actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .action { min-height: 32px; padding: 6px 9px; border: 1px solid #b8c0ca; border-radius: 5px; color: var(--ink); background: var(--surface); text-decoration: none; cursor: pointer; }
@@ -211,6 +221,14 @@
   </header>
 
   <main class="shell">
+    <section id="bundles-section" class="bundles" aria-label="Skill bundles" hidden>
+      <div class="section-heading">
+        <h2>Bundles — 新しいリポジトリへ引き込む</h2>
+      </div>
+      <p class="bundles-intro">共通部分（役割ベースに汎化した正本）をまとめて引き込むバンドルです。新しいリポジトリのルートで実行してください。</p>
+      <div id="bundle-cards" class="bundle-cards"></div>
+    </section>
+
     <div class="section-heading">
       <h2>Skills</h2>
       <span id="result-count" aria-live="polite"></span>
@@ -370,6 +388,11 @@
           main.append(element("p", "description", skill.description));
           const catClass = skill.category && skill.category !== "uncategorized" ? "cat-tag" : "cat-tag uncategorized";
           main.append(element("span", catClass, categoryTitle(skill.category)));
+          if (skill.inCommon) {
+            const commonTag = element("span", "common-tag", "共通ベースあり");
+            commonTag.title = "この名前のスキルは common/ に育てた正本があり、バンドルで引き込めます";
+            main.append(commonTag);
+          }
 
           const repoCell = element("td", "repo-cell");
           repoCell.append(element("span", "repo", skill.repository.split("/")[1]));
@@ -438,6 +461,22 @@
           option.value = id;
           category.append(option);
         });
+      const bundles = catalog.bundles || [];
+      if (bundles.length) {
+        const cards = document.getElementById("bundle-cards");
+        bundles.forEach((bundle) => {
+          const card = element("div", "bundle-card");
+          card.append(element("h3", "", `${bundle.title} (${bundle.skills.length})`));
+          if (bundle.description) card.append(element("p", "bundle-desc", bundle.description));
+          card.append(copyLine("Copy", bundle.install));
+          const skillList = element("div", "bundle-skills");
+          bundle.skills.forEach((name) => skillList.append(element("code", "", name)));
+          card.append(skillList);
+          cards.append(card);
+        });
+        document.getElementById("bundles-section").hidden = false;
+      }
+
       document.getElementById("skill-total").textContent = skills.length;
       document.getElementById("unique-total").textContent = Object.keys(variantCounts).length;
       document.getElementById("repo-total").textContent = new Set(skills.map((skill) => skill.repository)).size;

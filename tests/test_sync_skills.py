@@ -16,11 +16,13 @@ from scripts.sync_skills import (
     parse_frontmatter,
     render_catalog,
     render_html,
+    render_duplication_report,
     render_manifest,
     render_porting_guide,
     render_purpose_catalog,
     stage_skills,
 )
+from scripts.sync_skills import CatalogEntry
 
 
 class FakeClient:
@@ -279,6 +281,77 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(entries[0].name, restored[0].name)
         self.assertEqual(entries[0].source_url, restored[0].source_url)
         self.assertEqual(entries[0].components, restored[0].components)
+
+
+class DuplicationTest(unittest.TestCase):
+    def _entry(self, repo: str, name: str, sha: str) -> CatalogEntry:
+        return CatalogEntry(
+            repository=f"gghatano/{repo}",
+            name=name,
+            description="d",
+            source_path="p",
+            source_url="u",
+            skill_md_sha=sha,
+            destination=f"{repo}/{name}",
+            files=(),
+            components=(),
+            tools=(),
+            project_paths=(),
+        )
+
+    def test_reports_only_cross_repo_duplicates(self) -> None:
+        entries = [
+            self._entry("a", "shared", "sha1"),
+            self._entry("b", "shared", "sha1"),  # identical → 1 version
+            self._entry("c", "drift", "shaX"),
+            self._entry("d", "drift", "shaY"),  # divergent → 2 versions ⚠
+            self._entry("a", "solo", "shaZ"),  # single repo → excluded
+        ]
+        report = render_duplication_report("gghatano", entries)
+        self.assertIn("複数リポジトリに重複する名前: **2**", report)
+        self.assertIn("`shared`", report)
+        self.assertIn("`drift`", report)
+        self.assertNotIn("`solo`", report)
+        # identical content shows no warning flag; divergent one does.
+        shared_line = next(l for l in report.splitlines() if "`shared`" in l)
+        drift_line = next(l for l in report.splitlines() if "`drift`" in l)
+        self.assertNotIn("⚠", shared_line)
+        self.assertIn("⚠", drift_line)
+
+
+class CommonBundleHtmlTest(unittest.TestCase):
+    def test_load_common_and_bundles(self) -> None:
+        from scripts.sync_skills import load_common_and_bundles
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "common/skills/report-review").mkdir(parents=True)
+            (root / "common/skills/report-review/SKILL.md").write_text("x", encoding="utf-8")
+            (root / "bundles").mkdir()
+            (root / "bundles/research.json").write_text(
+                json.dumps({"name": "research", "title": "研究", "skills": ["report-review"]}),
+                encoding="utf-8",
+            )
+            common, bundles = load_common_and_bundles(root / "common", root / "bundles")
+            self.assertEqual(["report-review"], common)
+            self.assertEqual(1, len(bundles))
+            self.assertEqual("research", bundles[0]["name"])
+            self.assertIn("--bundle research", bundles[0]["install"])
+
+    def test_html_marks_common_skills_and_bundles(self) -> None:
+        client = FakeClient()
+        with tempfile.TemporaryDirectory() as temp:
+            entries = stage_skills(client, discover_skills(client, "gghatano"), Path(temp))
+        html = render_html(
+            "gghatano",
+            entries,
+            "<script>__CATALOG_DATA__</script>",
+            common_skills=["issue-planner"],
+            bundles=[{"name": "b", "title": "B", "description": "", "skills": ["issue-planner"], "install": "cmd"}],
+        )
+        self.assertIn('"inCommon":true', html)
+        self.assertIn('"bundles":[', html)
+        self.assertIn('"commonSkills":["issue-planner"]', html)
 
 
 class PortabilityTest(unittest.TestCase):

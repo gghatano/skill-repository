@@ -571,6 +571,46 @@ def entry_portability(entry: CatalogEntry) -> dict[str, Any]:
     return classify_portability(entry.project_paths, entry.components, entry.files)
 
 
+def render_duplication_report(owner: str, entries: list[CatalogEntry]) -> str:
+    """Show which skill names are duplicated across repositories (the 乱立 view).
+
+    Same-named skills that share a single SKILL.md content hash are prime
+    candidates for consolidation into `common/`; divergent ones need review first.
+    """
+    by_name: dict[str, list[CatalogEntry]] = {}
+    for entry in entries:
+        by_name.setdefault(entry.name, []).append(entry)
+
+    duplicated = {name: members for name, members in by_name.items() if len({m.repository for m in members}) > 1}
+
+    lines = [
+        "# Skill Duplication Report（重複状況）",
+        "",
+        f"GitHub account `{owner}` のスキルのうち、**複数リポジトリに同名で存在**するものを"
+        "集計した自動生成レポートです。共通部分として `common/` に集約する候補を把握するために使います。",
+        "このファイルは直接編集せず、`python3 scripts/sync_skills.py` で更新してください。",
+        "",
+        f"スキル総数: **{len(entries)}** ／ ユニーク名: **{len(by_name)}** ／ "
+        f"複数リポジトリに重複する名前: **{len(duplicated)}**",
+        "",
+        "「内容バージョン数」は SKILL.md の内容ハッシュの種類数です。**1 なら全リポジトリで"
+        "内容一致**（共通化しやすい）、2 以上なら差分があり収束前にレビューが要ります。",
+        "",
+        "| Skill | リポジトリ数 | 内容バージョン数 | リポジトリ |",
+        "| --- | --- | --- | --- |",
+    ]
+    for name, members in sorted(
+        duplicated.items(),
+        key=lambda item: (-len({m.repository for m in item[1]}), item[0].lower()),
+    ):
+        repos = sorted({m.repository.split("/", 1)[-1] for m in members})
+        versions = len({m.skill_md_sha for m in members})
+        flag = "" if versions == 1 else " ⚠"
+        lines.append(f"| `{name}` | {len(repos)} | {versions}{flag} | {', '.join(f'`{r}`' for r in repos)} |")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def render_porting_guide(owner: str, entries: list[CatalogEntry]) -> str:
     """Per-skill checklist of the external assumptions to resolve before reuse."""
     analyzed = [(entry, entry_portability(entry)) for entry in entries]
@@ -665,20 +705,51 @@ def render_manifest(owner: str, entries: list[CatalogEntry]) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
+def load_common_and_bundles(common_dir: Path, bundles_dir: Path) -> tuple[list[str], list[dict[str, Any]]]:
+    """Return (common skill names, bundle summaries) for the HTML/install view."""
+    common_skills: list[str] = []
+    skills_dir = common_dir / "skills"
+    if skills_dir.is_dir():
+        common_skills = sorted(p.name for p in skills_dir.iterdir() if (p / "SKILL.md").is_file())
+
+    bundles: list[dict[str, Any]] = []
+    if bundles_dir.is_dir():
+        for path in sorted(bundles_dir.glob("*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            bundles.append(
+                {
+                    "name": data.get("name", path.stem),
+                    "title": data.get("title", path.stem),
+                    "description": data.get("description", ""),
+                    "skills": list(data.get("skills", [])),
+                    "install": f"python3 <skill-repository>/scripts/install_skills.py --bundle {data.get('name', path.stem)} --into .",
+                }
+            )
+    return common_skills, bundles
+
+
 def render_html(
     owner: str,
     entries: list[CatalogEntry],
     template: str,
     categories: list[Category] | None = None,
+    common_skills: list[str] | None = None,
+    bundles: list[dict[str, Any]] | None = None,
 ) -> str:
     if "__CATALOG_DATA__" not in template:
         raise SyncError("HTML template is missing __CATALOG_DATA__")
+    common_set = set(common_skills or [])
     payload = {
         "owner": owner,
         "categories": [
             {"id": category.id, "title": category.title, "summary": category.summary}
             for category in (categories or [])
         ],
+        "commonSkills": sorted(common_set),
+        "bundles": bundles or [],
         "skills": [
             {
                 "repository": entry.repository,
@@ -693,6 +764,7 @@ def render_html(
                 "tools": list(entry.tools),
                 "projectPaths": list(entry.project_paths),
                 "portability": entry_portability(entry),
+                "inCommon": entry.name in common_set,
             }
             for entry in entries
         ],
@@ -781,12 +853,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Per-skill checklist of external assumptions to resolve before reuse",
     )
     parser.add_argument(
+        "--duplication-report",
+        type=Path,
+        default=Path("docs/skill-duplication.md"),
+        help="Report of skills duplicated across repositories (common/ candidates)",
+    )
+    parser.add_argument(
         "--categories",
         type=Path,
         default=Path("catalog/categories.json"),
         help="Purpose taxonomy mapping skill names to categories",
     )
     parser.add_argument("--manifest", type=Path, default=Path("catalog/manifest.json"))
+    parser.add_argument("--common-dir", type=Path, default=Path("common"), help="Cultivated common skills root")
+    parser.add_argument("--bundles-dir", type=Path, default=Path("bundles"), help="Bundle definitions directory")
     parser.add_argument("--html", type=Path, default=Path("docs/index.html"))
     parser.add_argument("--html-template", type=Path, default=Path("web/index.template.html"))
     parser.add_argument("--dry-run", action="store_true", help="Discover skills without fetching files")
@@ -811,12 +891,14 @@ def _render_generated_files(
         html_template = args.html_template.read_text(encoding="utf-8")
     except OSError as exc:
         raise SyncError(f"cannot read HTML template: {args.html_template}") from exc
+    common_skills, bundles = load_common_and_bundles(args.common_dir, args.bundles_dir)
     return {
         args.catalog: render_catalog(args.owner, entries),
         args.purpose_catalog: render_purpose_catalog(args.owner, entries, categories),
         args.porting_guide: render_porting_guide(args.owner, entries),
+        args.duplication_report: render_duplication_report(args.owner, entries),
         args.manifest: render_manifest(args.owner, entries),
-        args.html: render_html(args.owner, entries, html_template, categories),
+        args.html: render_html(args.owner, entries, html_template, categories, common_skills, bundles),
     }
 
 
@@ -838,7 +920,7 @@ def main(argv: list[str] | None = None, client: GitHubClient | None = None) -> i
             print(f"Rebuilding from {args.manifest} ({len(entries)} skill(s))")
             for path, content in _render_generated_files(args, entries, categories).items():
                 atomic_write(path, content)
-            print(f"Updated {args.catalog}, {args.purpose_catalog}, {args.porting_guide}, {args.manifest}, and {args.html}")
+            print(f"Updated {args.catalog}, {args.purpose_catalog}, {args.porting_guide}, {args.duplication_report}, {args.manifest}, and {args.html}")
             return 0
 
         github = client or GhClient()
