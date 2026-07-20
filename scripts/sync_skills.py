@@ -297,6 +297,72 @@ def detect_project_paths(content: str, limit: int = 8) -> tuple[str, ...]:
     return tuple(paths)
 
 
+# A path is "parameterized" (already generic) when it carries a placeholder or
+# glob instead of a concrete, project-specific location.
+PARAMETERIZED_PATH_RE = re.compile(r"<[^>]+>|\{\{.*?\}\}|\$ARGUMENTS|\{[A-Z]|\*")
+# Paths that live under the Claude harness travel with sibling agents/knowledge
+# files rather than the host project layout.
+COMPANION_PREFIXES = (".claude/", ".agents/", ".github/")
+
+PORTABILITY_TIERS = {
+    "portable": "そのまま",
+    "companions": "同梱前提",
+    "rework": "要調整",
+}
+
+
+def classify_portability(
+    project_paths: Iterable[str],
+    components: Iterable[str],
+    files: Iterable[dict[str, str]],
+) -> dict[str, Any]:
+    """Split detected paths into portability buckets and derive an overall tier.
+
+    - bundled:       the skill's own shipped files/directories (travel with it)
+    - parameterized: placeholder/glob paths that are already generic
+    - companions:    .claude/.agents/.github siblings needed alongside the skill
+    - external:      concrete host-project paths that must be remapped when porting
+    """
+    component_set = {c.rstrip("/") for c in components}
+    file_set = {PurePosixPath(f["path"]).as_posix() for f in files}
+
+    def is_bundled(path: str) -> bool:
+        normalized = path.rstrip("/")
+        if not normalized:
+            return False
+        top = normalized.split("/")[0]
+        if top in component_set:
+            return True
+        return any(f == normalized or f.startswith(normalized + "/") for f in file_set)
+
+    buckets: dict[str, list[str]] = {
+        "bundled": [],
+        "parameterized": [],
+        "companions": [],
+        "external": [],
+    }
+    for path in project_paths:
+        if is_bundled(path):
+            bucket = "bundled"
+        elif path.startswith(COMPANION_PREFIXES):
+            bucket = "companions"
+        elif PARAMETERIZED_PATH_RE.search(path):
+            bucket = "parameterized"
+        else:
+            bucket = "external"
+        if path not in buckets[bucket]:
+            buckets[bucket].append(path)
+
+    if buckets["external"]:
+        tier = "rework"
+    elif buckets["companions"]:
+        tier = "companions"
+    else:
+        tier = "portable"
+
+    return {"tier": tier, **buckets}
+
+
 def load_categories(path: Path) -> list[Category]:
     """Load the purpose taxonomy. Returns an empty list when the file is absent."""
     try:
@@ -501,11 +567,83 @@ def render_purpose_catalog(
     return "\n".join(lines)
 
 
+def entry_portability(entry: CatalogEntry) -> dict[str, Any]:
+    return classify_portability(entry.project_paths, entry.components, entry.files)
+
+
+def render_porting_guide(owner: str, entries: list[CatalogEntry]) -> str:
+    """Per-skill checklist of the external assumptions to resolve before reuse."""
+    analyzed = [(entry, entry_portability(entry)) for entry in entries]
+    tier_counts = {tier: 0 for tier in PORTABILITY_TIERS}
+    for _, portability in analyzed:
+        tier_counts[portability["tier"]] += 1
+
+    lines = [
+        "# Skill Porting Guide（移植ガイド）",
+        "",
+        f"GitHub account `{owner}` のスキルを別プロジェクトへ持ち運ぶときに、"
+        "解決が必要な外部前提をスキルごとにまとめた自動生成のチェックリストです。",
+        "このファイルは直接編集せず、`python3 scripts/sync_skills.py` で更新してください。",
+        "",
+        "## 移植のしやすさ（tier）",
+        "",
+        "- **そのまま (portable)**: 同梱物とパラメータ化済みパスのみ。フォルダをコピーすればほぼ動く。",
+        "- **同梱前提 (companions)**: `.claude/` `.agents/` などの兄弟ファイル（エージェント・知識）を一緒にコピーする必要がある。",
+        "- **要調整 (rework)**: 特定プロジェクトの具体パスを前提にしており、コピー先に合わせて読み替え・調整が必要。",
+        "",
+        "| Tier | 件数 |",
+        "| --- | --- |",
+        f"| そのまま (portable) | {tier_counts['portable']} |",
+        f"| 同梱前提 (companions) | {tier_counts['companions']} |",
+        f"| 要調整 (rework) | {tier_counts['rework']} |",
+        "",
+    ]
+
+    def render_group(title: str, wanted_tier: str, note: str) -> None:
+        members = [(e, p) for e, p in analyzed if p["tier"] == wanted_tier]
+        lines.append(f"## {title}（{len(members)}）")
+        lines.append("")
+        if note:
+            lines.append(note)
+            lines.append("")
+        if not members:
+            lines.append("_該当なし_")
+            lines.append("")
+            return
+        for entry, portability in sorted(members, key=lambda item: (item[0].name.lower(), item[0].repository.lower())):
+            repo_name = entry.repository.split("/", 1)[-1]
+            lines.append(f"### `{entry.name}` — `{repo_name}`")
+            lines.append("")
+            lines.append(f"[SKILL.md]({entry.source_url})")
+            lines.append("")
+            if portability["external"]:
+                lines.append("- **要読み替え（外部プロジェクトのパス）**: "
+                             + ", ".join(f"`{p}`" for p in portability["external"]))
+            if portability["companions"]:
+                lines.append("- **一緒にコピー（ハーネス同梱物）**: "
+                             + ", ".join(f"`{p}`" for p in portability["companions"]))
+            if entry.tools:
+                lines.append("- **必要ツール**: " + ", ".join(entry.tools))
+            if portability["parameterized"]:
+                lines.append("- 参考（パラメータ化済み・調整不要）: "
+                             + ", ".join(f"`{p}`" for p in portability["parameterized"]))
+            lines.append("")
+
+    render_group("要調整", "rework", "コピー先の構成に合わせて、以下のパスを読み替える必要があります。")
+    render_group("同梱前提", "companions", "スキル本体に加えて、以下の兄弟ファイルも一緒にコピーしてください。")
+    render_group("そのまま", "portable", "特別な調整なしに持ち運べるスキルです。")
+    return "\n".join(lines)
+
+
 def render_manifest(owner: str, entries: list[CatalogEntry]) -> str:
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "owner": owner,
-        "skills": [
+        "skills": [],
+    }
+    for entry in entries:
+        portability = entry_portability(entry)
+        payload["skills"].append(
             {
                 "repository": entry.repository,
                 "name": entry.name,
@@ -519,11 +657,11 @@ def render_manifest(owner: str, entries: list[CatalogEntry]) -> str:
                 "components": list(entry.components),
                 "tools": list(entry.tools),
                 "project_paths": list(entry.project_paths),
-                "portability_review": "required" if entry.project_paths else "candidate",
+                "portability": portability,
+                # Legacy 2-state signal derived from the tier for existing consumers.
+                "portability_review": "candidate" if portability["tier"] == "portable" else "required",
             }
-            for entry in entries
-        ],
-    }
+        )
     return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
@@ -554,7 +692,7 @@ def render_html(
                 "components": list(entry.components),
                 "tools": list(entry.tools),
                 "projectPaths": list(entry.project_paths),
-                "portabilityReview": "required" if entry.project_paths else "candidate",
+                "portability": entry_portability(entry),
             }
             for entry in entries
         ],
@@ -637,6 +775,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Catalog grouped by purpose (category)",
     )
     parser.add_argument(
+        "--porting-guide",
+        type=Path,
+        default=Path("docs/skill-porting-guide.md"),
+        help="Per-skill checklist of external assumptions to resolve before reuse",
+    )
+    parser.add_argument(
         "--categories",
         type=Path,
         default=Path("catalog/categories.json"),
@@ -670,6 +814,7 @@ def _render_generated_files(
     return {
         args.catalog: render_catalog(args.owner, entries),
         args.purpose_catalog: render_purpose_catalog(args.owner, entries, categories),
+        args.porting_guide: render_porting_guide(args.owner, entries),
         args.manifest: render_manifest(args.owner, entries),
         args.html: render_html(args.owner, entries, html_template, categories),
     }
@@ -693,7 +838,7 @@ def main(argv: list[str] | None = None, client: GitHubClient | None = None) -> i
             print(f"Rebuilding from {args.manifest} ({len(entries)} skill(s))")
             for path, content in _render_generated_files(args, entries, categories).items():
                 atomic_write(path, content)
-            print(f"Updated {args.catalog}, {args.purpose_catalog}, {args.manifest}, and {args.html}")
+            print(f"Updated {args.catalog}, {args.purpose_catalog}, {args.porting_guide}, {args.manifest}, and {args.html}")
             return 0
 
         github = client or GhClient()
@@ -715,7 +860,7 @@ def main(argv: list[str] | None = None, client: GitHubClient | None = None) -> i
             replace_directory(staged, args.output)
         for path, content in generated.items():
             atomic_write(path, content)
-        print(f"Updated {args.output}, {args.catalog}, {args.purpose_catalog}, {args.manifest}, and {args.html}")
+        print(f"Updated {args.output}, {args.catalog}, {args.purpose_catalog}, {args.porting_guide}, {args.manifest}, and {args.html}")
         return 0
     except SyncError as exc:
         print(f"sync failed: {exc}", file=sys.stderr)

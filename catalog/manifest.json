@@ -1,6 +1,6 @@
 {
   "owner": "gghatano",
-  "schema_version": 1,
+  "schema_version": 2,
   "skills": [
     {
       "category": "dev-workflow",
@@ -15,6 +15,19 @@
         }
       ],
       "name": "experiment-issue",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "docs/templates/report_template.md",
+          "docs/review.md"
+        ],
+        "parameterized": [
+          "docs/report_{{NN}}_{{shortname}}.md",
+          "results/archive/<date>_exp{{NN}}/"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "docs/report_{{NN}}_{{shortname}}.md",
@@ -43,6 +56,21 @@
         }
       ],
       "name": "add-asset",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "config/assets.yaml",
+          "config/initial_positions.yaml",
+          "config/monthly_purchases.yaml",
+          "docs/spec.md",
+          "src/fetch_prices.py"
+        ],
+        "parameterized": [
+          "feature/add-asset-<asset_id>"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "config/assets.yaml",
@@ -74,6 +102,17 @@
         }
       ],
       "name": "release",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "docs/development.md",
+          "docs/spec.md",
+          "actions/deploy-pages"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "docs/development.md",
@@ -102,6 +141,23 @@
         }
       ],
       "name": "start-feature",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "docs/development.md",
+          "feature/fetch-prices",
+          "fix/portfolio-calc-rounding",
+          "chore/bump-uv",
+          "docs/update-spec",
+          "~/work/asset-management/",
+          "~/work/asset-management.wt/"
+        ],
+        "parameterized": [
+          "feature/*"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "feature/*",
@@ -135,6 +191,16 @@
         }
       ],
       "name": "doc-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -162,6 +228,18 @@
         }
       ],
       "name": "experiment-plan",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/planner.md"
+        ],
+        "external": [],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md",
+          "docs/plans/<ID>-..."
+        ],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/agents/planner.md",
@@ -189,6 +267,23 @@
         }
       ],
       "name": "experiment-run",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/implementer.md",
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "scripts/setup_env.sh",
+          "outputs/run_meta.json",
+          "scripts/10_experiments.py",
+          "content/engineering-notes.md"
+        ],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "docs/plans/<ID>-<slug>.md",
@@ -223,6 +318,23 @@
         }
       ],
       "name": "publish-check",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".github/workflows/deploy-pages.yml"
+        ],
+        "external": [
+          "scripts/03_build_html.py"
+        ],
+        "parameterized": [
+          "content/*.md",
+          "htmls/*.html",
+          "figures/*.png",
+          "content/<new>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -256,6 +368,17 @@
         }
       ],
       "name": "related-info-review",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md"
+        ],
+        "parameterized": [
+          "content/method-*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md",
@@ -280,6 +403,20 @@
         }
       ],
       "name": "report-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/REPORT.md",
+          "content/EXPERIMENTS.md"
+        ],
+        "parameterized": [
+          "content/method-*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -308,6 +445,15 @@
         }
       ],
       "name": "report-skeleton",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md"
@@ -331,6 +477,22 @@
         }
       ],
       "name": "repro-engineering-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/setup.md",
+          "content/usage.md",
+          "content/reproduce.md",
+          "content/engineering-notes.md",
+          "scripts/setup_env.sh",
+          "scripts/run_all.sh"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -364,6 +526,19 @@
         }
       ],
       "name": "research-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [
+          "docs/plans/",
+          "content/REPORT.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -393,6 +568,24 @@
         }
       ],
       "name": "publish-check",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".github/workflows/deploy-pages.yml"
+        ],
+        "external": [
+          "scripts/build_site.py",
+          "ark/build_html.py"
+        ],
+        "parameterized": [
+          "content/*.md",
+          "htmls/*.html",
+          "figures/*.png",
+          "content/<new>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -428,6 +621,21 @@
         }
       ],
       "name": "report-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/skills/stop-ai-slop-jp/"
+        ],
+        "external": [
+          "content/REPORT.md",
+          "references/structures.md"
+        ],
+        "parameterized": [
+          "content/*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -457,6 +665,17 @@
         }
       ],
       "name": "report-skeleton",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md"
+        ],
+        "parameterized": [
+          "templates/*_TEMPLATE.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md",
@@ -481,6 +700,17 @@
         }
       ],
       "name": "repro-engineering-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/engineering.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -532,7 +762,18 @@
         }
       ],
       "name": "stop-ai-slop-jp",
-      "portability_review": "required",
+      "portability": {
+        "bundled": [
+          "references/structures.md",
+          "references/phrases.md",
+          "references/examples.md"
+        ],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
+      "portability_review": "candidate",
       "project_paths": [
         "references/structures.md",
         "references/phrases.md",
@@ -557,6 +798,23 @@
         }
       ],
       "name": "0_input_prepare",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "examples/university_enrollment",
+          "source/raw_data/",
+          "source/table_definitions/",
+          "source/docs/",
+          "source/notes/"
+        ],
+        "parameterized": [
+          "$ARGUMENTS/source/",
+          "$ARGUMENTS/input/",
+          "$ARGUMENTS/input/table_definition.csv"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "examples/university_enrollment",
@@ -587,6 +845,23 @@
         }
       ],
       "name": "1_spec_ingest",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "examples/university_enrollment",
+          "input/table_definition.csv",
+          "input/sample_data.csv"
+        ],
+        "parameterized": [
+          "$ARGUMENTS/input/",
+          "input/*table_definition*",
+          "input/*sample_data*",
+          "input/<table>_table_definition.csv",
+          "input/<table>_sample_data.csv"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "examples/university_enrollment",
@@ -620,6 +895,23 @@
         }
       ],
       "name": "2_generation_plan",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "docs/spec.md",
+          "examples/customer/work/generation_plan.md",
+          "examples/customer_transactions/work/generation_plan.md"
+        ],
+        "parameterized": [
+          "$ARGUMENTS/work/inferred_schema.json",
+          "$ARGUMENTS/work/constraint_plan.md",
+          "$ARGUMENTS/input/data_spec.md",
+          "$ARGUMENTS/input/*sample_data*",
+          "$ARGUMENTS/work/generation_plan.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "$ARGUMENTS/work/inferred_schema.json",
@@ -650,6 +942,23 @@
         }
       ],
       "name": "3_generator_impl",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "examples/customer_transactions/src/generator.py"
+        ],
+        "parameterized": [
+          "$ARGUMENTS/work/generation_plan.md",
+          "$ARGUMENTS/work/inferred_schema.json",
+          "$ARGUMENTS/work/constraint_plan.md",
+          "$ARGUMENTS/input/*sample_data*",
+          "$ARGUMENTS/src/generator.py",
+          "$ARGUMENTS/output/synthetic_data.csv",
+          "$ARGUMENTS/output/<table>.csv"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "$ARGUMENTS/work/generation_plan.md",
@@ -683,7 +992,23 @@
         }
       ],
       "name": "4_evaluate_and_refine",
-      "portability_review": "required",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [
+          "$ARGUMENTS/input/*sample_data*",
+          "$ARGUMENTS/output/synthetic_data.csv",
+          "$ARGUMENTS/output/<table>.csv",
+          "$ARGUMENTS/work/inferred_schema.json",
+          "$ARGUMENTS/work/constraint_plan.md",
+          "$ARGUMENTS/src/generator.py",
+          "$ARGUMENTS/src/evaluate.py",
+          "$ARGUMENTS/output/evaluation_report.md"
+        ],
+        "tier": "portable"
+      },
+      "portability_review": "candidate",
       "project_paths": [
         "$ARGUMENTS/input/*sample_data*",
         "$ARGUMENTS/output/synthetic_data.csv",
@@ -713,6 +1038,24 @@
         }
       ],
       "name": "case-study",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/skills/README.md"
+        ],
+        "external": [
+          "docs/stylesheets/extra.css",
+          "docs/references/README.md"
+        ],
+        "parameterized": [
+          "docs/<case>/",
+          "src/dummy_data/<case>.py",
+          "data/<case>/raw/*.csv",
+          "tests/test_<case>_dummy_data.py",
+          "notebooks/<case>.ipynb"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "docs/<case>/",
@@ -746,6 +1089,24 @@
         }
       ],
       "name": "synthesize",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/<step>/SKILL.md"
+        ],
+        "external": [
+          "examples/university_enrollment",
+          "output/quality_gate.json",
+          "input/data_spec.md",
+          "input/constraints.md"
+        ],
+        "parameterized": [
+          "$ARGUMENTS/input/",
+          "input/*table_definition*",
+          "input/*sample_data*"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/<step>/SKILL.md",
@@ -779,6 +1140,18 @@
         }
       ],
       "name": "chart-quality-reviewer",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/chart-quality-reviewer/SKILL.md"
+        ],
+        "external": [
+          "tools/check_chart_quality.py",
+          "tools/check_image_quality.py"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/chart-quality-reviewer/SKILL.md",
@@ -804,6 +1177,15 @@
         }
       ],
       "name": "company-data-analyzer",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/company-data-analyzer/SKILL.md"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/company-data-analyzer/SKILL.md"
@@ -827,6 +1209,17 @@
         }
       ],
       "name": "consistency-reviewer",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/consistency-reviewer/SKILL.md"
+        ],
+        "external": [
+          "output/consistency_review.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/consistency-reviewer/SKILL.md",
@@ -853,6 +1246,15 @@
         }
       ],
       "name": "dist-zip-builder",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/dist-zip-builder/SKILL.md"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/dist-zip-builder/SKILL.md"
@@ -876,6 +1278,18 @@
         }
       ],
       "name": "municipality-collaboration-scenario",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/municipality-collaboration-scenario/SKILL.md"
+        ],
+        "external": [
+          "docs/success_cases_master_list.md",
+          "docs/success_cases_public_private_data.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/municipality-collaboration-scenario/SKILL.md",
@@ -905,6 +1319,17 @@
         }
       ],
       "name": "scenario-reviewer",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/scenario-reviewer/SKILL.md"
+        ],
+        "external": [],
+        "parameterized": [
+          "docs/review_report_<company_short>.md"
+        ],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/scenario-reviewer/SKILL.md",
@@ -931,6 +1356,15 @@
         }
       ],
       "name": "uc-catalog-builder",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/uc-catalog-builder/SKILL.md"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/uc-catalog-builder/SKILL.md"
@@ -956,6 +1390,15 @@
         }
       ],
       "name": "uc-catalog-reviewer",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/uc-catalog-reviewer/SKILL.md"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/uc-catalog-reviewer/SKILL.md"
@@ -981,6 +1424,15 @@
         }
       ],
       "name": "uc-eval-reviewer",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/uc-eval-reviewer/SKILL.md"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/uc-eval-reviewer/SKILL.md"
@@ -1006,6 +1458,15 @@
         }
       ],
       "name": "uc-quickwin-evaluator",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".agents/skills/uc-quickwin-evaluator/SKILL.md"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".agents/skills/uc-quickwin-evaluator/SKILL.md"
@@ -1029,6 +1490,21 @@
         }
       ],
       "name": "case-create",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "src/constants/prompts.ts",
+          "src/constants/categories.ts",
+          "src/schemas/case.schema.ts",
+          "public/cases/",
+          "public/cases/index.json"
+        ],
+        "parameterized": [
+          "public/cases/<id>/case.json"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "src/constants/prompts.ts",
@@ -1057,6 +1533,15 @@
         }
       ],
       "name": "case-enrich",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "src/constants/prompts.ts"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "src/constants/prompts.ts"
@@ -1080,7 +1565,16 @@
         }
       ],
       "name": "case-review",
-      "portability_review": "required",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [
+          "public/cases/{ID}/case.json"
+        ],
+        "tier": "portable"
+      },
+      "portability_review": "candidate",
       "project_paths": [
         "public/cases/{ID}/case.json"
       ],
@@ -1105,6 +1599,13 @@
         }
       ],
       "name": "review-prs",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
       "portability_review": "candidate",
       "project_paths": [],
       "repository": "gghatano/pseudonymize-webapp",
@@ -1129,6 +1630,24 @@
         }
       ],
       "name": "add-mock-screen",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/knowledge/",
+          ".claude/knowledge/dev-workflow.md",
+          ".claude/progress.md"
+        ],
+        "external": [
+          "lib/types.ts",
+          "tests/e2e/",
+          "lib/mock-store.ts"
+        ],
+        "parameterized": [
+          "app/<path>/page.tsx",
+          "feat/T<n>-<slug>"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/knowledge/",
@@ -1163,6 +1682,23 @@
         }
       ],
       "name": "pm-orchestrate",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/knowledge/autonomous-run-playbook.md",
+          ".claude/knowledge/",
+          ".claude/knowledge/dev-workflow.md",
+          ".claude/run-journal.md",
+          ".claude/progress.md"
+        ],
+        "external": [
+          "docs/ROADMAP.md"
+        ],
+        "parameterized": [
+          "feat/T<n>-<slug>"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/knowledge/autonomous-run-playbook.md",
@@ -1195,6 +1731,17 @@
         }
       ],
       "name": "ui-value-design",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/knowledge/"
+        ],
+        "external": [],
+        "parameterized": [
+          "feat/ui-*"
+        ],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/knowledge/",
@@ -1221,6 +1768,13 @@
         }
       ],
       "name": "calibrate-params",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
       "portability_review": "candidate",
       "project_paths": [],
       "repository": "gghatano/sxtf-simulation",
@@ -1242,6 +1796,13 @@
         }
       ],
       "name": "make-report",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
       "portability_review": "candidate",
       "project_paths": [],
       "repository": "gghatano/sxtf-simulation",
@@ -1266,6 +1827,13 @@
         }
       ],
       "name": "verify-sim",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
       "portability_review": "candidate",
       "project_paths": [],
       "repository": "gghatano/sxtf-simulation",
@@ -1290,6 +1858,16 @@
         }
       ],
       "name": "doc-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -1317,6 +1895,18 @@
         }
       ],
       "name": "experiment-plan",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/planner.md"
+        ],
+        "external": [],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md",
+          "docs/plans/<ID>-..."
+        ],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/agents/planner.md",
@@ -1344,6 +1934,24 @@
         }
       ],
       "name": "experiment-run",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/implementer.md",
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "outputs/run_meta.json",
+          "scripts/build_site.py",
+          "content/engineering.md"
+        ],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md",
+          "outputs/*_meta.json",
+          "scripts/<pkg>/"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "docs/plans/<ID>-<slug>.md",
@@ -1379,6 +1987,24 @@
         }
       ],
       "name": "publish-check",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".github/workflows/deploy-pages.yml"
+        ],
+        "external": [
+          "scripts/build_site.py",
+          "ark/build_html.py"
+        ],
+        "parameterized": [
+          "content/*.md",
+          "htmls/*.html",
+          "figures/*.png",
+          "content/<new>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -1414,6 +2040,17 @@
         }
       ],
       "name": "related-info-review",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md",
+          "content/related-work.md",
+          "content/method.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md",
@@ -1439,6 +2076,21 @@
         }
       ],
       "name": "report-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/skills/stop-ai-slop-jp/"
+        ],
+        "external": [
+          "content/REPORT.md",
+          "references/structures.md"
+        ],
+        "parameterized": [
+          "content/*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -1468,6 +2120,17 @@
         }
       ],
       "name": "report-skeleton",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md"
+        ],
+        "parameterized": [
+          "templates/*_TEMPLATE.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md",
@@ -1492,6 +2155,17 @@
         }
       ],
       "name": "repro-engineering-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/engineering.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -1521,6 +2195,19 @@
         }
       ],
       "name": "research-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [
+          "docs/plans/",
+          "content/REPORT.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -1572,7 +2259,18 @@
         }
       ],
       "name": "stop-ai-slop-jp",
-      "portability_review": "required",
+      "portability": {
+        "bundled": [
+          "references/structures.md",
+          "references/phrases.md",
+          "references/examples.md"
+        ],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
+      "portability_review": "candidate",
       "project_paths": [
         "references/structures.md",
         "references/phrases.md",
@@ -1597,6 +2295,13 @@
         }
       ],
       "name": "code-review",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
       "portability_review": "candidate",
       "project_paths": [],
       "repository": "gghatano/synthetic-research-data-sharing",
@@ -1621,7 +2326,17 @@
         }
       ],
       "name": "issue-driven-development",
-      "portability_review": "required",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [
+          "issue/<n>-<slug>",
+          "../worktrees/<repo>-issue-<n>"
+        ],
+        "tier": "portable"
+      },
+      "portability_review": "candidate",
       "project_paths": [
         "issue/<n>-<slug>",
         "../worktrees/<repo>-issue-<n>"
@@ -1651,6 +2366,13 @@
         }
       ],
       "name": "issue-triage",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
       "portability_review": "candidate",
       "project_paths": [],
       "repository": "gghatano/synthetic-research-data-sharing",
@@ -1674,7 +2396,16 @@
         }
       ],
       "name": "pr-from-issue",
-      "portability_review": "required",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [
+          "issue/<n>-<slug>"
+        ],
+        "tier": "portable"
+      },
+      "portability_review": "candidate",
       "project_paths": [
         "issue/<n>-<slug>"
       ],
@@ -1700,7 +2431,16 @@
         }
       ],
       "name": "pr-prep",
-      "portability_review": "required",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [
+          "feature/<topic>"
+        ],
+        "tier": "portable"
+      },
+      "portability_review": "candidate",
       "project_paths": [
         "feature/<topic>"
       ],
@@ -1728,6 +2468,13 @@
         }
       ],
       "name": "refactor-safely",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
       "portability_review": "candidate",
       "project_paths": [],
       "repository": "gghatano/synthetic-research-data-sharing",
@@ -1752,6 +2499,13 @@
         }
       ],
       "name": "spec-implementation",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
       "portability_review": "candidate",
       "project_paths": [],
       "repository": "gghatano/synthetic-research-data-sharing",
@@ -1776,6 +2530,13 @@
         }
       ],
       "name": "test-fix-loop",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [],
+        "parameterized": [],
+        "tier": "portable"
+      },
       "portability_review": "candidate",
       "project_paths": [],
       "repository": "gghatano/synthetic-research-data-sharing",
@@ -1800,6 +2561,18 @@
         }
       ],
       "name": "worktree-task-runner",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "issue/12-pytest-foundation"
+        ],
+        "parameterized": [
+          "issue/<issue-number>-<short-slug>",
+          "../worktrees/<repo-name>-issue-<issue-number>"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "issue/<issue-number>-<short-slug>",
@@ -1830,6 +2603,16 @@
         }
       ],
       "name": "doc-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -1857,6 +2640,18 @@
         }
       ],
       "name": "experiment-plan",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/planner.md"
+        ],
+        "external": [],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md",
+          "docs/plans/<ID>-..."
+        ],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/agents/planner.md",
@@ -1884,6 +2679,23 @@
         }
       ],
       "name": "experiment-run",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/implementer.md",
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "scripts/setup_env.sh",
+          "outputs/run_meta.json",
+          "scripts/10_experiments.py",
+          "content/engineering-notes.md"
+        ],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "docs/plans/<ID>-<slug>.md",
@@ -1918,6 +2730,23 @@
         }
       ],
       "name": "publish-check",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".github/workflows/deploy-pages.yml"
+        ],
+        "external": [
+          "scripts/03_build_html.py"
+        ],
+        "parameterized": [
+          "content/*.md",
+          "htmls/*.html",
+          "figures/*.png",
+          "content/<new>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -1951,6 +2780,17 @@
         }
       ],
       "name": "related-info-review",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md"
+        ],
+        "parameterized": [
+          "content/method-*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md",
@@ -1975,6 +2815,20 @@
         }
       ],
       "name": "report-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/REPORT.md",
+          "content/EXPERIMENTS.md"
+        ],
+        "parameterized": [
+          "content/method-*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2003,6 +2857,15 @@
         }
       ],
       "name": "report-skeleton",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md"
@@ -2026,6 +2889,22 @@
         }
       ],
       "name": "repro-engineering-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/setup.md",
+          "content/usage.md",
+          "content/reproduce.md",
+          "content/engineering-notes.md",
+          "scripts/setup_env.sh",
+          "scripts/run_all.sh"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2059,6 +2938,19 @@
         }
       ],
       "name": "research-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [
+          "docs/plans/",
+          "content/REPORT.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2088,6 +2980,16 @@
         }
       ],
       "name": "doc-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2115,6 +3017,18 @@
         }
       ],
       "name": "experiment-plan",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/planner.md"
+        ],
+        "external": [],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md",
+          "docs/plans/<ID>-..."
+        ],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/agents/planner.md",
@@ -2142,6 +3056,23 @@
         }
       ],
       "name": "experiment-run",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/implementer.md",
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "scripts/setup_env.sh",
+          "outputs/run_meta.json",
+          "scripts/10_experiments.py",
+          "content/engineering-notes.md"
+        ],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "docs/plans/<ID>-<slug>.md",
@@ -2176,6 +3107,23 @@
         }
       ],
       "name": "publish-check",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".github/workflows/deploy-pages.yml"
+        ],
+        "external": [
+          "scripts/03_build_html.py"
+        ],
+        "parameterized": [
+          "content/*.md",
+          "htmls/*.html",
+          "figures/*.png",
+          "content/<new>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2209,6 +3157,17 @@
         }
       ],
       "name": "related-info-review",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md"
+        ],
+        "parameterized": [
+          "content/method-*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md",
@@ -2233,6 +3192,19 @@
         }
       ],
       "name": "report-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/index.md"
+        ],
+        "parameterized": [
+          "content/*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2260,6 +3232,15 @@
         }
       ],
       "name": "report-skeleton",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/index.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/index.md"
@@ -2283,6 +3264,22 @@
         }
       ],
       "name": "repro-engineering-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/setup.md",
+          "content/usage.md",
+          "content/reproduce.md",
+          "content/engineering-notes.md",
+          "scripts/setup_env.sh",
+          "scripts/run_all.sh"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2316,6 +3313,19 @@
         }
       ],
       "name": "research-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [
+          "docs/plans/",
+          "content/REPORT.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2345,6 +3355,16 @@
         }
       ],
       "name": "doc-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [],
+        "parameterized": [],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2372,6 +3392,18 @@
         }
       ],
       "name": "experiment-plan",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/planner.md"
+        ],
+        "external": [],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md",
+          "docs/plans/<ID>-..."
+        ],
+        "tier": "companions"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/agents/planner.md",
@@ -2399,6 +3431,23 @@
         }
       ],
       "name": "experiment-run",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/agents/implementer.md",
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "scripts/setup_env.sh",
+          "outputs/run_meta.json",
+          "scripts/10_experiments.py",
+          "content/engineering-notes.md"
+        ],
+        "parameterized": [
+          "docs/plans/<ID>-<slug>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "docs/plans/<ID>-<slug>.md",
@@ -2433,6 +3482,23 @@
         }
       ],
       "name": "publish-check",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".github/workflows/deploy-pages.yml"
+        ],
+        "external": [
+          "scripts/03_build_html.py"
+        ],
+        "parameterized": [
+          "content/*.md",
+          "htmls/*.html",
+          "figures/*.png",
+          "content/<new>.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2466,6 +3532,17 @@
         }
       ],
       "name": "related-info-review",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md"
+        ],
+        "parameterized": [
+          "content/method-*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md",
@@ -2490,6 +3567,20 @@
         }
       ],
       "name": "report-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/REPORT.md",
+          "content/EXPERIMENTS.md"
+        ],
+        "parameterized": [
+          "content/method-*.md"
+        ],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2518,6 +3609,15 @@
         }
       ],
       "name": "report-skeleton",
+      "portability": {
+        "bundled": [],
+        "companions": [],
+        "external": [
+          "content/REPORT.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         "content/REPORT.md"
@@ -2541,6 +3641,22 @@
         }
       ],
       "name": "repro-engineering-review",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md"
+        ],
+        "external": [
+          "content/setup.md",
+          "content/usage.md",
+          "content/reproduce.md",
+          "content/engineering-notes.md",
+          "scripts/setup_env.sh",
+          "scripts/run_all.sh"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",
@@ -2574,6 +3690,19 @@
         }
       ],
       "name": "research-cycle",
+      "portability": {
+        "bundled": [],
+        "companions": [
+          ".claude/docs/documentation-conventions.md",
+          ".claude/agents/"
+        ],
+        "external": [
+          "docs/plans/",
+          "content/REPORT.md"
+        ],
+        "parameterized": [],
+        "tier": "rework"
+      },
       "portability_review": "required",
       "project_paths": [
         ".claude/docs/documentation-conventions.md",

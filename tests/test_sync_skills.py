@@ -9,6 +9,7 @@ from pathlib import Path
 from scripts.sync_skills import (
     SyncError,
     assign_categories,
+    classify_portability,
     discover_skills,
     entries_from_manifest,
     load_categories,
@@ -16,6 +17,7 @@ from scripts.sync_skills import (
     render_catalog,
     render_html,
     render_manifest,
+    render_porting_guide,
     render_purpose_catalog,
     stage_skills,
 )
@@ -277,6 +279,70 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(entries[0].name, restored[0].name)
         self.assertEqual(entries[0].source_url, restored[0].source_url)
         self.assertEqual(entries[0].components, restored[0].components)
+
+
+class PortabilityTest(unittest.TestCase):
+    def _files(self, *paths: str) -> list:
+        return [{"path": p, "sha": "x", "mode": "100644"} for p in paths]
+
+    def test_bundled_paths_do_not_trigger_rework(self) -> None:
+        result = classify_portability(
+            ["references/phrases.md", "references/examples.md"],
+            ["references"],
+            self._files("SKILL.md", "references/phrases.md"),
+        )
+        self.assertEqual("portable", result["tier"])
+        self.assertEqual(["references/phrases.md", "references/examples.md"], result["bundled"])
+        self.assertEqual([], result["external"])
+
+    def test_parameterized_paths_are_portable(self) -> None:
+        result = classify_portability(
+            ["docs/report_{{NN}}.md", "issue/<n>-<slug>", "content/*.md"],
+            [],
+            self._files("SKILL.md"),
+        )
+        self.assertEqual("portable", result["tier"])
+        self.assertEqual(3, len(result["parameterized"]))
+
+    def test_harness_paths_yield_companions_tier(self) -> None:
+        result = classify_portability(
+            [".claude/agents/planner.md", "docs/plans/<ID>.md"],
+            [],
+            self._files("SKILL.md"),
+        )
+        self.assertEqual("companions", result["tier"])
+        self.assertEqual([".claude/agents/planner.md"], result["companions"])
+
+    def test_concrete_external_path_yields_rework(self) -> None:
+        result = classify_portability(
+            ["config/assets.yaml", ".claude/agents/planner.md"],
+            [],
+            self._files("SKILL.md"),
+        )
+        self.assertEqual("rework", result["tier"])
+        self.assertEqual(["config/assets.yaml"], result["external"])
+        self.assertEqual([".claude/agents/planner.md"], result["companions"])
+
+    def test_manifest_carries_portability_and_bumps_schema(self) -> None:
+        client = FakeClient()
+        with tempfile.TemporaryDirectory() as temp:
+            entries = stage_skills(client, discover_skills(client, "gghatano"), Path(temp))
+        manifest = json.loads(render_manifest("gghatano", entries))
+        self.assertEqual(2, manifest["schema_version"])
+        skill = manifest["skills"][0]
+        self.assertIn("portability", skill)
+        self.assertEqual("portable", skill["portability"]["tier"])
+        # Legacy field still derived for existing consumers.
+        self.assertEqual("candidate", skill["portability_review"])
+
+    def test_porting_guide_lists_tiers(self) -> None:
+        client = FakeClient()
+        with tempfile.TemporaryDirectory() as temp:
+            entries = stage_skills(client, discover_skills(client, "gghatano"), Path(temp))
+        guide = render_porting_guide("gghatano", entries)
+        self.assertIn("# Skill Porting Guide", guide)
+        self.assertIn("## そのまま", guide)
+        self.assertIn("`issue-planner`", guide)
 
 
 if __name__ == "__main__":
