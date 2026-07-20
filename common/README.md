@@ -19,11 +19,17 @@
 - `docs/documentation-conventions.md` — 共通規約（役割→既定パス表を含む）
 - `agents/*.md` — 共通サブエージェント（planner / implementer / reviewer）
 
-## 引き込み方（新しい研究リポジトリで）
+## 引き込み方（新しいリポジトリで）
+
+系統（カテゴリ）ごとにバンドルがあります（`bundles/*.json`）。`--list` で一覧できます。
 
 ```bash
 # 新しいリポジトリのルートで実行
-python3 <skill-repository>/scripts/install_skills.py --bundle research --into .
+python3 <skill-repository>/scripts/install_skills.py --list                # 系統一覧
+python3 <skill-repository>/scripts/install_skills.py --bundle research --into .  # 研究レポート系
+python3 <skill-repository>/scripts/install_skills.py --bundle dev --into .       # 開発ワークフロー系
+python3 <skill-repository>/scripts/install_skills.py --bundle generation --into . # 生成・評価サイクル（合成データ）
+python3 <skill-repository>/scripts/install_skills.py --bundle writing --into .   # 日本語ライティング
 ```
 
 `.claude/skills/` に共通スキルが、`.claude/docs/`・`.claude/agents/` に同梱物が配置されます。
