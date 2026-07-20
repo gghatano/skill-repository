@@ -6,13 +6,35 @@
 ## 生成物
 
 - `skills/<repository>/<skill>/`: 出典リポジトリから同期したスキル一式
-- `docs/skill-catalog.md`: スキル名、概要、出典をまとめた一覧
+- `docs/skill-catalog.md`: スキル名、概要、出典を**出典リポジトリ順**でまとめた一覧
+- `docs/skill-purpose-catalog.md`: 同じスキルを**目的（カテゴリ）別**に整理した一覧
 - `docs/index.html`: 選定・移植情報を検索できる GitHub Pages
-- `catalog/manifest.json`: 同期元と blob SHA を記録した機械可読マニフェスト
+- `catalog/manifest.json`: 同期元と blob SHA、目的分類を記録した機械可読マニフェスト
+- `catalog/categories.json`: スキル名から目的カテゴリへの対応を定義するタクソノミー
 
 同じリポジトリ内に複数の `.claude` ディレクトリがある場合も探索します。スキルの
 `SKILL.md` と同じディレクトリ以下にある `scripts/`、`references/`、`assets/` なども
 まとめて同期します。
+
+## 目的別の整理
+
+単なる収集にとどめず、各スキルが「どういう目的のものか」を横断的に把握できるよう、
+`catalog/categories.json` でスキル名を目的カテゴリに対応づけています。同期時にこの
+対応表を読み込み、`docs/skill-purpose-catalog.md` と `manifest.json` の各エントリに
+カテゴリを付与します。
+
+複数リポジトリで共通利用されるスキル（`report-review` や `experiment-plan` など）は
+同名なので、対応表はスキル**名**単位で1回定義すれば全リポジトリに反映されます。
+新しいスキルが未分類のまま同期されると `未分類` カテゴリにまとめられ、同期時に警告を
+出力します。カテゴリを追加・変更したいときは `catalog/categories.json` を編集してから
+再生成してください。
+
+GitHub へアクセスせずカタログ類だけを再生成する場合は、既存マニフェストから組み立て
+直せます。
+
+```bash
+python3 scripts/sync_skills.py --from-manifest
+```
 
 ## 同期
 

@@ -1,0 +1,190 @@
+# Skill Catalog（目的別）
+
+GitHub account `gghatano` のリポジトリから集約した Claude Skills を、出典リポジトリではなく **目的** で整理した一覧です。
+このファイルは直接編集せず、`catalog/categories.json` を更新してから `python3 scripts/sync_skills.py` で再生成してください。
+
+スキル数: **91** ／ カテゴリ数: **9**
+
+## カテゴリ一覧
+
+- [研究レポート作成ライフサイクル](#research-report-lifecycle)（49）
+- [合成データ生成パイプライン](#synthetic-data-generation)（11）
+- [品質・整合レビュー](#quality-review)（7）
+- [開発ワークフロー（Git / Issue / PR）](#dev-workflow)（13）
+- [文章・UI/UX ライティング](#writing-ux)（3）
+- [プライバシー事例カタログ](#privacy-incident-catalog)（3）
+- [シミュレーション・数値検証](#simulation)（3）
+- [配布・パッケージング](#packaging-distribution)（1）
+- [ドメイン固有ツール](#domain-specific)（1）
+
+<a id="research-report-lifecycle"></a>
+
+## 研究レポート作成ライフサイクル
+
+実験レポートの骨子設計から実験の計画・実行、各種レビュー、公開整合チェックまでを段階的に進めるオーケストレーターと工程スキル群。複数リポジトリで共通利用される中核ファミリー。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `doc-cycle` | `dpsynth-demo` | ドキュメント全体の整理・レビュー・対応サイクルを一括実行するオーケストレーター。report-review → repro-engineering-review → related-info-review → publish-check を順次呼び出し、横断的な指摘をまとめて報告する。実験の追記後・公開前・定期点検に使う。 | [SKILL.md](https://github.com/gghatano/dpsynth-demo/blob/main/.claude/skills/doc-cycle/SKILL.md) |
+| `doc-cycle` | `synth-report-kit` | ドキュメント全体の整理・レビュー・対応サイクルを一括実行するオーケストレーター。report-review → repro-engineering-review → related-info-review → publish-check を順次呼び出し、横断的な指摘をまとめて報告する。実験の追記後・公開前・定期点検に使う。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/doc-cycle/SKILL.md) |
+| `doc-cycle` | `tabular-sdg-skillset` | ドキュメント全体の整理・レビュー・対応サイクルを一括実行するオーケストレーター。report-review → repro-engineering-review → related-info-review → publish-check を順次呼び出し、横断的な指摘をまとめて報告する。実験の追記後・公開前・定期点検に使う。 | [SKILL.md](https://github.com/gghatano/tabular-sdg-skillset/blob/main/.claude/skills/doc-cycle/SKILL.md) |
+| `doc-cycle` | `tpdp2026-binagg` | ドキュメント全体の整理・レビュー・対応サイクルを一括実行するオーケストレーター。report-review → repro-engineering-review → related-info-review → publish-check を順次呼び出し、横断的な指摘をまとめて報告する。実験の追記後・公開前・定期点検に使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-binagg/blob/main/.claude/skills/doc-cycle/SKILL.md) |
+| `doc-cycle` | `tpdp2026-mst-aim-audit` | ドキュメント全体の整理・レビュー・対応サイクルを一括実行するオーケストレーター。report-review → repro-engineering-review → related-info-review → publish-check を順次呼び出し、横断的な指摘をまとめて報告する。実験の追記後・公開前・定期点検に使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-mst-aim-audit/blob/main/.claude/skills/doc-cycle/SKILL.md) |
+| `experiment-plan` | `dpsynth-demo` | 実験計画の作成とレビュー。レポート骨子から抽出した実験一覧をもとに、既存研究に準拠した指標による公平な比較条件と、業務課題を反映した評価シナリオを計画書（docs/plans/）に落とす。実験の追加・比較条件の変更時にも使う。 | [SKILL.md](https://github.com/gghatano/dpsynth-demo/blob/main/.claude/skills/experiment-plan/SKILL.md) |
+| `experiment-plan` | `synth-report-kit` | 実験計画の作成とレビュー。レポート骨子から抽出した実験一覧をもとに、既存研究に準拠した指標による公平な比較条件と、業務課題を反映した評価シナリオを計画書（docs/plans/）に落とす。実験の追加・比較条件の変更時にも使う。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/experiment-plan/SKILL.md) |
+| `experiment-plan` | `tabular-sdg-skillset` | 実験計画の作成とレビュー。レポート骨子から抽出した実験一覧をもとに、既存研究に準拠した指標による公平な比較条件と、業務課題を反映した評価シナリオを計画書（docs/plans/）に落とす。実験の追加・比較条件の変更時にも使う。 | [SKILL.md](https://github.com/gghatano/tabular-sdg-skillset/blob/main/.claude/skills/experiment-plan/SKILL.md) |
+| `experiment-plan` | `tpdp2026-binagg` | 実験計画の作成とレビュー。レポート骨子から抽出した実験一覧をもとに、既存研究に準拠した指標による公平な比較条件と、業務課題を反映した評価シナリオを計画書（docs/plans/）に落とす。実験の追加・比較条件の変更時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-binagg/blob/main/.claude/skills/experiment-plan/SKILL.md) |
+| `experiment-plan` | `tpdp2026-mst-aim-audit` | 実験計画の作成とレビュー。レポート骨子から抽出した実験一覧をもとに、既存研究に準拠した指標による公平な比較条件と、業務課題を反映した評価シナリオを計画書（docs/plans/）に落とす。実験の追加・比較条件の変更時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-mst-aim-audit/blob/main/.claude/skills/experiment-plan/SKILL.md) |
+| `experiment-run` | `dpsynth-demo` | 実験の実行と結果の記録。計画書（docs/plans/）に基づき、uv による固定環境でスクリプトを実行し、結果をレポート規約（実行条件の明記・図表・所見）に沿って整理する。実験の再実行・シード追加・新実験スクリプトの追加時にも使う。 | [SKILL.md](https://github.com/gghatano/dpsynth-demo/blob/main/.claude/skills/experiment-run/SKILL.md) |
+| `experiment-run` | `synth-report-kit` | 実験の実行と結果の記録。計画書（docs/plans/）に基づき、uv による固定環境でスクリプトを実行し、結果をレポート規約（実行条件の明記・図表・所見）に沿って整理する。実験の再実行・シード追加・新実験スクリプトの追加時にも使う。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/experiment-run/SKILL.md) |
+| `experiment-run` | `tabular-sdg-skillset` | 実験の実行と結果の記録。計画書（docs/plans/）に基づき、uv による固定環境でスクリプトを実行し、結果をレポート規約（実行条件の明記・図表・所見）に沿って整理する。実験の再実行・シード追加・新実験スクリプトの追加時にも使う。 | [SKILL.md](https://github.com/gghatano/tabular-sdg-skillset/blob/main/.claude/skills/experiment-run/SKILL.md) |
+| `experiment-run` | `tpdp2026-binagg` | 実験の実行と結果の記録。計画書（docs/plans/）に基づき、uv による固定環境でスクリプトを実行し、結果をレポート規約（実行条件の明記・図表・所見）に沿って整理する。実験の再実行・シード追加・新実験スクリプトの追加時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-binagg/blob/main/.claude/skills/experiment-run/SKILL.md) |
+| `experiment-run` | `tpdp2026-mst-aim-audit` | 実験の実行と結果の記録。計画書（docs/plans/）に基づき、uv による固定環境でスクリプトを実行し、結果をレポート規約（実行条件の明記・図表・所見）に沿って整理する。実験の再実行・シード追加・新実験スクリプトの追加時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-mst-aim-audit/blob/main/.claude/skills/experiment-run/SKILL.md) |
+| `publish-check` | `dpsynth-demo` | 公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/03_build_html.py）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。 | [SKILL.md](https://github.com/gghatano/dpsynth-demo/blob/main/.claude/skills/publish-check/SKILL.md) |
+| `publish-check` | `pe-demo` | 公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/build_site.py の pages）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。 | [SKILL.md](https://github.com/gghatano/pe-demo/blob/main/.claude/skills/publish-check/SKILL.md) |
+| `publish-check` | `synth-report-kit` | 公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/build_site.py の pages）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/publish-check/SKILL.md) |
+| `publish-check` | `tabular-sdg-skillset` | 公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/03_build_html.py）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。 | [SKILL.md](https://github.com/gghatano/tabular-sdg-skillset/blob/main/.claude/skills/publish-check/SKILL.md) |
+| `publish-check` | `tpdp2026-binagg` | 公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/03_build_html.py）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-binagg/blob/main/.claude/skills/publish-check/SKILL.md) |
+| `publish-check` | `tpdp2026-mst-aim-audit` | 公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/03_build_html.py）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-mst-aim-audit/blob/main/.claude/skills/publish-check/SKILL.md) |
+| `related-info-review` | `dpsynth-demo` | 関連情報の整理。参考文献・出典タグ・上流リポジトリ情報・手法解説ページの参考リンク・残課題（GitHub Issues）を点検し、リンク切れや対応漏れを整理する。文献追加、上流の更新追従、Issue 化の準備時にも使う。 | [SKILL.md](https://github.com/gghatano/dpsynth-demo/blob/main/.claude/skills/related-info-review/SKILL.md) |
+| `related-info-review` | `synth-report-kit` | 関連情報の整理。参考文献・出典タグ・上流リポジトリ情報・手法解説ページの参考リンク・残課題（GitHub Issues）を点検し、リンク切れや対応漏れを整理する。文献追加、上流の更新追従、Issue 化の準備時にも使う。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/related-info-review/SKILL.md) |
+| `related-info-review` | `tabular-sdg-skillset` | 関連情報の整理。参考文献・出典タグ・上流リポジトリ情報・手法解説ページの参考リンク・残課題（GitHub Issues）を点検し、リンク切れや対応漏れを整理する。文献追加、上流の更新追従、Issue 化の準備時にも使う。 | [SKILL.md](https://github.com/gghatano/tabular-sdg-skillset/blob/main/.claude/skills/related-info-review/SKILL.md) |
+| `related-info-review` | `tpdp2026-binagg` | 関連情報の整理。参考文献・出典タグ・上流リポジトリ情報・手法解説ページの参考リンク・残課題（GitHub Issues）を点検し、リンク切れや対応漏れを整理する。文献追加、上流の更新追従、Issue 化の準備時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-binagg/blob/main/.claude/skills/related-info-review/SKILL.md) |
+| `related-info-review` | `tpdp2026-mst-aim-audit` | 関連情報の整理。参考文献・出典タグ・上流リポジトリ情報・手法解説ページの参考リンク・残課題（GitHub Issues）を点検し、リンク切れや対応漏れを整理する。文献追加、上流の更新追従、Issue 化の準備時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-mst-aim-audit/blob/main/.claude/skills/related-info-review/SKILL.md) |
+| `report-review` | `dpsynth-demo` | 実験レポート（前提・結果・考察・課題）の整理とレビュー。レポート本体や追加実験の Markdown を、事実と推定の分離・数値の整合・課題の追跡可能性の観点で点検し、軽微な問題は修正する。レポートの章立て直し、実験結果の追記、考察の見直し時にも使う。 | [SKILL.md](https://github.com/gghatano/dpsynth-demo/blob/main/.claude/skills/report-review/SKILL.md) |
+| `report-review` | `pe-demo` | 実験レポート（前提・結果・考察・課題）の整理とレビュー。レポート本体や追加実験の Markdown を、事実と推定の分離・数値の整合・課題の追跡可能性の観点で点検し、軽微な問題は修正する。レポートの章立て直し、実験結果の追記、考察の見直し時にも使う。 | [SKILL.md](https://github.com/gghatano/pe-demo/blob/main/.claude/skills/report-review/SKILL.md) |
+| `report-review` | `synth-report-kit` | 実験レポート（前提・結果・考察・課題）の整理とレビュー。レポート本体や追加実験の Markdown を、事実と推定の分離・数値の整合・課題の追跡可能性の観点で点検し、軽微な問題は修正する。レポートの章立て直し、実験結果の追記、考察の見直し時にも使う。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/report-review/SKILL.md) |
+| `report-review` | `tabular-sdg-skillset` | 実験レポート（前提・結果・考察・課題）の整理とレビュー。レポート本体や追加実験の Markdown を、事実と推定の分離・数値の整合・課題の追跡可能性の観点で点検し、軽微な問題は修正する。レポートの章立て直し、実験結果の追記、考察の見直し時にも使う。 | [SKILL.md](https://github.com/gghatano/tabular-sdg-skillset/blob/main/.claude/skills/report-review/SKILL.md) |
+| `report-review` | `tpdp2026-binagg` | 実験レポート（前提・結果・考察・課題）の整理とレビュー。レポート本体や追加実験の Markdown を、事実と推定の分離・数値の整合・課題の追跡可能性の観点で点検し、軽微な問題は修正する。レポートの章立て直し、実験結果の追記、考察の見直し時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-binagg/blob/main/.claude/skills/report-review/SKILL.md) |
+| `report-review` | `tpdp2026-mst-aim-audit` | 実験レポート（前提・結果・考察・課題）の整理とレビュー。レポート本体や追加実験の Markdown を、事実と推定の分離・数値の整合・課題の追跡可能性の観点で点検し、軽微な問題は修正する。レポートの章立て直し、実験結果の追記、考察の見直し時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-mst-aim-audit/blob/main/.claude/skills/report-review/SKILL.md) |
+| `report-skeleton` | `dpsynth-demo` | レポート骨子の設計。実験を始める前にレポートの章立て・各章の主張・必要な実験と指標を骨子として固め、段階的に埋めるための TODO 付きスケルトンを content/ に用意する。新しい評価対象に着手するとき・レポートの再構成時に最初に使う。 | [SKILL.md](https://github.com/gghatano/dpsynth-demo/blob/main/.claude/skills/report-skeleton/SKILL.md) |
+| `report-skeleton` | `pe-demo` | レポート骨子の設計。実験を始める前にレポートの章立て・各章の主張・必要な実験と指標を骨子として固め、段階的に埋めるための TODO 付きスケルトンを content/ に用意する。新しい評価対象に着手するとき・レポートの再構成時に最初に使う。 | [SKILL.md](https://github.com/gghatano/pe-demo/blob/main/.claude/skills/report-skeleton/SKILL.md) |
+| `report-skeleton` | `synth-report-kit` | レポート骨子の設計。実験を始める前にレポートの章立て・各章の主張・必要な実験と指標を骨子として固め、段階的に埋めるための TODO 付きスケルトンを content/ に用意する。新しい評価対象に着手するとき・レポートの再構成時に最初に使う。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/report-skeleton/SKILL.md) |
+| `report-skeleton` | `tabular-sdg-skillset` | レポート骨子の設計。実験を始める前にレポートの章立て・各章の主張・必要な実験と指標を骨子として固め、段階的に埋めるための TODO 付きスケルトンを content/ に用意する。新しい評価対象に着手するとき・レポートの再構成時に最初に使う。 | [SKILL.md](https://github.com/gghatano/tabular-sdg-skillset/blob/main/.claude/skills/report-skeleton/SKILL.md) |
+| `report-skeleton` | `tpdp2026-binagg` | レポート骨子の設計。実験を始める前にレポートの章立て・各章の主張・必要な実験と指標を骨子として固め、段階的に埋めるための TODO 付きスケルトンを content/ に用意する。新しい評価対象に着手するとき・レポートの再構成時に最初に使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-binagg/blob/main/.claude/skills/report-skeleton/SKILL.md) |
+| `report-skeleton` | `tpdp2026-mst-aim-audit` | レポート骨子の設計。実験を始める前にレポートの章立て・各章の主張・必要な実験と指標を骨子として固め、段階的に埋めるための TODO 付きスケルトンを content/ に用意する。新しい評価対象に着手するとき・レポートの再構成時に最初に使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-mst-aim-audit/blob/main/.claude/skills/report-skeleton/SKILL.md) |
+| `repro-engineering-review` | `dpsynth-demo` | 再現手順とエンジニアリングノートのレビュー。setup/usage/reproduce/engineering-notes とスクリプト・依存固定・パッチの整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。 | [SKILL.md](https://github.com/gghatano/dpsynth-demo/blob/main/.claude/skills/repro-engineering-review/SKILL.md) |
+| `repro-engineering-review` | `pe-demo` | 再現手順とエンジニアリングノートのレビュー。engineering タブとスクリプト・依存固定（uv）・上流への修正の整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。 | [SKILL.md](https://github.com/gghatano/pe-demo/blob/main/.claude/skills/repro-engineering-review/SKILL.md) |
+| `repro-engineering-review` | `synth-report-kit` | 再現手順とエンジニアリングノートのレビュー。engineering タブとスクリプト・依存固定（uv）・上流への修正の整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/repro-engineering-review/SKILL.md) |
+| `repro-engineering-review` | `tabular-sdg-skillset` | 再現手順とエンジニアリングノートのレビュー。setup/usage/reproduce/engineering-notes とスクリプト・依存固定・パッチの整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。 | [SKILL.md](https://github.com/gghatano/tabular-sdg-skillset/blob/main/.claude/skills/repro-engineering-review/SKILL.md) |
+| `repro-engineering-review` | `tpdp2026-binagg` | 再現手順とエンジニアリングノートのレビュー。setup/usage/reproduce/engineering-notes とスクリプト・依存固定・パッチの整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-binagg/blob/main/.claude/skills/repro-engineering-review/SKILL.md) |
+| `repro-engineering-review` | `tpdp2026-mst-aim-audit` | 再現手順とエンジニアリングノートのレビュー。setup/usage/reproduce/engineering-notes とスクリプト・依存固定・パッチの整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-mst-aim-audit/blob/main/.claude/skills/repro-engineering-review/SKILL.md) |
+| `research-cycle` | `dpsynth-demo` | 実験レポート作成のライフサイクル全体を統括するトップレベルのオーケストレーター。report-skeleton → experiment-plan → experiment-run（実験ごとに反復）→ doc-cycle を順に進め、現在地（stage・未実施の計画・残 TODO）を判定して次のプロセスへ誘導する。新しい評価対象への着手時、または「いま何をすべきか」の確認に使う。 | [SKILL.md](https://github.com/gghatano/dpsynth-demo/blob/main/.claude/skills/research-cycle/SKILL.md) |
+| `research-cycle` | `synth-report-kit` | 実験レポート作成のライフサイクル全体を統括するトップレベルのオーケストレーター。report-skeleton → experiment-plan → experiment-run（実験ごとに反復）→ doc-cycle を順に進め、現在地（stage・未実施の計画・残 TODO）を判定して次のプロセスへ誘導する。新しい評価対象への着手時、または「いま何をすべきか」の確認に使う。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/research-cycle/SKILL.md) |
+| `research-cycle` | `tabular-sdg-skillset` | 実験レポート作成のライフサイクル全体を統括するトップレベルのオーケストレーター。report-skeleton → experiment-plan → experiment-run（実験ごとに反復）→ doc-cycle を順に進め、現在地（stage・未実施の計画・残 TODO）を判定して次のプロセスへ誘導する。新しい評価対象への着手時、または「いま何をすべきか」の確認に使う。 | [SKILL.md](https://github.com/gghatano/tabular-sdg-skillset/blob/main/.claude/skills/research-cycle/SKILL.md) |
+| `research-cycle` | `tpdp2026-binagg` | 実験レポート作成のライフサイクル全体を統括するトップレベルのオーケストレーター。report-skeleton → experiment-plan → experiment-run（実験ごとに反復）→ doc-cycle を順に進め、現在地（stage・未実施の計画・残 TODO）を判定して次のプロセスへ誘導する。新しい評価対象への着手時、または「いま何をすべきか」の確認に使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-binagg/blob/main/.claude/skills/research-cycle/SKILL.md) |
+| `research-cycle` | `tpdp2026-mst-aim-audit` | 実験レポート作成のライフサイクル全体を統括するトップレベルのオーケストレーター。report-skeleton → experiment-plan → experiment-run（実験ごとに反復）→ doc-cycle を順に進め、現在地（stage・未実施の計画・残 TODO）を判定して次のプロセスへ誘導する。新しい評価対象への着手時、または「いま何をすべきか」の確認に使う。 | [SKILL.md](https://github.com/gghatano/tpdp2026-mst-aim-audit/blob/main/.claude/skills/research-cycle/SKILL.md) |
+
+<a id="synthetic-data-generation"></a>
+
+## 合成データ生成パイプライン
+
+仕様の取り込みから生成方式の設計、ジェネレータ実装、評価・改善までを担う合成データ生成の工程スキルと、ユースケース整理・分析を行うスキル群。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `0_input_prepare` | `pets-seminar-01` | タスクディレクトリ ($ARGUMENTS) の原データ・仕様書・業務ドキュメントを読み取り、合成データ生成パイプラインが参照する input/ 配下の table_definition、sample_data、data_spec.md、constraints.md を作成・更新する。 | [SKILL.md](https://github.com/gghatano/pets-seminar-01/blob/main/.claude/skills/0_input_prepare/SKILL.md) |
+| `1_spec_ingest` | `pets-seminar-01` | タスクディレクトリ ($ARGUMENTS) の input/ を読み取り、合成データ生成に必要な仕様を機械可読化する。work/inferred_schema.json と work/constraint_plan.md を作成する。 | [SKILL.md](https://github.com/gghatano/pets-seminar-01/blob/main/.claude/skills/1_spec_ingest/SKILL.md) |
+| `2_generation_plan` | `pets-seminar-01` | タスクディレクトリ ($ARGUMENTS) の inferred_schema.json と constraint_plan.md をもとに、各列の生成方式を設計し work/generation_plan.md を作成する。 | [SKILL.md](https://github.com/gghatano/pets-seminar-01/blob/main/.claude/skills/2_generation_plan/SKILL.md) |
+| `3_generator_impl` | `pets-seminar-01` | タスクディレクトリ ($ARGUMENTS) の generation_plan.md に基づき、src/generator.py を実装し、output/ に合成データを生成する。 | [SKILL.md](https://github.com/gghatano/pets-seminar-01/blob/main/.claude/skills/3_generator_impl/SKILL.md) |
+| `4_evaluate_and_refine` | `pets-seminar-01` | タスクディレクトリ ($ARGUMENTS) の合成データを、仕様・サンプル・制約に照らして評価し、必要に応じて generator.py を修正する。evaluation_report.md と constraints_check.csv を出力する。 | [SKILL.md](https://github.com/gghatano/pets-seminar-01/blob/main/.claude/skills/4_evaluate_and_refine/SKILL.md) |
+| `case-study` | `pets-seminar-01` | 事務局レポートの事例を1つ選び、仮名加工情報・匿名加工情報のデータ加工を再現する教材（設計文書＋ダミーデータ＋Colab Notebook＋結果）を、一次情報に忠実かつ3層構成で作成する標準手順。新しい事例（例: case02 匿名加工情報）に着手するとき、または既存事例の設計〜実装を進めるときに使う。 | [SKILL.md](https://github.com/gghatano/pets-seminar-01/blob/main/.claude/skills/case-study/SKILL.md) |
+| `company-data-analyzer` | `ppdp-demo` | Use when a ppdp-demo company already has finalized input/use_cases.md (with UC評価) and input/org_data_master.md, and stage ④ needs synthetic data for the representative Quick Win UC to be generated, analyzed, self-reviewed for contradictions, and turned into the dashboard analysis artifacts (data_design.md, generator/evaluate, analysis_scenarios.md, analysis_report.md, figures, quality_gate.json). | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/company-data-analyzer/SKILL.md) |
+| `municipality-collaboration-scenario` | `ppdp-demo` | Use when Claude needs to read an existing ppdp-demo company data project (data_design.md, analysis_report.md) and generate concrete scenarios for combining that company's synthetic data with municipal government datasets (住民基本台帳, 課税所得, 福祉給付, 公共施設, 交通インフラ etc.). Produces a collaboration scenario document, data-generation scripts, analysis scripts, and a collaboration analysis report under the company's data_projects directory. | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/municipality-collaboration-scenario/SKILL.md) |
+| `synthesize` | `pets-seminar-01` | 合成データ生成パイプラインの PM (project manager) エージェントとして起動する。必要に応じて原資料から input/ を作成し、5 つの SKILL (0_input_prepare → 1_spec_ingest → 2_generation_plan → 3_generator_impl → 4_evaluate_and_refine) を順次サブエージェントに委譲し、各ステップの Acceptance Criteria 充足を確認しながら end-to-end で実行する。 | [SKILL.md](https://github.com/gghatano/pets-seminar-01/blob/main/.claude/skills/synthesize/SKILL.md) |
+| `uc-catalog-builder` | `ppdp-demo` | Use when Claude needs to read a ppdp-demo company research README and build the multi-use-case catalog: enumerate ~15 use cases into use_cases.md, consolidate the org/data single-source-of-truth into org_data_master.md, and generate the ORG–DS–UC mapping diagram (build_mapping.py + figures/JSON/interactive HTML/spec), plus the 09型 project README. | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/uc-catalog-builder/SKILL.md) |
+| `uc-quickwin-evaluator` | `ppdp-demo` | Use when evaluating a ppdp-demo company's UC catalog (input/use_cases.md + input/org_data_master.md) on the two axes 実現容易性 × インパクト and picking Quick Wins — machine-computes feasibility via tools/gen_uc_eval.py, adds hand-scored impact, decides ✅Quick Win / △戦略案件, and produces the '## UC評価' section pasted at the top of use_cases.md for dashboard ③. | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/uc-quickwin-evaluator/SKILL.md) |
+
+<a id="quality-review"></a>
+
+## 品質・整合レビュー
+
+成果物（チャート・分析・ユースケースカタログ・コード・PR）の品質や横断的整合性を点検し、pass/warn/fail のレビュー結果を返すスキル群。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `chart-quality-reviewer` | `ppdp-demo` | Use when asked to detect or fix rendering issues in charts/figures across ppdp-demo company projects. Runs static code analysis (check_chart_quality.py) and PNG image analysis (check_image_quality.py), interprets results, and reports actionable findings — covering label squish, heatmap whitespace, legend clipping, duplicate images, and X-axis bias. | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/chart-quality-reviewer/SKILL.md) |
+| `code-review` | `synthetic-research-data-sharing` | 実装差分を docs/review-checklist.md に沿ってレビューする手順。実装完了前に必ず使う。 | [SKILL.md](https://github.com/gghatano/synthetic-research-data-sharing/blob/develop/.claude/skills/code-review/SKILL.md) |
+| `consistency-reviewer` | `ppdp-demo` | Use when Claude needs to review cross-artifact consistency of a ppdp-demo company project that uses the multi-use-case model: checks that use_cases.md, org_data_master.md, the mapping diagram (build_mapping.py / figures), and analysis_scenarios.md agree on IDs (UC/ORG/DS), categories, 実在/仮説 labels, and synthetic-demo notes. Produces a structured pass/warn/fail review report so a PM does not have to verify consistency by hand. | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/consistency-reviewer/SKILL.md) |
+| `review-prs` | `pseudonymize-webapp` | openなPRを並列サブエージェントでレビューし、結果をGitHubコメントとして投稿する。 `/review-prs` で起動。引数なしで全open PR、PR番号指定で個別レビュー可。 | [SKILL.md](https://github.com/gghatano/pseudonymize-webapp/blob/main/.claude/skills/review-prs/SKILL.md) |
+| `scenario-reviewer` | `ppdp-demo` | Use when Claude needs to review a municipality_collaboration_scenario.md file in ppdp-demo to check quality, completeness, and compliance with v4 skill standards. Reviews 参考事例 URLs, データ実在性 notes, 他社データ制約 warnings, 活用先 completeness, and hypothesis quality. Produces a structured review report with pass/fail per criterion and improvement suggestions. | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/scenario-reviewer/SKILL.md) |
+| `uc-catalog-reviewer` | `ppdp-demo` | Use when Claude needs to review the stage-② artifacts of a ppdp-demo company project (input/use_cases.md UC catalog, input/org_data_master.md, src/build_mapping.py and its mapping outputs) for content quality, 実在/仮説 honesty, ID conventions, and master/mapping consistency BEFORE UC evaluation (③) or synthetic data (④). Produces a structured pass/warn/fail review report and does not rewrite the artifacts. | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/uc-catalog-reviewer/SKILL.md) |
+| `uc-eval-reviewer` | `ppdp-demo` | Use when Claude needs to review the UC評価 (実現容易性 × インパクト) section that stage ③ (uc-quickwin-evaluator) inserted at the top of a ppdp-demo company use_cases.md, before stage ④ synthesis/analysis: checks 実現容易性 rationale, インパクト completeness (no placeholders/TODO), Quick Win 判定妥当性, 代表分析可能性, ラベル語彙, トーン, 配置 against docs/uc_evaluation_framework.md. When C1 fail (upward adjustment) is detected, immediately corrects input/use_cases.md to the machine-computed value and records the before/after in the report. | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/uc-eval-reviewer/SKILL.md) |
+
+<a id="dev-workflow"></a>
+
+## 開発ワークフロー（Git / Issue / PR）
+
+ブランチ・worktree の作成、Issue 起票・トリアージ、実装、PR 作成・リリースなど、開発運用の手順を標準化するスキル群。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `add-mock-screen` | `sxtf-mock` | sxtf-mock（鉄骨サプライチェーン真正性証明モック）に画面を1枚追加/実装するときの標準手順。Next.js App Router + TS + Tailwind + shadcn/ui で、共有の型・mock-store・provenance 契約を壊さず規約準拠で画面を作る。screen-inventory.md の T2〜T7 のいずれかの画面を担当する/モック画面を追加・実装するときは、明示的に "skill" と言われなくても必ずこのスキルを使うこと。 | [SKILL.md](https://github.com/gghatano/sxtf-mock/blob/develop/.claude/skills/add-mock-screen/SKILL.md) |
+| `experiment-issue` | `202604-syntheticdata-survey` | 新しい合成データ比較実験のアイデアを GitHub Issue 化する。フォーマットを実験 #4〜#6 と揃え、不足情報は AskUserQuestion で補完してから `gh issue create` する。「実験を issue に」「新しい実験案」「exp0N の issue 作って」などの要求に反応する。 | [SKILL.md](https://github.com/gghatano/202604-syntheticdata-survey/blob/main/.claude/skills/experiment-issue/SKILL.md) |
+| `issue-driven-development` | `synthetic-research-data-sharing` | GitHub Issue を作業単位として branch/worktree/PR/検証記録を一貫管理する。実装作業を始めるときに必ず使う。 | [SKILL.md](https://github.com/gghatano/synthetic-research-data-sharing/blob/develop/.claude/skills/issue-driven-development/SKILL.md) |
+| `issue-triage` | `synthetic-research-data-sharing` | 仕様や発見事項から Issue 候補を抽出し、適切な粒度・依存・ラベルに整理する手順。Issue を作る前の計画時に使う。 | [SKILL.md](https://github.com/gghatano/synthetic-research-data-sharing/blob/develop/.claude/skills/issue-triage/SKILL.md) |
+| `pm-orchestrate` | `sxtf-mock` | sxtf-mock を無人で前進させる PM オーケストレーション手順。未決Issueを仮置きで解決しつつ、サブエージェントを束ねて基盤〜画面〜検証まで実装し、develop まで自動マージする。サブエージェントを定期監視し、スタックしたら自動リトライ→再割当→skip で前進する。ユーザーが「自律的に動いてほしい」「PMとしてissueを順次解決」「10時間自律」「サブエージェントを監視して進めて」等を述べたら、明示的に "skill" と言われなくても必ずこのスキルを使うこと。 | [SKILL.md](https://github.com/gghatano/sxtf-mock/blob/develop/.claude/skills/pm-orchestrate/SKILL.md) |
+| `pr-from-issue` | `synthetic-research-data-sharing` | Issue に紐づく PR を作成し、Issue へ進捗・検証結果をコメントして相互リンクする手順。作業完了時に使う。 | [SKILL.md](https://github.com/gghatano/synthetic-research-data-sharing/blob/develop/.claude/skills/pr-from-issue/SKILL.md) |
+| `pr-prep` | `synthetic-research-data-sharing` | PR 作成前の最終確認手順。コミット／PR を出す直前に必ず使う。 | [SKILL.md](https://github.com/gghatano/synthetic-research-data-sharing/blob/develop/.claude/skills/pr-prep/SKILL.md) |
+| `refactor-safely` | `synthetic-research-data-sharing` | 振る舞いを変えずに内部構造だけ改善する手順。リファクタリングを実装タスクと分けて行うとき使う。 | [SKILL.md](https://github.com/gghatano/synthetic-research-data-sharing/blob/develop/.claude/skills/refactor-safely/SKILL.md) |
+| `release` | `asset-management` | `develop` の内容を `main` に取り込むリリース PR を作成・マージするときに使う。「リリースしたい」「develop を main に反映」「公開したい」などのときに発動する。 | [SKILL.md](https://github.com/gghatano/asset-management/blob/develop/.claude/skills/release/SKILL.md) |
+| `spec-implementation` | `synthetic-research-data-sharing` | docs/SPEC.md に基づき、実装タスクを小さく切り出して実装・検証する手順。仕様から1単位を実装するとき必ず使う。 | [SKILL.md](https://github.com/gghatano/synthetic-research-data-sharing/blob/develop/.claude/skills/spec-implementation/SKILL.md) |
+| `start-feature` | `asset-management` | 新しい作業を始めるときに、`develop` を最新化したうえで `feature/*` ブランチと git worktree を切る手順を案内する。「新機能の作業を始めたい」「worktree を切って」「ブランチを作って作業したい」などのときに使う。 | [SKILL.md](https://github.com/gghatano/asset-management/blob/develop/.claude/skills/start-feature/SKILL.md) |
+| `test-fix-loop` | `synthetic-research-data-sharing` | テスト・lint・型チェックの失敗を分析し、修正し、再実行して緑にする手順。検証が落ちたとき使う。 | [SKILL.md](https://github.com/gghatano/synthetic-research-data-sharing/blob/develop/.claude/skills/test-fix-loop/SKILL.md) |
+| `worktree-task-runner` | `synthetic-research-data-sharing` | Issue ごとに専用 branch と git worktree を作成し、分離した作業ディレクトリで実装する手順。Issue 着手時に使う。 | [SKILL.md](https://github.com/gghatano/synthetic-research-data-sharing/blob/develop/.claude/skills/worktree-task-runner/SKILL.md) |
+
+<a id="writing-ux"></a>
+
+## 文章・UI/UX ライティング
+
+日本語文章の推敲や、価値起点の UI コピー・情報設計を整えるライティング支援スキル。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `stop-ai-slop-jp` | `pe-demo` | AIで書いた日本語を、人間が書いた文章に戻す。下書き、編集、レビューで使う。全角ダッシュや偏愛語だけでなく、主体の不在、命題型H2、壮大化、両論併記、リズムの均一さも直す。 | [SKILL.md](https://github.com/gghatano/pe-demo/blob/main/.claude/skills/stop-ai-slop-jp/SKILL.md) |
+| `stop-ai-slop-jp` | `synth-report-kit` | AIで書いた日本語を、人間が書いた文章に戻す。下書き、編集、レビューで使う。全角ダッシュや偏愛語だけでなく、主体の不在、命題型H2、壮大化、両論併記、リズムの均一さも直す。 | [SKILL.md](https://github.com/gghatano/synth-report-kit/blob/main/.claude/skills/stop-ai-slop-jp/SKILL.md) |
+| `ui-value-design` | `sxtf-mock` | sxtf-mock の画面を「機能の説明」でなく「ユーザに提供する価値」で語るUIに設計・レビューするための、プロのUX/UIライティング手順。画面の見出し・導入文・セクション名・空状態・マイクロコピー・情報設計(IA)を value-first に整え、専門用語を平場の日本語へ翻訳し、PoCの限界と矛盾しない誠実さを保つ。画面のコピー/UX/見せ方を作る・直す・レビューするとき、「価値で語るUIにしたい」「分かりやすくしたい」「UIをレビューして」等のとき、明示的に "skill" と言われなくても必ずこのスキルを使うこと。 | [SKILL.md](https://github.com/gghatano/sxtf-mock/blob/develop/.claude/skills/ui-value-design/SKILL.md) |
+
+<a id="privacy-incident-catalog"></a>
+
+## プライバシー事例カタログ
+
+公開情報からプライバシー侵害・漏えい事例の case.json を作成・補完・レビューし、事例カタログを整備するスキル群。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `case-create` | `privacy-incident-catalog` | 文献URL・テキストから新規 case.json を作成 | [SKILL.md](https://github.com/gghatano/privacy-incident-catalog/blob/main/.claude/skills/case-create/SKILL.md) |
+| `case-enrich` | `privacy-incident-catalog` | 追加文献で既存事例の case.json を補完・改善 | [SKILL.md](https://github.com/gghatano/privacy-incident-catalog/blob/main/.claude/skills/case-enrich/SKILL.md) |
+| `case-review` | `privacy-incident-catalog` | case.json の公開情報整合性レビュー（新規追加・更新時に使用） | [SKILL.md](https://github.com/gghatano/privacy-incident-catalog/blob/main/.claude/skills/case-review/SKILL.md) |
+
+<a id="simulation"></a>
+
+## シミュレーション・数値検証
+
+シミュレーションのパラメータ較正、経営層向けレポート生成、モデル変更後の検証を行うスキル群。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `calibrate-params` | `sxtf-simulation` | config/levels/*.yaml のパラメータレンジを文献・統計で裏付けるキャリブレーション作業の手順。パラメータの値を変更・追加するときに使う。 | [SKILL.md](https://github.com/gghatano/sxtf-simulation/blob/master/.claude/skills/calibrate-params/SKILL.md) |
+| `make-report` | `sxtf-simulation` | 経営層向けレポート(L0/L1/L2 比較、規制シナリオのコスト曲線、感度分析)を生成する手順と表現規約。レポート・図表・比較資料を作るときに使う。 | [SKILL.md](https://github.com/gghatano/sxtf-simulation/blob/master/.claude/skills/make-report/SKILL.md) |
+| `verify-sim` | `sxtf-simulation` | モデル・KPI・config を変更した後の検証手順。シミュレーションコードを触ったら必ずこの手順で確認する。 | [SKILL.md](https://github.com/gghatano/sxtf-simulation/blob/master/.claude/skills/verify-sim/SKILL.md) |
+
+<a id="packaging-distribution"></a>
+
+## 配布・パッケージング
+
+成果物を配布用にビルド・パッケージングするスキル。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `dist-zip-builder` | `ppdp-demo` | Use when the user asks to create a distribution ZIP of the ppdp-demo HTML report (配布用ZIP作成 / 配布パッケージ / オフライン閲覧用ZIP / レポートをZIPにまとめて / distribution zip). Builds the HTML, localizes CDN assets for offline viewing, and packages html/ into ppdp-demo-report-<date>.zip via tools/package_dist.py. | [SKILL.md](https://github.com/gghatano/ppdp-demo/blob/main/.claude/skills/dist-zip-builder/SKILL.md) |
+
+<a id="domain-specific"></a>
+
+## ドメイン固有ツール
+
+特定プロジェクト固有の資産・データ管理を支援するスキル。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `add-asset` | `asset-management` | 新しい金融商品（投資信託・ETF・株式・現金など）を本トラッカーに追加するときに使う。`config/assets.yaml` への追記、`config/initial_positions.yaml` / `config/monthly_purchases.yaml` の整合確認、必要に応じた価格取得アダプタの拡張、`docs/spec.md` の更新を一括で案内する。 | [SKILL.md](https://github.com/gghatano/asset-management/blob/develop/.claude/skills/add-asset/SKILL.md) |
