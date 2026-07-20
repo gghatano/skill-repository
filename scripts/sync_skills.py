@@ -13,7 +13,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.parse
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable, Protocol
 
@@ -116,6 +116,23 @@ class CatalogEntry:
     components: tuple[str, ...]
     tools: tuple[str, ...]
     project_paths: tuple[str, ...]
+    category: str = "uncategorized"
+
+
+@dataclass(frozen=True)
+class Category:
+    id: str
+    title: str
+    summary: str
+    skills: tuple[str, ...]
+
+
+UNCATEGORIZED = Category(
+    id="uncategorized",
+    title="未分類",
+    summary="まだ目的分類が割り当てられていないスキルです。`catalog/categories.json` に追記してください。",
+    skills=(),
+)
 
 
 TOOL_PATTERNS = {
@@ -280,6 +297,68 @@ def detect_project_paths(content: str, limit: int = 8) -> tuple[str, ...]:
     return tuple(paths)
 
 
+def load_categories(path: Path) -> list[Category]:
+    """Load the purpose taxonomy. Returns an empty list when the file is absent."""
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return []
+    except OSError as exc:
+        raise SyncError(f"cannot read categories file: {path}") from exc
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise SyncError(f"categories file is not valid JSON: {exc}") from exc
+
+    categories: list[Category] = []
+    seen_ids: set[str] = set()
+    seen_skills: dict[str, str] = {}
+    for item in data.get("categories", []):
+        identifier = str(item.get("id", "")).strip()
+        title = str(item.get("title", "")).strip()
+        if not identifier or not title:
+            raise SyncError("each category requires a non-empty 'id' and 'title'")
+        if identifier in seen_ids:
+            raise SyncError(f"duplicate category id: {identifier}")
+        seen_ids.add(identifier)
+        skills = tuple(str(name).strip() for name in item.get("skills", []) if str(name).strip())
+        for skill in skills:
+            if skill in seen_skills:
+                raise SyncError(
+                    f"skill '{skill}' is assigned to both '{seen_skills[skill]}' and '{identifier}'"
+                )
+            seen_skills[skill] = identifier
+        categories.append(
+            Category(
+                id=identifier,
+                title=title,
+                summary=str(item.get("summary", "")).strip(),
+                skills=skills,
+            )
+        )
+    return categories
+
+
+def assign_categories(
+    entries: Iterable[CatalogEntry],
+    categories: Iterable[Category],
+) -> tuple[list[CatalogEntry], list[str]]:
+    """Attach a category id to each entry by skill name. Returns (entries, uncategorized_names)."""
+    lookup: dict[str, str] = {}
+    for category in categories:
+        for skill in category.skills:
+            lookup[skill] = category.id
+
+    assigned: list[CatalogEntry] = []
+    uncategorized: set[str] = set()
+    for entry in entries:
+        category_id = lookup.get(entry.name, UNCATEGORIZED.id)
+        if category_id == UNCATEGORIZED.id:
+            uncategorized.add(entry.name)
+        assigned.append(replace(entry, category=category_id))
+    return assigned, sorted(uncategorized)
+
+
 def stage_skills(
     client: GitHubClient,
     sources: Iterable[SkillSource],
@@ -363,6 +442,65 @@ def render_catalog(owner: str, entries: list[CatalogEntry]) -> str:
     return "\n".join(lines)
 
 
+def render_purpose_catalog(
+    owner: str,
+    entries: list[CatalogEntry],
+    categories: list[Category],
+) -> str:
+    """Render a catalog grouped by purpose (category) instead of by repository."""
+    by_category: dict[str, list[CatalogEntry]] = {}
+    for entry in entries:
+        by_category.setdefault(entry.category, []).append(entry)
+
+    ordered = list(categories)
+    if any(entry.category == UNCATEGORIZED.id for entry in entries):
+        ordered = ordered + [UNCATEGORIZED]
+
+    lines = [
+        "# Skill Catalog（目的別）",
+        "",
+        f"GitHub account `{owner}` のリポジトリから集約した Claude Skills を、"
+        "出典リポジトリではなく **目的** で整理した一覧です。",
+        "このファイルは直接編集せず、`catalog/categories.json` を更新してから "
+        "`python3 scripts/sync_skills.py` で再生成してください。",
+        "",
+        f"スキル数: **{len(entries)}** ／ カテゴリ数: **{len([c for c in ordered if by_category.get(c.id)])}**",
+        "",
+        "## カテゴリ一覧",
+        "",
+    ]
+    for category in ordered:
+        members = by_category.get(category.id)
+        if not members:
+            continue
+        anchor = category.id
+        lines.append(f"- [{category.title}](#{anchor})（{len(members)}）")
+    lines.append("")
+
+    for category in ordered:
+        members = by_category.get(category.id)
+        if not members:
+            continue
+        lines.append(f'<a id="{category.id}"></a>')
+        lines.append("")
+        lines.append(f"## {category.title}")
+        lines.append("")
+        if category.summary:
+            lines.append(category.summary)
+            lines.append("")
+        lines.append("| Skill | Repository | Description | Source |")
+        lines.append("| --- | --- | --- | --- |")
+        for entry in sorted(members, key=lambda e: (e.name.lower(), e.repository.lower())):
+            description = entry.description.replace("|", "\\|").replace("\n", " ")
+            name = entry.name.replace("|", "\\|")
+            repo_name = entry.repository.split("/", 1)[-1]
+            lines.append(
+                f"| `{name}` | `{repo_name}` | {description} | [SKILL.md]({entry.source_url}) |"
+            )
+        lines.append("")
+    return "\n".join(lines)
+
+
 def render_manifest(owner: str, entries: list[CatalogEntry]) -> str:
     payload = {
         "schema_version": 1,
@@ -372,6 +510,7 @@ def render_manifest(owner: str, entries: list[CatalogEntry]) -> str:
                 "repository": entry.repository,
                 "name": entry.name,
                 "description": entry.description,
+                "category": entry.category,
                 "source_path": entry.source_path,
                 "source_url": entry.source_url,
                 "skill_md_sha": entry.skill_md_sha,
@@ -388,16 +527,26 @@ def render_manifest(owner: str, entries: list[CatalogEntry]) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
-def render_html(owner: str, entries: list[CatalogEntry], template: str) -> str:
+def render_html(
+    owner: str,
+    entries: list[CatalogEntry],
+    template: str,
+    categories: list[Category] | None = None,
+) -> str:
     if "__CATALOG_DATA__" not in template:
         raise SyncError("HTML template is missing __CATALOG_DATA__")
     payload = {
         "owner": owner,
+        "categories": [
+            {"id": category.id, "title": category.title, "summary": category.summary}
+            for category in (categories or [])
+        ],
         "skills": [
             {
                 "repository": entry.repository,
                 "name": entry.name,
                 "description": entry.description,
+                "category": entry.category,
                 "sourcePath": entry.source_path,
                 "sourceUrl": entry.source_url,
                 "destination": entry.destination,
@@ -439,6 +588,37 @@ def replace_directory(staged: Path, destination: Path) -> None:
         shutil.rmtree(backup)
 
 
+def entries_from_manifest(path: Path) -> list[CatalogEntry]:
+    """Reconstruct catalog entries from an existing manifest, for offline doc rebuilds."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise SyncError(f"manifest not found: {path}") from exc
+    except OSError as exc:
+        raise SyncError(f"cannot read manifest: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise SyncError(f"manifest is not valid JSON: {exc}") from exc
+
+    entries: list[CatalogEntry] = []
+    for skill in data.get("skills", []):
+        entries.append(
+            CatalogEntry(
+                repository=skill["repository"],
+                name=skill["name"],
+                description=skill["description"],
+                source_path=skill["source_path"],
+                source_url=skill["source_url"],
+                skill_md_sha=skill["skill_md_sha"],
+                destination=skill["destination"],
+                files=tuple(skill.get("files", ())),
+                components=tuple(skill.get("components", ())),
+                tools=tuple(skill.get("tools", ())),
+                project_paths=tuple(skill.get("project_paths", ())),
+            )
+        )
+    return sorted(entries, key=lambda entry: (entry.repository.lower(), entry.name.lower()))
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--owner", default="gghatano", help="GitHub account to scan")
@@ -450,17 +630,65 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--output", type=Path, default=Path("skills"))
     parser.add_argument("--catalog", type=Path, default=Path("docs/skill-catalog.md"))
+    parser.add_argument(
+        "--purpose-catalog",
+        type=Path,
+        default=Path("docs/skill-purpose-catalog.md"),
+        help="Catalog grouped by purpose (category)",
+    )
+    parser.add_argument(
+        "--categories",
+        type=Path,
+        default=Path("catalog/categories.json"),
+        help="Purpose taxonomy mapping skill names to categories",
+    )
     parser.add_argument("--manifest", type=Path, default=Path("catalog/manifest.json"))
     parser.add_argument("--html", type=Path, default=Path("docs/index.html"))
     parser.add_argument("--html-template", type=Path, default=Path("web/index.template.html"))
     parser.add_argument("--dry-run", action="store_true", help="Discover skills without fetching files")
+    parser.add_argument(
+        "--from-manifest",
+        action="store_true",
+        help="Rebuild catalogs/manifest/HTML from the existing manifest without touching GitHub",
+    )
     return parser
+
+
+def _render_generated_files(
+    args: argparse.Namespace,
+    entries: list[CatalogEntry],
+    categories: list[Category],
+) -> dict[Path, str]:
+    """Render every generated document up front so a failure cannot leave a partial state."""
+    entries, uncategorized = assign_categories(entries, categories)
+    if uncategorized:
+        print(f"warning: {len(uncategorized)} skill name(s) are uncategorized: {', '.join(uncategorized)}", file=sys.stderr)
+    try:
+        html_template = args.html_template.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise SyncError(f"cannot read HTML template: {args.html_template}") from exc
+    return {
+        args.catalog: render_catalog(args.owner, entries),
+        args.purpose_catalog: render_purpose_catalog(args.owner, entries, categories),
+        args.manifest: render_manifest(args.owner, entries),
+        args.html: render_html(args.owner, entries, html_template, categories),
+    }
 
 
 def main(argv: list[str] | None = None, client: GitHubClient | None = None) -> int:
     args = build_parser().parse_args(argv)
-    github = client or GhClient()
     try:
+        categories = load_categories(args.categories)
+
+        if args.from_manifest:
+            entries = entries_from_manifest(args.manifest)
+            print(f"Rebuilding from {args.manifest} ({len(entries)} skill(s))")
+            for path, content in _render_generated_files(args, entries, categories).items():
+                atomic_write(path, content)
+            print(f"Updated {args.catalog}, {args.purpose_catalog}, {args.manifest}, and {args.html}")
+            return 0
+
+        github = client or GhClient()
         sources = discover_skills(github, args.owner, set(args.repo) or None)
         print(f"Discovered {len(sources)} skill(s) in {len({s.repository for s in sources})} repository/repositories")
         for source in sources:
@@ -473,18 +701,13 @@ def main(argv: list[str] | None = None, client: GitHubClient | None = None) -> i
             staged = Path(temp) / args.output.name
             staged.mkdir()
             entries = stage_skills(github, sources, staged)
-            catalog_content = render_catalog(args.owner, entries)
-            manifest_content = render_manifest(args.owner, entries)
-            try:
-                html_template = args.html_template.read_text(encoding="utf-8")
-            except OSError as exc:
-                raise SyncError(f"cannot read HTML template: {args.html_template}") from exc
-            html_content = render_html(args.owner, entries, html_template)
+            # Render (and validate the template) before mutating skills/ so a
+            # failure cannot leave a partial sync behind.
+            generated = _render_generated_files(args, entries, categories)
             replace_directory(staged, args.output)
-        atomic_write(args.catalog, catalog_content)
-        atomic_write(args.manifest, manifest_content)
-        atomic_write(args.html, html_content)
-        print(f"Updated {args.output}, {args.catalog}, {args.manifest}, and {args.html}")
+        for path, content in generated.items():
+            atomic_write(path, content)
+        print(f"Updated {args.output}, {args.catalog}, {args.purpose_catalog}, {args.manifest}, and {args.html}")
         return 0
     except SyncError as exc:
         print(f"sync failed: {exc}", file=sys.stderr)

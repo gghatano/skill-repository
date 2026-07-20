@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "categories": [
+    {
+      "id": "research-report-lifecycle",
+      "title": "研究レポート作成ライフサイクル",
+      "summary": "実験レポートの骨子設計から実験の計画・実行、各種レビュー、公開整合チェックまでを段階的に進めるオーケストレーターと工程スキル群。複数リポジトリで共通利用される中核ファミリー。",
+      "skills": [
+        "research-cycle",
+        "report-skeleton",
+        "experiment-plan",
+        "experiment-run",
+        "doc-cycle",
+        "report-review",
+        "repro-engineering-review",
+        "related-info-review",
+        "publish-check"
+      ]
+    },
+    {
+      "id": "synthetic-data-generation",
+      "title": "合成データ生成パイプライン",
+      "summary": "仕様の取り込みから生成方式の設計、ジェネレータ実装、評価・改善までを担う合成データ生成の工程スキルと、ユースケース整理・分析を行うスキル群。",
+      "skills": [
+        "0_input_prepare",
+        "1_spec_ingest",
+        "2_generation_plan",
+        "3_generator_impl",
+        "4_evaluate_and_refine",
+        "synthesize",
+        "case-study",
+        "company-data-analyzer",
+        "uc-catalog-builder",
+        "uc-quickwin-evaluator",
+        "municipality-collaboration-scenario"
+      ]
+    },
+    {
+      "id": "quality-review",
+      "title": "品質・整合レビュー",
+      "summary": "成果物（チャート・分析・ユースケースカタログ・コード・PR）の品質や横断的整合性を点検し、pass/warn/fail のレビュー結果を返すスキル群。",
+      "skills": [
+        "chart-quality-reviewer",
+        "consistency-reviewer",
+        "uc-catalog-reviewer",
+        "uc-eval-reviewer",
+        "scenario-reviewer",
+        "code-review",
+        "review-prs"
+      ]
+    },
+    {
+      "id": "dev-workflow",
+      "title": "開発ワークフロー（Git / Issue / PR）",
+      "summary": "ブランチ・worktree の作成、Issue 起票・トリアージ、実装、PR 作成・リリースなど、開発運用の手順を標準化するスキル群。",
+      "skills": [
+        "start-feature",
+        "release",
+        "issue-driven-development",
+        "issue-triage",
+        "pr-from-issue",
+        "pr-prep",
+        "worktree-task-runner",
+        "spec-implementation",
+        "refactor-safely",
+        "test-fix-loop",
+        "experiment-issue",
+        "pm-orchestrate",
+        "add-mock-screen"
+      ]
+    },
+    {
+      "id": "writing-ux",
+      "title": "文章・UI/UX ライティング",
+      "summary": "日本語文章の推敲や、価値起点の UI コピー・情報設計を整えるライティング支援スキル。",
+      "skills": [
+        "stop-ai-slop-jp",
+        "ui-value-design"
+      ]
+    },
+    {
+      "id": "privacy-incident-catalog",
+      "title": "プライバシー事例カタログ",
+      "summary": "公開情報からプライバシー侵害・漏えい事例の case.json を作成・補完・レビューし、事例カタログを整備するスキル群。",
+      "skills": [
+        "case-create",
+        "case-enrich",
+        "case-review"
+      ]
+    },
+    {
+      "id": "simulation",
+      "title": "シミュレーション・数値検証",
+      "summary": "シミュレーションのパラメータ較正、経営層向けレポート生成、モデル変更後の検証を行うスキル群。",
+      "skills": [
+        "calibrate-params",
+        "make-report",
+        "verify-sim"
+      ]
+    },
+    {
+      "id": "packaging-distribution",
+      "title": "配布・パッケージング",
+      "summary": "成果物を配布用にビルド・パッケージングするスキル。",
+      "skills": [
+        "dist-zip-builder"
+      ]
+    },
+    {
+      "id": "domain-specific",
+      "title": "ドメイン固有ツール",
+      "summary": "特定プロジェクト固有の資産・データ管理を支援するスキル。",
+      "skills": [
+        "add-asset"
+      ]
+    }
+  ]
+}

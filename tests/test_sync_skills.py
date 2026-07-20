@@ -8,11 +8,15 @@ from pathlib import Path
 
 from scripts.sync_skills import (
     SyncError,
+    assign_categories,
     discover_skills,
+    entries_from_manifest,
+    load_categories,
     parse_frontmatter,
     render_catalog,
     render_html,
     render_manifest,
+    render_purpose_catalog,
     stage_skills,
 )
 
@@ -133,6 +137,111 @@ class SyncSkillsTest(unittest.TestCase):
     def test_rejects_unknown_repository_filter(self) -> None:
         with self.assertRaisesRegex(SyncError, "repository not found"):
             discover_skills(FakeClient(), "gghatano", {"missing"})
+
+
+class CategoryTest(unittest.TestCase):
+    def _write_categories(self, temp: str, payload: dict) -> Path:
+        path = Path(temp) / "categories.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        return path
+
+    def _entries(self) -> list:
+        client = FakeClient()
+        with tempfile.TemporaryDirectory() as temp:
+            return stage_skills(client, discover_skills(client, "gghatano"), Path(temp))
+
+    def test_load_categories_missing_file_returns_empty(self) -> None:
+        self.assertEqual([], load_categories(Path("does-not-exist.json")))
+
+    def test_load_categories_rejects_duplicate_skill_assignment(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = self._write_categories(
+                temp,
+                {
+                    "categories": [
+                        {"id": "a", "title": "A", "skills": ["x"]},
+                        {"id": "b", "title": "B", "skills": ["x"]},
+                    ]
+                },
+            )
+            with self.assertRaisesRegex(SyncError, "both"):
+                load_categories(path)
+
+    def test_load_categories_rejects_duplicate_id(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = self._write_categories(
+                temp,
+                {
+                    "categories": [
+                        {"id": "a", "title": "A", "skills": []},
+                        {"id": "a", "title": "A2", "skills": []},
+                    ]
+                },
+            )
+            with self.assertRaisesRegex(SyncError, "duplicate category id"):
+                load_categories(path)
+
+    def test_assign_categories_matches_by_skill_name(self) -> None:
+        entries = self._entries()
+        with tempfile.TemporaryDirectory() as temp:
+            path = self._write_categories(
+                temp,
+                {"categories": [{"id": "planning", "title": "Planning", "skills": ["issue-planner"]}]},
+            )
+            categories = load_categories(path)
+        assigned, uncategorized = assign_categories(entries, categories)
+        self.assertEqual("planning", assigned[0].category)
+        self.assertEqual([], uncategorized)
+
+    def test_assign_categories_reports_uncategorized(self) -> None:
+        entries = self._entries()
+        assigned, uncategorized = assign_categories(entries, [])
+        self.assertEqual("uncategorized", assigned[0].category)
+        self.assertEqual(["issue-planner"], uncategorized)
+
+    def test_render_purpose_catalog_groups_and_marks_uncategorized(self) -> None:
+        entries = self._entries()
+        with tempfile.TemporaryDirectory() as temp:
+            path = self._write_categories(
+                temp,
+                {"categories": [{"id": "planning", "title": "計画", "skills": ["issue-planner"]}]},
+            )
+            categories = load_categories(path)
+        assigned, _ = assign_categories(entries, categories)
+        catalog = render_purpose_catalog("gghatano", assigned, categories)
+        self.assertIn("# Skill Catalog（目的別）", catalog)
+        self.assertIn("## 計画", catalog)
+        self.assertIn('<a id="planning">', catalog)
+        self.assertIn("`issue-planner`", catalog)
+        self.assertNotIn("未分類", catalog)
+
+    def test_render_purpose_catalog_appends_uncategorized_section(self) -> None:
+        entries = self._entries()
+        assigned, _ = assign_categories(entries, [])
+        catalog = render_purpose_catalog("gghatano", assigned, [])
+        self.assertIn("## 未分類", catalog)
+
+    def test_manifest_includes_category(self) -> None:
+        entries = self._entries()
+        with tempfile.TemporaryDirectory() as temp:
+            path = self._write_categories(
+                temp,
+                {"categories": [{"id": "planning", "title": "計画", "skills": ["issue-planner"]}]},
+            )
+            categories = load_categories(path)
+        assigned, _ = assign_categories(entries, categories)
+        manifest = json.loads(render_manifest("gghatano", assigned))
+        self.assertEqual("planning", manifest["skills"][0]["category"])
+
+    def test_entries_from_manifest_round_trips(self) -> None:
+        entries = self._entries()
+        with tempfile.TemporaryDirectory() as temp:
+            manifest_path = Path(temp) / "manifest.json"
+            manifest_path.write_text(render_manifest("gghatano", entries), encoding="utf-8")
+            restored = entries_from_manifest(manifest_path)
+        self.assertEqual(entries[0].name, restored[0].name)
+        self.assertEqual(entries[0].source_url, restored[0].source_url)
+        self.assertEqual(entries[0].components, restored[0].components)
 
 
 if __name__ == "__main__":
