@@ -1,11 +1,14 @@
 ---
-name: 3_generator_impl
+name: generate
 description: タスクディレクトリ ($ARGUMENTS) の generation_plan.md に基づき、src/generator.py を実装し、output/ に合成データを生成する。
 ---
 
-# 3_generator_impl
+# generate
 
-設計に基づき、再実行可能な Python 生成器を実装するステップ。
+> 「仕様駆動 生成・評価サイクル」（規約 `.claude/docs/generation-cycle-conventions.md`）の
+> **生成実装**フェーズ。以下は合成データ プロファイルの中身。
+
+設計に基づき、再実行可能な生成器を実装・実行するステップ。
 
 ## 引数
 
@@ -85,7 +88,7 @@ description: タスクディレクトリ ($ARGUMENTS) の generation_plan.md に
 
 ## 参考
 
-完全な仕様は `docs/spec.md` の `SKILL: 3_generator_impl` 節を参照。
+完全な仕様は `docs/spec.md` の `SKILL: generate` 節を参照。
 既存実装の参考:
 - 単一テーブル: `examples/customer/src/generator.py`
 - 複数テーブル: `examples/customer_transactions/src/generator.py`（importlib による再利用例も含む）

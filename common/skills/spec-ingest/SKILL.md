@@ -1,11 +1,14 @@
 ---
-name: 1_spec_ingest
+name: spec-ingest
 description: タスクディレクトリ ($ARGUMENTS) の input/ を読み取り、合成データ生成に必要な仕様を機械可読化する。work/inferred_schema.json と work/constraint_plan.md を作成する。
 ---
 
-# 1_spec_ingest
+# spec-ingest
 
-`input/` に整理済みの仕様を読み取り、合成データ生成に必要な機械可読仕様へ変換するステップ。
+> 「仕様駆動 生成・評価サイクル」（規約 `.claude/docs/generation-cycle-conventions.md`）の
+> **仕様化**フェーズ。以下は合成データ プロファイルの中身。
+
+`input/` に整理済みの仕様を読み取り、機械可読仕様（schema・制約）へ変換するステップ。
 
 ## 引数
 
@@ -59,5 +62,5 @@ description: タスクディレクトリ ($ARGUMENTS) の input/ を読み取り
 
 ## 参考
 
-完全な仕様は `docs/spec.md` の `SKILL: 1_spec_ingest` 節を参照。
+完全な仕様は `docs/spec.md` の `SKILL: spec-ingest` 節を参照。
 既存実装の参考: `examples/customer/work/`, `examples/customer_transactions/work/`。
