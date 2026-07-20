@@ -28,6 +28,8 @@
 python3 <skill-repository>/scripts/install_skills.py --list                # 系統一覧
 python3 <skill-repository>/scripts/install_skills.py --bundle research --into .  # 研究レポート系
 python3 <skill-repository>/scripts/install_skills.py --bundle dev --into .       # 開発ワークフロー系
+python3 <skill-repository>/scripts/install_skills.py --bundle synth --into .     # 合成データ生成系
+python3 <skill-repository>/scripts/install_skills.py --bundle writing --into .   # 日本語ライティング
 ```
 
 `.claude/skills/` に共通スキルが、`.claude/docs/`・`.claude/agents/` に同梱物が配置されます。
