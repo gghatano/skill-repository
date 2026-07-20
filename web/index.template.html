@@ -120,8 +120,9 @@
       line-height: 1.25;
     }
     .badge { padding: 4px 8px; font-size: 12px; font-weight: 650; }
-    .badge.candidate { color: var(--green); background: var(--green-soft); }
-    .badge.required { color: var(--amber); background: var(--amber-soft); }
+    .badge.portable { color: var(--green); background: var(--green-soft); }
+    .badge.companions { color: var(--blue); background: #eaf1f9; }
+    .badge.rework { color: var(--amber); background: var(--amber-soft); }
     .chips { display: flex; flex-wrap: wrap; gap: 5px; }
     .chip { padding: 3px 7px; border: 1px solid var(--line); color: #46515d; background: #fafbfc; font-size: 12px; }
     .cat-tag { display: inline-flex; align-items: center; margin-top: 8px; padding: 3px 9px; border: 1px solid #cfdcec; border-radius: 4px; color: var(--blue); background: #eaf1f9; font-size: 12px; font-weight: 600; }
@@ -227,10 +228,11 @@
         <span class="sr-only">Purpose</span>
         <select id="category"><option value="">All purposes</option></select>
       </label>
-      <div class="segments" aria-label="Portability review">
+      <div class="segments" aria-label="Portability">
         <button type="button" data-portability="all" aria-pressed="true">All</button>
-        <button type="button" data-portability="candidate" aria-pressed="false">そのまま候補</button>
-        <button type="button" data-portability="required" aria-pressed="false">要調整</button>
+        <button type="button" data-portability="portable" aria-pressed="false">そのまま</button>
+        <button type="button" data-portability="companions" aria-pressed="false">同梱前提</button>
+        <button type="button" data-portability="rework" aria-pressed="false">要調整</button>
       </div>
     </div>
 
@@ -272,6 +274,7 @@
         return map;
       }, {});
       const categoryTitle = (id) => categoryTitles[id] || "未分類";
+      const TIER_LABELS = { portable: "そのまま", companions: "同梱前提", rework: "要調整" };
       let portability = "all";
 
       const element = (tag, className, text) => {
@@ -316,16 +319,24 @@
         selection.append(list);
 
         const review = element("section");
-        review.append(element("h3", "", "Portability review"));
-        const reviewText = skill.portabilityReview === "required"
-          ? "Project-relative paths were detected. Confirm each path and repository-specific convention after copying."
-          : "No project-relative path was detected in SKILL.md. Confirm tools and bundled files before use.";
+        review.append(element("h3", "", "Porting checklist"));
+        const port = skill.portability;
+        const reviewText = {
+          rework: "特定プロジェクトの具体パスを前提にしています。コピー先に合わせて以下を読み替えてください。",
+          companions: "同梱の兄弟ファイル（エージェント・知識）を一緒にコピーする必要があります。",
+          portable: "特別な調整なしに持ち運べます。ツールと同梱ファイルだけ確認してください。",
+        }[port.tier] || "";
         review.append(element("p", "", reviewText));
-        if (skill.projectPaths.length) {
+        const pathGroup = (label, values) => {
+          if (!values || !values.length) return;
+          review.append(element("p", "", label));
           const paths = element("div", "path-list");
-          skill.projectPaths.forEach((path) => paths.append(element("code", "", path)));
+          values.forEach((path) => paths.append(element("code", "", path)));
           review.append(paths);
-        }
+        };
+        pathGroup("要読み替え（外部プロジェクトのパス）", port.external);
+        pathGroup("一緒にコピー（ハーネス同梱物）", port.companions);
+        pathGroup("パラメータ化済み（調整不要）", port.parameterized);
 
         const install = element("section", "install-section");
         install.append(element("h3", "", "Placement"));
@@ -348,7 +359,7 @@
           return (!query || haystack.includes(query))
             && (!repoValue || skill.repository === repoValue)
             && (!categoryValue || skill.category === categoryValue)
-            && (portability === "all" || skill.portabilityReview === portability);
+            && (portability === "all" || skill.portability.tier === portability);
         });
 
         rows.replaceChildren();
@@ -367,8 +378,8 @@
           }
 
           const portabilityCell = element("td", "portability-cell");
-          const badgeText = skill.portabilityReview === "required" ? "要調整" : "そのまま候補";
-          portabilityCell.append(element("span", `badge ${skill.portabilityReview}`, badgeText));
+          const tier = skill.portability.tier;
+          portabilityCell.append(element("span", `badge ${tier}`, TIER_LABELS[tier] || tier));
 
           const bundleCell = element("td", "bundle-cell");
           const chips = element("div", "chips");
