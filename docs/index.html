@@ -71,7 +71,7 @@
 
     .toolbar {
       display: grid;
-      grid-template-columns: minmax(260px, 1fr) minmax(190px, 280px) auto;
+      grid-template-columns: minmax(220px, 1fr) minmax(160px, 230px) minmax(160px, 230px) auto;
       gap: 10px;
       align-items: center;
       padding: 12px 0 18px;
@@ -124,6 +124,8 @@
     .badge.required { color: var(--amber); background: var(--amber-soft); }
     .chips { display: flex; flex-wrap: wrap; gap: 5px; }
     .chip { padding: 3px 7px; border: 1px solid var(--line); color: #46515d; background: #fafbfc; font-size: 12px; }
+    .cat-tag { display: inline-flex; align-items: center; margin-top: 8px; padding: 3px 9px; border: 1px solid #cfdcec; border-radius: 4px; color: var(--blue); background: #eaf1f9; font-size: 12px; font-weight: 600; }
+    .cat-tag.uncategorized { color: var(--muted); background: var(--soft); border-color: var(--line); }
 
     .actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .action { min-height: 32px; padding: 6px 9px; border: 1px solid #b8c0ca; border-radius: 5px; color: var(--ink); background: var(--surface); text-decoration: none; cursor: pointer; }
@@ -221,6 +223,10 @@
         <span class="sr-only">Repository</span>
         <select id="repository"><option value="">All repositories</option></select>
       </label>
+      <label>
+        <span class="sr-only">Purpose</span>
+        <select id="category"><option value="">All purposes</option></select>
+      </label>
       <div class="segments" aria-label="Portability review">
         <button type="button" data-portability="all" aria-pressed="true">All</button>
         <button type="button" data-portability="candidate" aria-pressed="false">そのまま候補</button>
@@ -254,12 +260,18 @@
       const rows = document.getElementById("skill-rows");
       const search = document.getElementById("search");
       const repository = document.getElementById("repository");
+      const category = document.getElementById("category");
       const empty = document.getElementById("empty");
       const resultCount = document.getElementById("result-count");
       const variantCounts = skills.reduce((counts, skill) => {
         counts[skill.name] = (counts[skill.name] || 0) + 1;
         return counts;
       }, {});
+      const categoryTitles = (catalog.categories || []).reduce((map, item) => {
+        map[item.id] = item.title;
+        return map;
+      }, {});
+      const categoryTitle = (id) => categoryTitles[id] || "未分類";
       let portability = "all";
 
       const element = (tag, className, text) => {
@@ -329,11 +341,13 @@
       const render = () => {
         const query = search.value.trim().toLocaleLowerCase();
         const repoValue = repository.value;
+        const categoryValue = category.value;
         const filtered = skills.filter((skill) => {
-          const haystack = [skill.name, skill.description, skill.repository, ...skill.tools, ...skill.projectPaths]
+          const haystack = [skill.name, skill.description, skill.repository, categoryTitle(skill.category), ...skill.tools, ...skill.projectPaths]
             .join(" ").toLocaleLowerCase();
           return (!query || haystack.includes(query))
             && (!repoValue || skill.repository === repoValue)
+            && (!categoryValue || skill.category === categoryValue)
             && (portability === "all" || skill.portabilityReview === portability);
         });
 
@@ -343,6 +357,8 @@
           const main = element("td", "skill-main");
           main.append(element("span", "skill-name", skill.name));
           main.append(element("p", "description", skill.description));
+          const catClass = skill.category && skill.category !== "uncategorized" ? "cat-tag" : "cat-tag uncategorized";
+          main.append(element("span", catClass, categoryTitle(skill.category)));
 
           const repoCell = element("td", "repo-cell");
           repoCell.append(element("span", "repo", skill.repository.split("/")[1]));
@@ -396,12 +412,28 @@
         option.value = repo;
         repository.append(option);
       });
+
+      const categoryCounts = skills.reduce((counts, skill) => {
+        const id = skill.category || "uncategorized";
+        counts[id] = (counts[id] || 0) + 1;
+        return counts;
+      }, {});
+      const orderedCategoryIds = (catalog.categories || []).map((item) => item.id);
+      if (categoryCounts.uncategorized) orderedCategoryIds.push("uncategorized");
+      orderedCategoryIds
+        .filter((id) => categoryCounts[id])
+        .forEach((id) => {
+          const option = element("option", "", `${categoryTitle(id)} (${categoryCounts[id]})`);
+          option.value = id;
+          category.append(option);
+        });
       document.getElementById("skill-total").textContent = skills.length;
       document.getElementById("unique-total").textContent = Object.keys(variantCounts).length;
       document.getElementById("repo-total").textContent = new Set(skills.map((skill) => skill.repository)).size;
 
       search.addEventListener("input", render);
       repository.addEventListener("change", render);
+      category.addEventListener("change", render);
       document.querySelectorAll("[data-portability]").forEach((button) => {
         button.addEventListener("click", () => {
           portability = button.dataset.portability;
