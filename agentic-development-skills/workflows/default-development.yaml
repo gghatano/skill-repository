@@ -1,0 +1,75 @@
+# default-development — 標準開発ワークフロー
+#
+# Skill を並べた実行順序とループ・Context 共有範囲の定義。
+# Workflow は Skill を「組み合わせる」層であり、Skill 本体にループを埋め込まない。
+# 実行方法（サブエージェント起動など）は adapters/ が解釈する。
+
+name: default-development
+description: Explore → Plan → 独立レビュー → Implement → Test/Fix → 独立レビュー/Fix → Verify
+
+# 全ステップで共有する成果物と、隔離する成果物（成果物駆動 + Context 隔離）
+context:
+  shared:
+    - spec.md            # Project Spec（全ステップ共通）
+  isolated:
+    - reviewer_outputs   # 独立レビュアーの出力は統合 Agent 以外に渡さない
+
+steps:
+  - id: explore
+    skill: core/explore
+    inputs: [spec.md]
+    outputs: [research.md]
+
+  - id: plan
+    skill: core/plan
+    inputs: [spec.md, research.md]
+    outputs: [plan.md]
+
+  # 実装前に計画を独立多観点でレビューして統合する（並列 Agent があれば有効）
+  - id: review-plan
+    skill: composite/independent-review
+    config:
+      reviewers: 3
+      aggregation: judge
+    inputs: [plan.md, spec.md]
+    outputs: [plan-review.md]
+
+  - id: implement
+    skill: core/implement
+    inputs: [plan.md]
+    outputs: [changed_files]
+
+  # test と fix を分離したまま緑になるまでループ
+  - id: test-fix
+    skill: composite/test-and-fix
+    config:
+      max_iterations: 5
+    inputs: [changed_files, spec.md]
+    outputs: [test-results.json]
+
+  # 実装を独立多観点でレビュー
+  - id: review
+    skill: composite/independent-review
+    config:
+      reviewers: [correctness, security, performance]
+      aggregation: merge
+    inputs: [changed_files, spec.md]
+    outputs: [review.md]
+
+  # Critical/Major が無くなるまで修正ループ
+  - id: review-fix
+    skill: composite/review-and-fix
+    config:
+      max_iterations: 3
+      block_on: [Critical, Major]
+    inputs: [changed_files, review.md, spec.md]
+    outputs: [review.md]
+
+  # Spec との最終整合・完了判定
+  - id: verify
+    skill: core/verify
+    inputs: [spec.md, changed_files, test-results.json, review.md]
+    outputs: [verification.md]
+
+# 完了条件: verify が PASS を返す。FAIL の場合は不足を plan/fix へ差し戻す。
+done_when: verification.md == PASS

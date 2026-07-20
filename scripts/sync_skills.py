@@ -719,16 +719,47 @@ def load_common_and_bundles(common_dir: Path, bundles_dir: Path) -> tuple[list[s
                 data = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
+            companions = data.get("companions") or {}
             bundles.append(
                 {
                     "name": data.get("name", path.stem),
                     "title": data.get("title", path.stem),
                     "description": data.get("description", ""),
                     "skills": list(data.get("skills", [])),
+                    "companions": {
+                        "docs": list(companions.get("docs", [])),
+                        "agents": list(companions.get("agents", [])),
+                    },
+                    "afterInstall": data.get("after_install", ""),
                     "install": f"python3 <skill-repository>/scripts/install_skills.py --bundle {data.get('name', path.stem)} --into .",
                 }
             )
     return common_skills, bundles
+
+
+def load_common_details(common_dir: Path) -> list[dict[str, str]]:
+    """Return [{name, description}] for the cultivated common skills (SKILL.md front matter)."""
+    details: list[dict[str, str]] = []
+    skills_dir = common_dir / "skills"
+    if not skills_dir.is_dir():
+        return details
+    for path in sorted(skills_dir.iterdir()):
+        skill_md = path / "SKILL.md"
+        if not skill_md.is_file():
+            continue
+        try:
+            text = skill_md.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        metadata = parse_frontmatter(text)
+        description = metadata.get("description") or fallback_description(text) or "説明なし"
+        details.append(
+            {
+                "name": metadata.get("name") or path.name,
+                "description": " ".join(description.split()),
+            }
+        )
+    return details
 
 
 def render_html(
@@ -738,6 +769,7 @@ def render_html(
     categories: list[Category] | None = None,
     common_skills: list[str] | None = None,
     bundles: list[dict[str, Any]] | None = None,
+    common_details: list[dict[str, str]] | None = None,
 ) -> str:
     if "__CATALOG_DATA__" not in template:
         raise SyncError("HTML template is missing __CATALOG_DATA__")
@@ -749,6 +781,7 @@ def render_html(
             for category in (categories or [])
         ],
         "commonSkills": sorted(common_set),
+        "commonDetails": common_details or [],
         "bundles": bundles or [],
         "skills": [
             {
@@ -892,13 +925,16 @@ def _render_generated_files(
     except OSError as exc:
         raise SyncError(f"cannot read HTML template: {args.html_template}") from exc
     common_skills, bundles = load_common_and_bundles(args.common_dir, args.bundles_dir)
+    common_details = load_common_details(args.common_dir)
     return {
         args.catalog: render_catalog(args.owner, entries),
         args.purpose_catalog: render_purpose_catalog(args.owner, entries, categories),
         args.porting_guide: render_porting_guide(args.owner, entries),
         args.duplication_report: render_duplication_report(args.owner, entries),
         args.manifest: render_manifest(args.owner, entries),
-        args.html: render_html(args.owner, entries, html_template, categories, common_skills, bundles),
+        args.html: render_html(
+            args.owner, entries, html_template, categories, common_skills, bundles, common_details
+        ),
     }
 
 
