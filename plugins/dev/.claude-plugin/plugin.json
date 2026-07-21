@@ -1,0 +1,10 @@
+{
+  "name": "dev",
+  "displayName": "開発ワークフロー（Git / Issue / PR）",
+  "description": "GitHub Issue を作業単位に、branch / worktree / 実装 / 検証 / レビュー / PR を一貫管理する開発フローのスキル群。どのリポジトリ種別にも適用できる汎用ワークフロー。",
+  "version": "0.1.0",
+  "author": { "name": "gghatano", "url": "https://github.com/gghatano" },
+  "homepage": "https://github.com/gghatano/skill-repository",
+  "repository": "https://github.com/gghatano/skill-repository",
+  "keywords": ["development", "git", "issue", "pull-request", "workflow"]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "research",
+  "displayName": "研究レポート作成ライフサイクル",
+  "description": "実験レポートの骨子設計から実験の計画・実行、レビュー、公開までを一式で進める研究リポジトリ向けのスキル群。役割ベースのスキル本体・規約・サブエージェントを同梱。",
+  "version": "0.1.0",
+  "author": { "name": "gghatano", "url": "https://github.com/gghatano" },
+  "homepage": "https://github.com/gghatano/skill-repository",
+  "repository": "https://github.com/gghatano/skill-repository",
+  "keywords": ["research", "report", "experiment", "reproducibility", "review"]
+}

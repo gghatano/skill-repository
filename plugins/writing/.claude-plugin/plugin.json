@@ -1,0 +1,10 @@
+{
+  "name": "writing",
+  "displayName": "文章・日本語ライティング",
+  "description": "AI が書いた日本語を人間が書いた文章に近づける横断的なライティング支援。主体の不在・命題型見出し・両論併記・記号アーティファクト等を直す。references/ を同梱した自己完結スキル。",
+  "version": "0.1.0",
+  "author": { "name": "gghatano", "url": "https://github.com/gghatano" },
+  "homepage": "https://github.com/gghatano/skill-repository",
+  "repository": "https://github.com/gghatano/skill-repository",
+  "keywords": ["writing", "japanese", "editing", "style"]
+}

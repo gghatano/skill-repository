@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="新しいリポジトリへ引き込める汎用 Claude Skills とバンドルのカタログ・導入手順">
+  <meta name="description" content="新しいリポジトリへ引き込める汎用 Claude Skills を目的別プラグインとして配布するカタログ・導入手順">
   <title>Skill Repository</title>
   <link rel="icon" href="https://github.com/gghatano.png?size=32">
   <style>
@@ -52,7 +52,7 @@
     .subtitle { margin: 4px 0 0; color: var(--muted); line-height: 1.4; }
 
     .summary { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 6px; }
-    .metric { min-width: 96px; padding: 10px 14px; text-align: right; }
+    .metric { min-width: 92px; padding: 10px 14px; text-align: right; }
     .metric + .metric { border-left: 1px solid var(--line); }
     .metric strong { display: block; font-size: 18px; line-height: 1.2; }
     .metric span { color: var(--muted); font-size: 12px; }
@@ -75,27 +75,30 @@
       background: var(--blue); color: #fff; font-size: 12px; font-weight: 700;
     }
     .step p { margin: 2px 0 8px 28px; color: var(--muted); line-height: 1.55; }
-    .step .copy-line { margin-left: 28px; }
+    .step .copy-line, .step .code-static { margin-left: 28px; }
 
     .copy-line { display: grid; grid-template-columns: 1fr auto; align-items: stretch; margin-top: 8px; }
     .copy-line + .copy-line { margin-top: 8px; }
-    .copy-line code {
+    .copy-line code, .code-static {
       min-width: 0; overflow: auto; padding: 9px 11px;
-      border: 1px solid var(--line); border-right: 0; border-radius: 4px 0 0 4px;
-      background: var(--surface); white-space: nowrap;
+      border: 1px solid var(--line); background: var(--surface);
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px;
+      white-space: nowrap;
     }
+    .copy-line code { border-right: 0; border-radius: 4px 0 0 4px; }
+    .code-static { display: block; border-radius: 4px; margin-top: 8px; }
     .copy-line button {
       border: 1px solid #b8c0ca; border-radius: 0 4px 4px 0;
       padding: 0 12px; color: var(--ink); background: var(--surface); cursor: pointer;
     }
     .copy-line button:hover { background: var(--soft); }
 
-    /* Bundles */
-    .bundle-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-    .bundle-card { border: 1px solid var(--line); border-radius: 8px; padding: 18px; background: #fbfcfd; display: flex; flex-direction: column; }
-    .bundle-card h3 { margin: 0 0 6px; font-size: 15px; }
-    .bundle-card .bundle-desc { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    /* Plugin cards */
+    .plugin-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+    .plugin-card { border: 1px solid var(--line); border-radius: 8px; padding: 18px; background: #fbfcfd; display: flex; flex-direction: column; }
+    .plugin-card h3 { margin: 0 0 2px; font-size: 15px; }
+    .plugin-card .plugin-id { margin: 0 0 8px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .plugin-card .plugin-desc { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.6; }
     .field-label { margin: 12px 0 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
     .pill-row { display: flex; flex-wrap: wrap; gap: 5px; }
     .pill {
@@ -103,10 +106,8 @@
       border: 1px solid var(--line); border-radius: 4px; background: var(--surface);
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
     }
-    .companion-note { display: flex; flex-wrap: wrap; gap: 5px; }
-    .companion-note .pill { color: var(--green); border-color: #cfe0d6; background: var(--green-soft); }
-    .after-install { margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid #cbd5df; background: var(--soft); color: var(--muted); font-size: 12.5px; line-height: 1.6; border-radius: 0 4px 4px 0; }
-    .bundle-install { margin-top: auto; padding-top: 14px; }
+    .pill.companion { color: var(--green); border-color: #cfe0d6; background: var(--green-soft); }
+    .plugin-install { margin-top: auto; padding-top: 14px; }
 
     /* Skills */
     .search-wrap { position: relative; max-width: 380px; margin-bottom: 16px; }
@@ -122,10 +123,9 @@
     .skill-card { border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
     .skill-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
     .skill-name { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; font-size: 14px; }
-    .skill-bundles { display: inline-flex; flex-wrap: wrap; gap: 5px; }
-    .bundle-tag { display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid #cfdcec; border-radius: 4px; color: var(--blue); background: var(--blue-soft); font-size: 11.5px; font-weight: 600; }
+    .plugin-tag { display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid #cfdcec; border-radius: 4px; color: var(--blue); background: var(--blue-soft); font-size: 11.5px; font-weight: 600; }
     .skill-desc { margin: 8px 0 0; color: var(--muted); line-height: 1.6; }
-    .skill-install { margin-top: 10px; }
+    .skill-invoke { margin-top: 10px; }
     .empty { padding: 40px 20px; color: var(--muted); text-align: center; }
 
     .site-footer { padding: 20px 0 30px; border-top: 1px solid var(--line); color: var(--muted); }
@@ -137,7 +137,7 @@
       .header-inner { display: block; min-height: 0; }
       .summary { margin-top: 16px; width: 100%; }
       .metric { flex: 1; text-align: left; padding: 9px 10px; }
-      .bundle-cards { grid-template-columns: 1fr; }
+      .plugin-cards { grid-template-columns: 1fr; }
       .footer-inner { display: block; }
     }
   </style>
@@ -149,12 +149,12 @@
         <img class="avatar" src="https://github.com/gghatano.png?size=104" width="52" height="52" alt="gghatano">
         <div>
           <h1>Skill Repository</h1>
-          <p class="subtitle">新しいリポジトリへ引き込める汎用スキルとバンドル</p>
+          <p class="subtitle">目的別プラグインで配布する汎用 Claude Skills</p>
         </div>
       </div>
       <div class="summary" aria-label="Catalog summary">
-        <div class="metric"><strong id="skill-total">0</strong><span>汎用スキル</span></div>
-        <div class="metric"><strong id="bundle-total">0</strong><span>バンドル</span></div>
+        <div class="metric"><strong id="plugin-total">0</strong><span>プラグイン</span></div>
+        <div class="metric"><strong id="skill-total">0</strong><span>スキル</span></div>
         <div class="metric"><strong id="companion-total">0</strong><span>同梱物</span></div>
       </div>
     </div>
@@ -166,48 +166,46 @@
         <h2 id="install-heading">導入手順</h2>
       </div>
       <p class="lead">
-        このリポジトリを一度取得し、<code>install_skills.py</code> でバンドルまたは個別スキルを引き込み先リポジトリのルートへコピーします。
-        既存ファイルは <code>--force</code> を付けない限り上書きしません。
+        Claude Code の <code>/plugin</code> でマーケットプレイスを追加し、目的のプラグインをインストールします。
+        スキルはプラグイン名前空間付き（<code>/&lt;plugin&gt;:&lt;skill&gt;</code>）で呼び出せます。
       </p>
       <div class="steps">
         <div class="step">
-          <h3><span class="num">1</span>このリポジトリを取得</h3>
-          <p>引き込み元（マスター）を手元に用意します。以後 <code>&lt;skill-repository&gt;</code> はこのクローン先を指します。</p>
-          <div class="copy-line"><code id="clone-cmd">git clone https://github.com/gghatano/skill-repository</code><button type="button" data-copy="#clone-cmd">Copy</button></div>
+          <h3><span class="num">1</span>マーケットプレイスを追加</h3>
+          <p>このリポジトリをプラグインの配布元として登録します（初回のみ）。</p>
+          <div class="copy-line"><code id="mp-add">/plugin marketplace add gghatano/skill-repository</code><button type="button" data-copy="#mp-add">Copy</button></div>
         </div>
         <div class="step">
-          <h3><span class="num">2</span>利用可能な一覧を確認</h3>
-          <p>引き込めるバンドルと汎用スキルの一覧を表示します。</p>
-          <div class="copy-line"><code id="list-cmd">python3 &lt;skill-repository&gt;/scripts/install_skills.py --list</code><button type="button" data-copy="#list-cmd">Copy</button></div>
+          <h3><span class="num">2</span>プラグインをインストール</h3>
+          <p>必要なプラグインだけ入れられます（下の「プラグイン」の各カードからコマンドをコピーできます）。</p>
+          <code class="code-static" id="install-example">/plugin install &lt;name&gt;@&lt;marketplace&gt;</code>
         </div>
         <div class="step">
-          <h3><span class="num">3</span>引き込み先のルートで実行</h3>
-          <p>バンドルごと引き込む場合（下の「バンドル」の各カードからコマンドをコピーできます）。</p>
-          <div class="copy-line"><code id="bundle-cmd">python3 &lt;skill-repository&gt;/scripts/install_skills.py --bundle &lt;name&gt; --into .</code><button type="button" data-copy="#bundle-cmd">Copy</button></div>
-          <p>個別スキルだけ引き込む場合（<code>--skill</code> は繰り返し指定可。規約・エージェントも要るなら <code>--with-companions</code>）。</p>
-          <div class="copy-line"><code id="skill-cmd">python3 &lt;skill-repository&gt;/scripts/install_skills.py --skill &lt;name&gt; --into .</code><button type="button" data-copy="#skill-cmd">Copy</button></div>
+          <h3><span class="num">3</span>スキルを使う</h3>
+          <p>インストール済みプラグインのスキルは名前空間付きで呼び出します（例）。</p>
+          <code class="code-static">/research:report-review</code>
         </div>
       </div>
     </section>
 
-    <section class="block" id="bundles-section" aria-labelledby="bundles-heading" hidden>
+    <section class="block" id="plugins-section" aria-labelledby="plugins-heading" hidden>
       <div class="section-heading">
-        <h2 id="bundles-heading">バンドル</h2>
-        <span class="count" id="bundle-count"></span>
+        <h2 id="plugins-heading">プラグイン</h2>
+        <span class="count" id="plugin-count"></span>
       </div>
-      <p class="lead">役割ベースに汎化した共通部分（スキル本体・規約・サブエージェント）を、目的単位でまとめて引き込むための定義です。</p>
-      <div id="bundle-cards" class="bundle-cards"></div>
+      <p class="lead">目的ごとに、役割ベースに汎化したスキル本体・規約（docs）・サブエージェント（agents）を自己完結でまとめた配布単位です。</p>
+      <div id="plugin-cards" class="plugin-cards"></div>
     </section>
 
     <section class="block" aria-labelledby="skills-heading">
       <div class="section-heading">
-        <h2 id="skills-heading">汎用スキル</h2>
+        <h2 id="skills-heading">スキル一覧</h2>
         <span class="count" id="skill-count"></span>
       </div>
-      <p class="lead">特定プロジェクトのパスに依存しない、役割ベースの正本スキルです。単体でも、バンドルの一部としても引き込めます。</p>
+      <p class="lead">各プラグインに含まれる汎用スキルです。所属プラグインのタグと呼び出しコマンドを添えています。</p>
       <label class="search-wrap">
         <span class="sr-only">スキルを検索</span>
-        <input id="search" type="search" placeholder="スキル名・説明で検索" autocomplete="off">
+        <input id="search" type="search" placeholder="スキル名・説明・プラグインで検索" autocomplete="off">
       </label>
       <div id="skill-list" class="skill-list"></div>
       <div id="empty" class="empty" hidden>該当するスキルがありません。</div>
@@ -216,7 +214,7 @@
 
   <footer class="site-footer">
     <div class="shell footer-inner">
-      <span>Generated from <code>common/skills</code> and <code>bundles/</code>.</span>
+      <span>Generated from <code>plugins/</code> and <code>.claude-plugin/marketplace.json</code>.</span>
       <a href="https://github.com/gghatano/skill-repository">gghatano/skill-repository</a>
     </div>
   </footer>
@@ -225,10 +223,8 @@
   <script>
     (() => {
       const catalog = JSON.parse(document.getElementById("catalog-data").textContent);
-      const bundles = catalog.bundles || [];
-      const commonDetails = (catalog.commonDetails && catalog.commonDetails.length)
-        ? catalog.commonDetails
-        : (catalog.commonSkills || []).map((name) => ({ name, description: "" }));
+      const plugins = catalog.plugins || [];
+      const marketplace = catalog.marketplace || { name: "gghatano-skills", add: "/plugin marketplace add gghatano/skill-repository" };
 
       const el = (tag, className, text) => {
         const node = document.createElement(tag);
@@ -252,15 +248,13 @@
         return wrap;
       };
 
-      // Map each common skill name to the bundles that include it.
-      const bundlesBySkill = {};
-      bundles.forEach((bundle) => {
-        (bundle.skills || []).forEach((name) => {
-          (bundlesBySkill[name] = bundlesBySkill[name] || []).push(bundle.title || bundle.name);
-        });
-      });
+      // Populate the marketplace-add command from data.
+      const mpAdd = document.getElementById("mp-add");
+      if (mpAdd && marketplace.add) mpAdd.textContent = marketplace.add;
+      const installExample = document.getElementById("install-example");
+      if (installExample) installExample.textContent = `/plugin install <name>@${marketplace.name}`;
 
-      // --- Static copy buttons in the install steps ---
+      // Static copy buttons in the install steps.
       document.querySelectorAll("[data-copy]").forEach((button) => {
         button.addEventListener("click", async () => {
           const target = document.querySelector(button.dataset.copy);
@@ -271,42 +265,52 @@
         });
       });
 
-      // --- Bundles ---
-      if (bundles.length) {
-        const cards = document.getElementById("bundle-cards");
-        bundles.forEach((bundle) => {
-          const card = el("div", "bundle-card");
-          card.append(el("h3", "", `${bundle.title} (${(bundle.skills || []).length})`));
-          if (bundle.description) card.append(el("p", "bundle-desc", bundle.description));
+      // --- Plugins ---
+      if (plugins.length) {
+        const cards = document.getElementById("plugin-cards");
+        plugins.forEach((plugin) => {
+          const card = el("div", "plugin-card");
+          card.append(el("h3", "", `${plugin.displayName} (${plugin.skills.length})`));
+          card.append(el("p", "plugin-id", plugin.name));
+          if (plugin.description) card.append(el("p", "plugin-desc", plugin.description));
 
           card.append(el("div", "field-label", "含まれるスキル"));
           const skillRow = el("div", "pill-row");
-          (bundle.skills || []).forEach((name) => skillRow.append(el("span", "pill", name)));
+          plugin.skills.forEach((skill) => skillRow.append(el("span", "pill", skill.name)));
           card.append(skillRow);
 
-          const companions = bundle.companions || {};
-          const companionFiles = [...(companions.docs || []), ...(companions.agents || [])];
-          if (companionFiles.length) {
+          const companions = [
+            ...plugin.agents.map((f) => `agents/${f}`),
+            ...plugin.docs.map((f) => `docs/${f}`),
+          ];
+          if (companions.length) {
             card.append(el("div", "field-label", "同梱物（規約・エージェント）"));
-            const compRow = el("div", "pill-row companion-note");
-            companionFiles.forEach((file) => compRow.append(el("span", "pill", file)));
+            const compRow = el("div", "pill-row");
+            companions.forEach((f) => compRow.append(el("span", "pill companion", f)));
             card.append(compRow);
           }
 
-          if (bundle.afterInstall) card.append(el("p", "after-install", bundle.afterInstall));
-
-          const install = el("div", "bundle-install");
+          const install = el("div", "plugin-install");
           install.append(el("div", "field-label", "導入コマンド"));
-          install.append(copyLine(bundle.install));
+          install.append(copyLine(plugin.install));
           card.append(install);
 
           cards.append(card);
         });
-        document.getElementById("bundles-section").hidden = false;
-        document.getElementById("bundle-count").textContent = `${bundles.length} 件`;
+        document.getElementById("plugins-section").hidden = false;
+        document.getElementById("plugin-count").textContent = `${plugins.length} 件`;
       }
 
-      // --- Skills ---
+      // --- Skills (flattened across plugins) ---
+      const skillIndex = plugins.flatMap((plugin) =>
+        plugin.skills.map((skill) => ({
+          name: skill.name,
+          description: skill.description,
+          plugin: plugin.name,
+          pluginTitle: plugin.displayName,
+        }))
+      );
+
       const list = document.getElementById("skill-list");
       const empty = document.getElementById("empty");
       const search = document.getElementById("search");
@@ -314,10 +318,10 @@
 
       const renderSkills = () => {
         const query = search.value.trim().toLocaleLowerCase();
-        const filtered = commonDetails.filter((skill) => {
+        const filtered = skillIndex.filter((skill) => {
           if (!query) return true;
-          const tags = (bundlesBySkill[skill.name] || []).join(" ");
-          return `${skill.name} ${skill.description} ${tags}`.toLocaleLowerCase().includes(query);
+          return `${skill.name} ${skill.description} ${skill.plugin} ${skill.pluginTitle}`
+            .toLocaleLowerCase().includes(query);
         });
 
         list.replaceChildren();
@@ -325,36 +329,30 @@
           const card = el("div", "skill-card");
           const top = el("div", "skill-top");
           top.append(el("span", "skill-name", skill.name));
-          const tags = bundlesBySkill[skill.name] || [];
-          if (tags.length) {
-            const tagWrap = el("span", "skill-bundles");
-            tags.forEach((title) => tagWrap.append(el("span", "bundle-tag", title)));
-            top.append(tagWrap);
-          }
+          const tag = el("span", "plugin-tag", skill.pluginTitle);
+          tag.title = `plugin: ${skill.plugin}`;
+          top.append(tag);
           card.append(top);
           if (skill.description) card.append(el("p", "skill-desc", skill.description));
-          const install = el("div", "skill-install");
-          install.append(copyLine(`python3 <skill-repository>/scripts/install_skills.py --skill ${skill.name} --into .`));
-          card.append(install);
+          const invoke = el("div", "skill-invoke");
+          invoke.append(copyLine(`/${skill.plugin}:${skill.name}`));
+          card.append(invoke);
           list.append(card);
         });
 
         empty.hidden = filtered.length !== 0;
         skillCount.textContent = query
-          ? `${filtered.length} / ${commonDetails.length} 件`
-          : `${commonDetails.length} 件`;
+          ? `${filtered.length} / ${skillIndex.length} 件`
+          : `${skillIndex.length} 件`;
       };
 
       search.addEventListener("input", renderSkills);
       renderSkills();
 
       // --- Metrics ---
-      const companionTotal = bundles.reduce((sum, bundle) => {
-        const companions = bundle.companions || {};
-        return sum + (companions.docs || []).length + (companions.agents || []).length;
-      }, 0);
-      document.getElementById("skill-total").textContent = commonDetails.length;
-      document.getElementById("bundle-total").textContent = bundles.length;
+      const companionTotal = plugins.reduce((sum, p) => sum + p.agents.length + p.docs.length, 0);
+      document.getElementById("plugin-total").textContent = plugins.length;
+      document.getElementById("skill-total").textContent = skillIndex.length;
       document.getElementById("companion-total").textContent = companionTotal;
     })();
   </script>
