@@ -575,7 +575,7 @@ def render_duplication_report(owner: str, entries: list[CatalogEntry]) -> str:
     """Show which skill names are duplicated across repositories (the 乱立 view).
 
     Same-named skills that share a single SKILL.md content hash are prime
-    candidates for consolidation into `common/`; divergent ones need review first.
+    candidates for consolidation into a `plugins/` plugin; divergent ones need review first.
     """
     by_name: dict[str, list[CatalogEntry]] = {}
     for entry in entries:
@@ -587,7 +587,7 @@ def render_duplication_report(owner: str, entries: list[CatalogEntry]) -> str:
         "# Skill Duplication Report（重複状況）",
         "",
         f"GitHub account `{owner}` のスキルのうち、**複数リポジトリに同名で存在**するものを"
-        "集計した自動生成レポートです。共通部分として `common/` に集約する候補を把握するために使います。",
+        "集計した自動生成レポートです。共通部分として `plugins/` のプラグインに集約する候補を把握するために使います。",
         "このファイルは直接編集せず、`python3 scripts/sync_skills.py` で更新してください。",
         "",
         f"スキル総数: **{len(entries)}** ／ ユニーク名: **{len(by_name)}** ／ "
@@ -705,42 +705,9 @@ def render_manifest(owner: str, entries: list[CatalogEntry]) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
-def load_common_and_bundles(common_dir: Path, bundles_dir: Path) -> tuple[list[str], list[dict[str, Any]]]:
-    """Return (common skill names, bundle summaries) for the HTML/install view."""
-    common_skills: list[str] = []
-    skills_dir = common_dir / "skills"
-    if skills_dir.is_dir():
-        common_skills = sorted(p.name for p in skills_dir.iterdir() if (p / "SKILL.md").is_file())
-
-    bundles: list[dict[str, Any]] = []
-    if bundles_dir.is_dir():
-        for path in sorted(bundles_dir.glob("*.json")):
-            try:
-                data = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            companions = data.get("companions") or {}
-            bundles.append(
-                {
-                    "name": data.get("name", path.stem),
-                    "title": data.get("title", path.stem),
-                    "description": data.get("description", ""),
-                    "skills": list(data.get("skills", [])),
-                    "companions": {
-                        "docs": list(companions.get("docs", [])),
-                        "agents": list(companions.get("agents", [])),
-                    },
-                    "afterInstall": data.get("after_install", ""),
-                    "install": f"python3 <skill-repository>/scripts/install_skills.py --bundle {data.get('name', path.stem)} --into .",
-                }
-            )
-    return common_skills, bundles
-
-
-def load_common_details(common_dir: Path) -> list[dict[str, str]]:
-    """Return [{name, description}] for the cultivated common skills (SKILL.md front matter)."""
+def _skill_details(skills_dir: Path) -> list[dict[str, str]]:
+    """Return [{name, description}] for every SKILL.md under a plugin's skills/ dir."""
     details: list[dict[str, str]] = []
-    skills_dir = common_dir / "skills"
     if not skills_dir.is_dir():
         return details
     for path in sorted(skills_dir.iterdir()):
@@ -762,45 +729,60 @@ def load_common_details(common_dir: Path) -> list[dict[str, str]]:
     return details
 
 
+def load_plugins(plugins_dir: Path, marketplace_path: Path, repo_slug: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Return (marketplace summary, plugin summaries) for the HTML/install view.
+
+    A plugin is a directory under ``plugins/`` with ``.claude-plugin/plugin.json``.
+    Its skills are read from ``skills/<name>/SKILL.md`` and its companion agents/docs
+    from ``agents/`` and ``docs/``.
+    """
+    marketplace_name = "gghatano-skills"
+    if marketplace_path.is_file():
+        try:
+            marketplace_name = json.loads(marketplace_path.read_text(encoding="utf-8")).get("name", marketplace_name)
+        except (OSError, json.JSONDecodeError):
+            pass
+    marketplace = {"name": marketplace_name, "add": f"/plugin marketplace add {repo_slug}"}
+
+    plugins: list[dict[str, Any]] = []
+    if plugins_dir.is_dir():
+        for path in sorted(plugins_dir.iterdir()):
+            manifest = path / ".claude-plugin" / "plugin.json"
+            if not manifest.is_file():
+                continue
+            try:
+                data = json.loads(manifest.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            name = data.get("name", path.name)
+            agents_dir = path / "agents"
+            docs_dir = path / "docs"
+            plugins.append(
+                {
+                    "name": name,
+                    "displayName": data.get("displayName") or name,
+                    "description": data.get("description", ""),
+                    "skills": _skill_details(path / "skills"),
+                    "agents": sorted(p.name for p in agents_dir.glob("*.md")) if agents_dir.is_dir() else [],
+                    "docs": sorted(p.name for p in docs_dir.glob("*.md")) if docs_dir.is_dir() else [],
+                    "install": f"/plugin install {name}@{marketplace_name}",
+                }
+            )
+    return marketplace, plugins
+
+
 def render_html(
     owner: str,
-    entries: list[CatalogEntry],
     template: str,
-    categories: list[Category] | None = None,
-    common_skills: list[str] | None = None,
-    bundles: list[dict[str, Any]] | None = None,
-    common_details: list[dict[str, str]] | None = None,
+    marketplace: dict[str, Any],
+    plugins: list[dict[str, Any]],
 ) -> str:
     if "__CATALOG_DATA__" not in template:
         raise SyncError("HTML template is missing __CATALOG_DATA__")
-    common_set = set(common_skills or [])
     payload = {
         "owner": owner,
-        "categories": [
-            {"id": category.id, "title": category.title, "summary": category.summary}
-            for category in (categories or [])
-        ],
-        "commonSkills": sorted(common_set),
-        "commonDetails": common_details or [],
-        "bundles": bundles or [],
-        "skills": [
-            {
-                "repository": entry.repository,
-                "name": entry.name,
-                "description": entry.description,
-                "category": entry.category,
-                "sourcePath": entry.source_path,
-                "sourceUrl": entry.source_url,
-                "destination": entry.destination,
-                "files": list(entry.files),
-                "components": list(entry.components),
-                "tools": list(entry.tools),
-                "projectPaths": list(entry.project_paths),
-                "portability": entry_portability(entry),
-                "inCommon": entry.name in common_set,
-            }
-            for entry in entries
-        ],
+        "marketplace": marketplace,
+        "plugins": plugins,
     }
     data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     return template.replace("__CATALOG_DATA__", data)
@@ -889,7 +871,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--duplication-report",
         type=Path,
         default=Path("docs/skill-duplication.md"),
-        help="Report of skills duplicated across repositories (common/ candidates)",
+        help="Report of skills duplicated across repositories (plugin consolidation candidates)",
     )
     parser.add_argument(
         "--categories",
@@ -898,8 +880,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Purpose taxonomy mapping skill names to categories",
     )
     parser.add_argument("--manifest", type=Path, default=Path("catalog/manifest.json"))
-    parser.add_argument("--common-dir", type=Path, default=Path("common"), help="Cultivated common skills root")
-    parser.add_argument("--bundles-dir", type=Path, default=Path("bundles"), help="Bundle definitions directory")
+    parser.add_argument("--plugins-dir", type=Path, default=Path("plugins"), help="Distributable plugins root")
+    parser.add_argument(
+        "--marketplace",
+        type=Path,
+        default=Path(".claude-plugin/marketplace.json"),
+        help="Plugin marketplace manifest",
+    )
+    parser.add_argument(
+        "--repo-slug",
+        default="gghatano/skill-repository",
+        help="owner/repo used in the '/plugin marketplace add' command",
+    )
     parser.add_argument("--html", type=Path, default=Path("docs/index.html"))
     parser.add_argument("--html-template", type=Path, default=Path("web/index.template.html"))
     parser.add_argument("--dry-run", action="store_true", help="Discover skills without fetching files")
@@ -924,17 +916,14 @@ def _render_generated_files(
         html_template = args.html_template.read_text(encoding="utf-8")
     except OSError as exc:
         raise SyncError(f"cannot read HTML template: {args.html_template}") from exc
-    common_skills, bundles = load_common_and_bundles(args.common_dir, args.bundles_dir)
-    common_details = load_common_details(args.common_dir)
+    marketplace, plugins = load_plugins(args.plugins_dir, args.marketplace, args.repo_slug)
     return {
         args.catalog: render_catalog(args.owner, entries),
         args.purpose_catalog: render_purpose_catalog(args.owner, entries, categories),
         args.porting_guide: render_porting_guide(args.owner, entries),
         args.duplication_report: render_duplication_report(args.owner, entries),
         args.manifest: render_manifest(args.owner, entries),
-        args.html: render_html(
-            args.owner, entries, html_template, categories, common_skills, bundles, common_details
-        ),
+        args.html: render_html(args.owner, html_template, marketplace, plugins),
     }
 
 

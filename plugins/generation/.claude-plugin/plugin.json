@@ -1,0 +1,10 @@
+{
+  "name": "generation",
+  "displayName": "仕様駆動 生成・評価サイクル",
+  "description": "仕様から成果物を作り、評価して直す汎用サイクル（input-prepare → spec-ingest → generation-design → generate → evaluate-refine）。骨格は領域非依存で、現在の中身は合成データ生成プロファイル。",
+  "version": "0.1.0",
+  "author": { "name": "gghatano", "url": "https://github.com/gghatano" },
+  "homepage": "https://github.com/gghatano/skill-repository",
+  "repository": "https://github.com/gghatano/skill-repository",
+  "keywords": ["generation", "evaluation", "spec-driven", "synthetic-data"]
+}

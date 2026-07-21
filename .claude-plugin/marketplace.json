@@ -1,0 +1,40 @@
+{
+  "name": "gghatano-skills",
+  "owner": { "name": "gghatano", "url": "https://github.com/gghatano" },
+  "description": "gghatano の汎用 Claude Skills を目的別プラグインとして配布するマーケットプレイス。",
+  "metadata": { "pluginRoot": "./plugins" },
+  "plugins": [
+    {
+      "name": "dev",
+      "source": "./dev",
+      "displayName": "開発ワークフロー（Git / Issue / PR）",
+      "description": "GitHub Issue を作業単位に、branch / worktree / 実装 / 検証 / レビュー / PR を一貫管理する開発フローのスキル群。",
+      "version": "0.1.0",
+      "keywords": ["development", "git", "issue", "pull-request", "workflow"]
+    },
+    {
+      "name": "generation",
+      "source": "./generation",
+      "displayName": "仕様駆動 生成・評価サイクル",
+      "description": "仕様から成果物を作り、評価して直す汎用サイクル。骨格は領域非依存で、現在の中身は合成データ生成プロファイル。",
+      "version": "0.1.0",
+      "keywords": ["generation", "evaluation", "spec-driven", "synthetic-data"]
+    },
+    {
+      "name": "research",
+      "source": "./research",
+      "displayName": "研究レポート作成ライフサイクル",
+      "description": "実験レポートの骨子設計から計画・実行・レビュー・公開までを一式で進めるスキル群。規約・サブエージェント同梱。",
+      "version": "0.1.0",
+      "keywords": ["research", "report", "experiment", "reproducibility", "review"]
+    },
+    {
+      "name": "writing",
+      "source": "./writing",
+      "displayName": "文章・日本語ライティング",
+      "description": "AI が書いた日本語を人間が書いた文章に近づける横断的なライティング支援。自己完結スキル。",
+      "version": "0.1.0",
+      "keywords": ["writing", "japanese", "editing", "style"]
+    }
+  ]
+}

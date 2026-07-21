@@ -128,8 +128,11 @@ class SyncSkillsTest(unittest.TestCase):
         self.assertNotIn("generated_at", manifest)
         self.assertEqual("issue-planner", json.loads(manifest)["skills"][0]["name"])
 
-        html = render_html("gghatano", entries, "<script>__CATALOG_DATA__</script>")
-        self.assertIn('"name":"issue-planner"', html)
+        marketplace = {"name": "gghatano-skills", "add": "/plugin marketplace add gghatano/skill-repository"}
+        plugins = [{"name": "research", "displayName": "研究", "description": "", "skills": [{"name": "report-review", "description": "レビュー"}], "agents": [], "docs": [], "install": "/plugin install research@gghatano-skills"}]
+        html = render_html("gghatano", "<script>__CATALOG_DATA__</script>", marketplace, plugins)
+        self.assertIn('"name":"report-review"', html)
+        self.assertIn('"marketplace":', html)
         self.assertNotIn("__CATALOG_DATA__", html)
 
     def test_rejects_truncated_tree(self) -> None:
@@ -319,39 +322,62 @@ class DuplicationTest(unittest.TestCase):
         self.assertIn("⚠", drift_line)
 
 
-class CommonBundleHtmlTest(unittest.TestCase):
-    def test_load_common_and_bundles(self) -> None:
-        from scripts.sync_skills import load_common_and_bundles
+class PluginHtmlTest(unittest.TestCase):
+    def test_load_plugins(self) -> None:
+        from scripts.sync_skills import load_plugins
 
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            (root / "common/skills/report-review").mkdir(parents=True)
-            (root / "common/skills/report-review/SKILL.md").write_text("x", encoding="utf-8")
-            (root / "bundles").mkdir()
-            (root / "bundles/research.json").write_text(
-                json.dumps({"name": "research", "title": "研究", "skills": ["report-review"]}),
+            skill_dir = root / "plugins/research/skills/report-review"
+            skill_dir.mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: report-review\ndescription: レビューする\n---\n本文",
                 encoding="utf-8",
             )
-            common, bundles = load_common_and_bundles(root / "common", root / "bundles")
-            self.assertEqual(["report-review"], common)
-            self.assertEqual(1, len(bundles))
-            self.assertEqual("research", bundles[0]["name"])
-            self.assertIn("--bundle research", bundles[0]["install"])
+            (root / "plugins/research/docs").mkdir(parents=True)
+            (root / "plugins/research/docs/documentation-conventions.md").write_text("x", encoding="utf-8")
+            (root / "plugins/research/agents").mkdir(parents=True)
+            (root / "plugins/research/agents/planner.md").write_text("x", encoding="utf-8")
+            (root / "plugins/research/.claude-plugin").mkdir(parents=True)
+            (root / "plugins/research/.claude-plugin/plugin.json").write_text(
+                json.dumps({"name": "research", "displayName": "研究", "description": "説明"}),
+                encoding="utf-8",
+            )
+            (root / ".claude-plugin").mkdir()
+            (root / ".claude-plugin/marketplace.json").write_text(
+                json.dumps({"name": "gghatano-skills"}), encoding="utf-8"
+            )
 
-    def test_html_marks_common_skills_and_bundles(self) -> None:
-        client = FakeClient()
-        with tempfile.TemporaryDirectory() as temp:
-            entries = stage_skills(client, discover_skills(client, "gghatano"), Path(temp))
-        html = render_html(
-            "gghatano",
-            entries,
-            "<script>__CATALOG_DATA__</script>",
-            common_skills=["issue-planner"],
-            bundles=[{"name": "b", "title": "B", "description": "", "skills": ["issue-planner"], "install": "cmd"}],
-        )
-        self.assertIn('"inCommon":true', html)
-        self.assertIn('"bundles":[', html)
-        self.assertIn('"commonSkills":["issue-planner"]', html)
+            marketplace, plugins = load_plugins(
+                root / "plugins", root / ".claude-plugin/marketplace.json", "gghatano/skill-repository"
+            )
+            self.assertEqual("gghatano-skills", marketplace["name"])
+            self.assertIn("gghatano/skill-repository", marketplace["add"])
+            self.assertEqual(1, len(plugins))
+            self.assertEqual("research", plugins[0]["name"])
+            self.assertEqual("研究", plugins[0]["displayName"])
+            self.assertEqual([{"name": "report-review", "description": "レビューする"}], plugins[0]["skills"])
+            self.assertEqual(["planner.md"], plugins[0]["agents"])
+            self.assertEqual(["documentation-conventions.md"], plugins[0]["docs"])
+            self.assertEqual("/plugin install research@gghatano-skills", plugins[0]["install"])
+
+    def test_html_embeds_plugins(self) -> None:
+        marketplace = {"name": "gghatano-skills", "add": "/plugin marketplace add gghatano/skill-repository"}
+        plugins = [
+            {
+                "name": "research",
+                "displayName": "研究",
+                "description": "",
+                "skills": [{"name": "report-review", "description": "レビュー"}],
+                "agents": ["planner.md"],
+                "docs": ["documentation-conventions.md"],
+                "install": "/plugin install research@gghatano-skills",
+            }
+        ]
+        html = render_html("gghatano", "<script>__CATALOG_DATA__</script>", marketplace, plugins)
+        self.assertIn('"plugins":[', html)
+        self.assertIn('"name":"report-review"', html)
+        self.assertIn('/plugin install research@gghatano-skills', html)
 
 
 class PortabilityTest(unittest.TestCase):
