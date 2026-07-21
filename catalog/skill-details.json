@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "note": "各スキルの詳細ページ（docs/skills/<name>.html）用の要約。SKILL.md の内容に基づき作成。",
+  "skills": {
+    "code-review": {
+      "tagline": "実装差分をレビュー基準に沿ってレビューする手順。",
+      "canDo": [
+        "git diff でレビュー対象の差分を取得する",
+        "仕様適合性/設計/品質/セキュリティ/保守性で評価する",
+        "プロジェクト固有の不変条件を確認する",
+        "深刻度と file:line を添えて指摘を列挙する",
+        "根拠付きで指摘のみ返し修正はしない"
+      ],
+      "whenToUse": "実装完了前に必ず使う。差分をレビュー観点で評価し承認可否を判断するとき。",
+      "io": "入力は git diff、出力はサマリと深刻度付き指摘。基準は規約と docs/review-checklist.md に従い、修正は実装担当の責務とする。"
+    },
+    "issue-driven-development": {
+      "tagline": "GitHub Issue 単位で実装作業を一貫管理する手順。",
+      "canDo": [
+        "Issue 本文を作業指示書として要約する",
+        "Issue 専用の branch/worktree を確認する",
+        "既存パターンに合わせ実装しテストを追加する",
+        "規約 §1 の検証コマンドを通しで実行する",
+        "PR 作成と Issue への検証記録・相互リンクを行う"
+      ],
+      "whenToUse": "すべての実装作業を始めるときに必ず使う。1 Issue = 1 branch = 1 worktree = 1 PR で管理する。",
+      "io": "入力は Issue 番号、出力は PR と Issue への検証結果コメント。spec-implementation / pr-from-issue や code-reviewer 等のサブエージェントと連携する。"
+    },
+    "issue-triage": {
+      "tagline": "仕様や発見から Issue 候補を抽出し整理する手順。",
+      "canDo": [
+        "spec-analyst で仕様を充足マトリクス化する",
+        "候補を粒度ガイドで分類し大きすぎる物を分割する",
+        "依存関係を明示し循環を排除する",
+        "各候補にスコープ/検証方法/ラベル等を付ける",
+        "テンプレートの種類を割り当てる"
+      ],
+      "whenToUse": "Issue を作る前の計画時に使う。この段階では Issue を大量作成しない。",
+      "io": "入力は仕様書と発見事項、出力は docs/implementation-plan.md へ追記する Issue 候補一覧。spec-analyst サブエージェントと連携し、人間確認後に gh issue create する。"
+    },
+    "pr-from-issue": {
+      "tagline": "Issue に紐づく PR を作成し相互リンクする手順。",
+      "canDo": [
+        "gh pr create で Issue 紐付き PR を作成する",
+        "PR 本文に対応 Issue/変更/検証結果を記す",
+        "CI 緑を待ちスタック PR の落とし穴を回避する",
+        "Issue へ進捗コメントし PR URL を貼る",
+        "チャットへ完了報告を返す"
+      ],
+      "whenToUse": "作業完了時に使う。pr-prep の全検証が緑であることが前提。",
+      "io": "入力は Issue 番号と検証結果、出力は PR と Issue 進捗コメント。Closes/Refs #n で連携し、issue-management.md のフォーマットに従う。"
+    },
+    "pr-prep": {
+      "tagline": "コミット/PR を出す直前の最終確認手順。",
+      "canDo": [
+        "既定ブランチでないことを確認する",
+        "全検証を通しで実行し出力を控える",
+        "git status で意図しない変更や秘密混入を確認する",
+        "acceptance-criteria の該当項目を確認する",
+        "コミットメッセージと PR 本文の要件を整える"
+      ],
+      "whenToUse": "コミット/PR を出す直前に必ず使う。1 PR = 1 タスクになっているか確認する。",
+      "io": "入力は作業差分、出力は検証済みのコミット/PR 本文。規約 §1 の検証コマンドに従い、code-reviewer 等のレビューを通す。"
+    },
+    "refactor-safely": {
+      "tagline": "振る舞いを変えず内部構造だけ改善する手順。",
+      "canDo": [
+        "リファクタ前に全検証を緑にする",
+        "変えない契約を明記する",
+        "ゴールデン比較で生成物の差分 0 を確認する",
+        "小さなステップで変更し都度検証する",
+        "差分無しを証跡として示す"
+      ],
+      "whenToUse": "リファクタリングを実装タスクと分けて行うとき使う。外部から観測できる振る舞いを変えないことが絶対条件。",
+      "io": "入力はリファクタ対象と不変契約、出力は差分ゼロの証跡。仕様変更や機能追加が混ざったら別タスク・別 PR に分割する。"
+    },
+    "spec-implementation": {
+      "tagline": "SPEC.md に基づき 1 単位を実装・検証する手順。",
+      "canDo": [
+        "対象仕様を特定し該当節を引用する",
+        "既存の設計パターン・データ契約を確認する",
+        "最小単位で実装しテストを追加する",
+        "検証と再現性スモークを実行する",
+        "code-reviewer にレビューさせる"
+      ],
+      "whenToUse": "仕様から 1 単位を実装するとき必ず使う。仕様書を唯一の正とし 1 回 1 作業単位だけ進める。",
+      "io": "入力は SPEC.md の該当節、出力は実装・テスト・検証出力と報告。test-fix-loop / refactor-safely や code-reviewer / security-reviewer と連携する。"
+    },
+    "test-fix-loop": {
+      "tagline": "テスト/lint/型チェックの失敗を直し緑にする手順。",
+      "canDo": [
+        "失敗コマンドを単体再実行し完全な出力を得る",
+        "失敗を原因別に分類する",
+        "根本原因を 1〜2 行で言語化する",
+        "仕様を曲げず最小の修正を行う",
+        "全検証を通し回帰がないか確認する"
+      ],
+      "whenToUse": "テスト・lint・型チェックなどの検証が落ちたとき使う。",
+      "io": "入力は失敗した検証コマンド、出力は修正と原因・再実行結果の報告。規約 §1 の検証コマンドに従い、make build 忘れやシード固定漏れに注意する。"
+    },
+    "worktree-task-runner": {
+      "tagline": "Issue ごとに専用 branch と worktree を作る手順。",
+      "canDo": [
+        "命名規約に沿って branch と worktree を作成する",
+        "gh 利用可否に応じた 2 通りの作成手順を使う",
+        "worktree で初回 uv sync し環境を整える",
+        "既定ブランチ直下での実装を避ける",
+        "PR マージ後に worktree を削除する"
+      ],
+      "whenToUse": "Issue 着手時に使う。1 worktree = 1 Issue = 1 branch で分離した作業ディレクトリを用意する。",
+      "io": "入力は Issue 番号、出力は分離された作業用 worktree。規約 §2 のブランチ・worktree 方針に従い、issue-driven-development の手順で実装する。"
+    },
+    "input-prepare": {
+      "tagline": "原資料を後続が読める input/ に整える入力整備スキル。",
+      "canDo": [
+        "原資料を棚卸しし利用可否を確認する",
+        "テーブル定義を table_definition に抽出する",
+        "機微情報をマスクしサンプルを作成する",
+        "業務仕様を data_spec.md に整理する",
+        "制約を constraints.md に整理する"
+      ],
+      "whenToUse": "input/ が未整備で、source/ 等の原データ・仕様書・DDL・Excel/PDF から生成パイプライン用の入力を用意したいときに使う（生成・評価サイクルの step0）。",
+      "io": "入力は source/ 配下の原資料、出力は input/ の table_definition・sample_data・data_spec.md・constraints.md。後続の spec-ingest が読む形に整え、明示仕様と推定仕様を区別する。"
+    },
+    "spec-ingest": {
+      "tagline": "input/ の仕様を機械可読な schema と制約に変換するスキル。",
+      "canDo": [
+        "テーブル定義から列仕様を抽出する",
+        "サンプルから統計量を推定する",
+        "data_spec/constraints を解釈する",
+        "制約を 3 分類し constraint_plan に記載する",
+        "複数テーブルの FK と列間関係を記述する"
+      ],
+      "whenToUse": "input-prepare 完了後、整理済み input/ を機械可読仕様に落とし込むとき（step1）に使う。",
+      "io": "入力は input/ 配下、出力は work/inferred_schema.json と work/constraint_plan.md。制約を generation/post_sampling/validation_only に分類し、明示・推定・assumption を区別する。"
+    },
+    "generation-design": {
+      "tagline": "各列の生成方式を設計し generation_plan.md を作るスキル。",
+      "canDo": [
+        "各列に生成方式を割り当てる",
+        "統計量の利用方針を決定する",
+        "列間関係と相関を特定する",
+        "複雑な制約を post sampling に回す",
+        "oversampling 倍率と生成順序を決める"
+      ],
+      "whenToUse": "spec-ingest の後、実装前に生成方針（ルール・分布・相関・親子順序）を設計するとき（step2）に使う。",
+      "io": "入力は work/inferred_schema.json・constraint_plan.md と input/、出力は work/generation_plan.md。後続の generate が実装の設計図として参照する。"
+    },
+    "generate": {
+      "tagline": "設計に基づき generator.py を実装し合成データを生成するスキル。",
+      "canDo": [
+        "再実行可能な generator.py を実装する",
+        "seed 付き CLI で指定件数を生成する",
+        "post sampling で複合制約を満たす",
+        "削除・上書き件数を stderr に記録する",
+        "複数テーブルを親子順で生成する"
+      ],
+      "whenToUse": "generation-design 完了後、generation_plan.md に沿って実際に合成データを作るとき（step3）に使う。",
+      "io": "入力は work/generation_plan.md・inferred_schema.json・constraint_plan.md と input/、出力は src/generator.py と output/ の CSV。列名・型を schema と整合させ、後続の evaluate-refine が評価する。"
+    },
+    "evaluate-refine": {
+      "tagline": "合成データを仕様・制約に照らし評価し必要なら生成器を改善するスキル。",
+      "canDo": [
+        "evaluate.py を実装し評価する",
+        "スキーマ・分布・相関を評価する",
+        "制約違反を constraints_check.csv に出す",
+        "evaluation_report.md に所見をまとめる",
+        "quality_gate.json で改善要否を判定する"
+      ],
+      "whenToUse": "generate 完了後、成果物の品質と制約充足を評価し、軽微な問題は generator.py に最小修正するとき（step4）に使う。",
+      "io": "入力は input/sample_data・output のデータ・work 仕様・generator.py、出力は evaluate.py・evaluation_report.md・constraints_check.csv・quality_gate.json。最終的な再生成ループの判断は PM に委ねる。"
+    },
+    "generation-cycle": {
+      "tagline": "5 スキルを逐次委譲する合成データ生成の PM オーケストレーター。",
+      "canDo": [
+        "input/ の起動前チェックを行う",
+        "5 スキルをサブエージェントに逐次委譲する",
+        "各ステップの Acceptance Criteria を確認する",
+        "quality_gate.json で改善ループを制御する",
+        "進捗・完了報告をまとめる"
+      ],
+      "whenToUse": "タスクディレクトリを指定して input-prepare から evaluate-refine までを end-to-end で実行させたいとき、PM エージェントとして起動する。",
+      "io": "引数はタスクのルートディレクトリ。自身はコードを書かず、各ステップをサブエージェント（最大 5 体）に委譲し、成果物存在と quality_gate.json を確認しながら再生成は最大 2 回まで制御する。"
+    },
+    "report-review": {
+      "tagline": "実験レポートの前提・結果・考察・課題を分離観点で点検するレビュー。",
+      "canDo": [
+        "事実と推定の分離・出典タグ対応を点検する",
+        "数値の整合と統計的断定の妥当性を検査する",
+        "アカデミック体裁（構成・図表順・箇条書き）を点検する",
+        "日本語本文の AI 臭を除去する",
+        "軽微な問題を修正し要判断点を報告する"
+      ],
+      "whenToUse": "レポート本体・追加実験・手法解説の Markdown を公開前に独立レビューするとき。章立て直し・結果追記・考察見直し時にも使う。",
+      "io": "入力は content/REPORT.md・EXPERIMENTS.md・method-*.md、出力は修正済み/要判断/Issue 化候補。stop-ai-slop-jp と併用可、doc-cycle から呼ばれ判断は reviewer へ委譲可。"
+    },
+    "report-skeleton": {
+      "tagline": "実験前にレポートの章立て・主張・必要な実験を骨子として固める設計。",
+      "canDo": [
+        "スコープを 2〜3 行で言語化する",
+        "標準章構成のスケルトンを作成する",
+        "各章の主張と必要な実験・指標を割り当てる",
+        "必要な実験一覧を抽出する",
+        "本体と補助ページの二層構成を設計する"
+      ],
+      "whenToUse": "新しい評価対象に着手するとき、またはレポートの再構成時に最初に使う。実験はこの骨子を埋めるために行う。",
+      "io": "出力は content/REPORT.md 骨子（TODO 付き）と必要な実験一覧で、後者は experiment-plan への入力。stage で段階的に埋め、補助ページはサブエージェントに分担可。"
+    },
+    "experiment-plan": {
+      "tagline": "公平な比較条件と業務シナリオを備えた実験計画書を作成する。",
+      "canDo": [
+        "論文準拠プロトコルを一次情報から抽出する",
+        "再現ターゲット（exact/trend）を宣言する",
+        "多数モデル学習のコストモデルを明記する",
+        "既存研究準拠の指標と公平性を担保する",
+        "作業単位ごとに作業 issue を起案する"
+      ],
+      "whenToUse": "report-skeleton の実験一覧をもとに実行可能な計画を作るとき。実験の追加・比較条件の変更時にも使う。",
+      "io": "入力は必要な実験一覧、出力は docs/plans/<ID>-<slug>.md と要確認事項。判断中心のため planner（上位）へ委譲、experiment-run と report-review が計画書を参照。"
+    },
+    "experiment-run": {
+      "tagline": "計画書に基づき固定環境で実験を実行し結果を記録する再現性ファースト。",
+      "canDo": [
+        "uv の固定環境でスクリプトを実行する",
+        "長時間実行の進捗・可観測性を確保する",
+        "並列・堅牢性・vendoring の定石を適用する",
+        "結果を記述分離原則でレポートへ反映する",
+        "遭遇した問題を engineering.md に追記する"
+      ],
+      "whenToUse": "docs/plans/ の計画書がある実験を実行・再実行・シード追加・新スクリプト追加するとき。計画書がなければ先に experiment-plan へ差し戻す。",
+      "io": "入力は計画書、出力は生成物（outputs/figures/）・run_meta・レポート反映。1 worktree = 1 issue = 1 エージェントで implementer（下位）へ委譲、解釈は呼び出し元が担う。"
+    },
+    "publish-check": {
+      "tagline": "content→ビルダー→htmls→README の整合を点検しビルド検証する。",
+      "canDo": [
+        "PAGES テーブルと content の実ファイルを突合する",
+        "相互リンク・アンカー・図の実在を点検する",
+        "ビルドを実行し再生成差分を確認する",
+        "公開ワークフローの設定を検査する",
+        "ページ追加・改名の定型手順を実施する"
+      ],
+      "whenToUse": "ページの追加・改名時や公開前の最終確認に使う。main へのマージ前には必ず通す。",
+      "io": "入力は content/*.md・scripts/03_build_html.py・htmls/*.html、出力はビルド検証結果・修正済み・要判断。doc-cycle の最終ステップとして呼ばれる。"
+    },
+    "related-info-review": {
+      "tagline": "参考文献・出典タグ・上流情報・残課題 Issue を点検し整理する。",
+      "canDo": [
+        "出典タグ [n] と参考文献章を突合する",
+        "各ページの参考リンクの重複・矛盾を確認する",
+        "GitHub Issues と残課題・作業内容を突合する",
+        "主要リンクの生存確認を行う",
+        "軽微な表記ゆれを修正し追加は提案に留める"
+      ],
+      "whenToUse": "文献追加、上流リポジトリの更新追従、Issue 化の準備時に使う。リンク切れや対応漏れの整理に用いる。",
+      "io": "入力は参考文献章・出典タグ・method-*.md の参考リンク・GitHub Issues・上流言及、出力は修正済み・問題・起票/close Issue。doc-cycle の一工程。"
+    },
+    "repro-engineering-review": {
+      "tagline": "再現手順とエンジニアリングノートの整合を clone-and-run で確認する。",
+      "canDo": [
+        "README・reproduce・run_all.sh の手順一致を点検する",
+        "乱数再現性と再現ターゲット(trend)を検査する",
+        "依存固定・パッチ・vendoring の記録を点検する",
+        "エンジニアリングノートの問題記録を確認する",
+        "軽量な検証を実行し不一致を修正する"
+      ],
+      "whenToUse": "環境構築手順の変更、依存更新、スクリプト追加時に使う。clone-and-run で再現が成立するかを確認する。",
+      "io": "入力は setup/usage/reproduce/engineering-notes と scripts/・requirements.txt・patches/、出力は検証結果・修正済み・要判断。スクリプト挙動変更は提案に留める。"
+    },
+    "doc-cycle": {
+      "tagline": "ドキュメント整理・レビュー・公開を一括実行するオーケストレーター。",
+      "canDo": [
+        "report-review→repro→related→publish を順次呼ぶ",
+        "レビュー範囲を git status から決める",
+        "各修正の横断的な整合崩れを確認する",
+        "軽微な修正をコミットにまとめる",
+        "統合レポートで要判断点を報告する"
+      ],
+      "whenToUse": "実験の追記後・公開前・定期点検に使う。ライフサイクルの最後の整理を担い、骨子・計画段階では先行スキルへ誘導する。",
+      "io": "4 スキルを規約に沿い順次実行し統合レポートを出力。洗い出し・軽微修正は reviewer（中位）、ビルド・確定修正の適用は implementer（下位）に委譲。"
+    },
+    "research-cycle": {
+      "tagline": "レポート作成のライフサイクル全体を統括するトップ級オーケストレーター。",
+      "canDo": [
+        "現在地(stage・未計画・残 TODO)を判定する",
+        "①→②→③→④の該当スキルを順次呼び出す",
+        "実験単位で計画・実行・反映を反復する",
+        "ティア別にサブエージェントへ委譲する",
+        "中断点でユーザーに確認する"
+      ],
+      "whenToUse": "新しい評価対象への着手時、または「いま何をすべきか」を確認するときに使う。",
+      "io": "report-skeleton→experiment-plan→experiment-run→doc-cycle を統括し進捗を報告。②→③は docs/plans/ 計画書と issue で受け渡し、planner/reviewer/implementer へ委譲。"
+    },
+    "stop-ai-slop-jp": {
+      "tagline": "AI で書いた日本語を、人間が書いた文章に戻す執筆・編集スキル。",
+      "canDo": [
+        "false agency を潰し、主体を名指しに書き換える",
+        "命題型 H2 や二項対比などの構造テンプレを直す",
+        "偏愛語・必殺技造語・横文字メタファーを削る",
+        "全角ダッシュや中黒並列など記号のアーティファクトを潰す",
+        "5 軸(立場・リズム・主体性・具体性・削減)で採点する"
+      ],
+      "whenToUse": "日本語の下書き、編集、レビューで AI 臭を検出し修正したいときに使う。時間が限られる場合は立場・false agency・構造・語彙・記号の優先順位で対処する。",
+      "io": "AI で書いた日本語文章を入力し、主体の不在や偏愛語などを直した文章を出力する。structures.md(構造パターン)、phrases.md(禁止語リスト)、examples.md(対比例)のリファレンスと連携する。"
+    }
+  }
+}

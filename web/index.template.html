@@ -101,7 +101,7 @@
         <span id="skill-count" class="text-[13px] text-apple-sub dark:text-apple-subd"></span>
       </div>
       <p class="mt-2 max-w-2xl text-[15px] leading-relaxed text-apple-sub dark:text-apple-subd">
-        各プラグインに含まれる汎用スキル。所属プラグインのタグと呼び出しコマンドを添えています。
+        各プラグインに含まれる汎用スキル。スキル名または「できることを見る →」から、各スキルの詳細ページ（できること・使いどころ・入出力）へ移動できます。
       </p>
       <div class="relative mt-6 max-w-md">
         <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-apple-sub dark:text-apple-subd" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.82l3.14 3.14a.75.75 0 1 0 1.06-1.06l-3.14-3.14A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/></svg>
@@ -230,9 +230,11 @@
 
         list.replaceChildren();
         filtered.forEach((skill) => {
-          const card = el("div", "rounded-2xl bg-white p-5 shadow-apple ring-1 ring-black/[0.04] dark:bg-apple-card dark:ring-white/10");
+          const card = el("div", "rounded-2xl bg-white p-5 shadow-apple ring-1 ring-black/[0.04] transition duration-300 hover:-translate-y-0.5 hover:shadow-applehover dark:bg-apple-card dark:ring-white/10");
           const top = el("div", "flex flex-wrap items-center gap-2.5");
-          top.append(el("span", "font-mono text-[14px] font-semibold", skill.name));
+          const nameLink = el("a", "font-mono text-[14px] font-semibold hover:text-apple-blue dark:hover:text-apple-blued", skill.name);
+          nameLink.href = `./skills/${skill.name}.html`;
+          top.append(nameLink);
           const tag = el("span", "rounded-full bg-apple-blue/[0.1] px-2.5 py-0.5 text-[11.5px] font-medium text-apple-blue dark:bg-apple-blued/15 dark:text-apple-blued", skill.pluginTitle);
           tag.title = `plugin: ${skill.plugin}`;
           top.append(tag);
@@ -241,6 +243,11 @@
           const invoke = el("div", "mt-3.5 max-w-md");
           invoke.append(codeBlock(`/${skill.plugin}:${skill.name}`));
           card.append(invoke);
+          const detail = el("div", "mt-3");
+          const detailLink = el("a", "text-[13px] font-medium text-apple-blue hover:underline dark:text-apple-blued", "できることを見る →");
+          detailLink.href = `./skills/${skill.name}.html`;
+          detail.append(detailLink);
+          card.append(detail);
           list.append(card);
         });
 
