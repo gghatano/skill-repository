@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{SKILL_NAME}} — {{TAGLINE}}">
+  <title>{{SKILL_NAME}} · Skill Repository</title>
+  <link rel="icon" href="https://github.com/gghatano.png?size=32">
+  <link rel="stylesheet" href="../tailwind.css">
+</head>
+<body class="min-h-screen bg-apple-bg text-apple-ink antialiased dark:bg-black dark:text-apple-inkd">
+
+  <header class="sticky top-0 z-30 border-b border-black/[0.06] bg-apple-bg/80 backdrop-blur-xl dark:border-white/10 dark:bg-black/70">
+    <div class="mx-auto flex w-full max-w-3xl items-center justify-between gap-6 px-5 py-3.5 sm:px-6">
+      <a href="../index.html" class="flex min-w-0 items-center gap-2 text-apple-sub transition-colors hover:text-apple-ink dark:text-apple-subd dark:hover:text-apple-inkd">
+        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 0 1 0 1.06L9.06 10l3.73 3.71a.75.75 0 1 1-1.06 1.06l-4.24-4.24a.75.75 0 0 1 0-1.06l4.24-4.24a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/></svg>
+        <span class="text-[14px] font-medium">Skill Repository</span>
+      </a>
+      <a href="../index.html#skills" class="text-[13px] text-apple-blue hover:underline dark:text-apple-blued">スキル一覧</a>
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-3xl px-5 py-12 sm:px-6 sm:py-16">
+    <a href="../index.html#plugins" class="inline-flex items-center gap-1.5 rounded-full bg-apple-blue/[0.1] px-3 py-1 text-[12.5px] font-medium text-apple-blue dark:bg-apple-blued/15 dark:text-apple-blued">{{PLUGIN_TITLE}}</a>
+    <h1 class="mt-4 font-mono text-3xl font-semibold tracking-tight sm:text-4xl">{{SKILL_NAME}}</h1>
+    <p class="mt-3 text-lg leading-relaxed text-apple-sub dark:text-apple-subd sm:text-xl">{{TAGLINE}}</p>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <div class="group flex items-stretch overflow-hidden rounded-xl bg-apple-bg2 ring-1 ring-black/[0.05] dark:bg-black/40 dark:ring-white/10">
+        <code data-copy-text="{{INVOKE}}" class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-3.5 py-2.5 font-mono text-[13px]">{{INVOKE}}</code>
+        <button type="button" data-copy-btn class="shrink-0 border-l border-black/[0.06] px-3.5 text-[12.5px] font-medium text-apple-blue transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:text-apple-blued dark:hover:bg-white/10">Copy</button>
+      </div>
+      <a href="{{SOURCE_URL}}" target="_blank" rel="noreferrer" class="text-[13px] text-apple-blue hover:underline dark:text-apple-blued">SKILL.md を見る ↗</a>
+    </div>
+
+    <div class="mt-10 space-y-10">
+      <section data-section="description">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">概要</h2>
+        <p class="mt-3 text-[15px] leading-relaxed">{{DESCRIPTION}}</p>
+      </section>
+
+      <section data-section="cando">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">できること</h2>
+        <ul class="mt-3 space-y-2">{{CANDO_ITEMS}}</ul>
+      </section>
+
+      <section data-section="whenToUse">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">使いどころ</h2>
+        <p class="mt-3 text-[15px] leading-relaxed">{{WHENTOUSE}}</p>
+      </section>
+
+      <section data-section="io">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">入出力・連携</h2>
+        <p class="mt-3 text-[15px] leading-relaxed">{{IO}}</p>
+      </section>
+
+      <section>
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">このスキルを導入</h2>
+        <p class="mt-3 text-[14px] leading-relaxed text-apple-sub dark:text-apple-subd">プラグイン <code class="rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">{{PLUGIN_NAME}}</code> の一部です。</p>
+        <div class="mt-3 group flex max-w-md items-stretch overflow-hidden rounded-xl bg-apple-bg2 ring-1 ring-black/[0.05] dark:bg-black/40 dark:ring-white/10">
+          <code data-copy-text="{{INSTALL}}" class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-3.5 py-2.5 font-mono text-[12.5px]">{{INSTALL}}</code>
+          <button type="button" data-copy-btn class="shrink-0 border-l border-black/[0.06] px-3.5 text-[12.5px] font-medium text-apple-blue transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:text-apple-blued dark:hover:bg-white/10">Copy</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="mt-14 border-t border-black/[0.06] pt-6 dark:border-white/10">
+      <a href="../index.html#skills" class="text-[14px] text-apple-blue hover:underline dark:text-apple-blued">← スキル一覧に戻る</a>
+    </div>
+  </main>
+
+  <footer class="border-t border-black/[0.06] dark:border-white/10">
+    <div class="mx-auto w-full max-w-3xl px-5 py-8 text-[13px] text-apple-sub dark:text-apple-subd sm:px-6">
+      <a class="text-apple-blue hover:underline dark:text-apple-blued" href="https://github.com/gghatano/skill-repository">gghatano/skill-repository</a>
+    </div>
+  </footer>
+
+  <!-- 各 <li> は Python 側で同じクラスで生成します（Tailwind 走査用のサンプル）:
+       <li class="flex gap-2.5 text-[15px] leading-relaxed"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-apple-blue dark:bg-apple-blued"></span><span></span></li> -->
+  <script>
+    document.querySelectorAll("[data-copy-btn]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const code = button.parentElement.querySelector("[data-copy-text]");
+        if (!code) return;
+        try { await navigator.clipboard.writeText(code.getAttribute("data-copy-text")); } catch (_) { return; }
+        button.textContent = "Copied";
+        window.setTimeout(() => { button.textContent = "Copy"; }, 1200);
+      });
+    });
+  </script>
+</body>
+</html>

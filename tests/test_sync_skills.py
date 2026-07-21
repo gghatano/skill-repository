@@ -16,6 +16,7 @@ from scripts.sync_skills import (
     parse_frontmatter,
     render_catalog,
     render_html,
+    render_skill_detail_pages,
     render_duplication_report,
     render_manifest,
     render_porting_guide,
@@ -378,6 +379,35 @@ class PluginHtmlTest(unittest.TestCase):
         self.assertIn('"plugins":[', html)
         self.assertIn('"name":"report-review"', html)
         self.assertIn('/plugin install research@gghatano-skills', html)
+
+    def test_render_skill_detail_pages(self) -> None:
+        marketplace = {"name": "gghatano-skills", "add": "/plugin marketplace add gghatano/skill-repository"}
+        plugins = [
+            {
+                "name": "research",
+                "displayName": "研究",
+                "description": "",
+                "skills": [{"name": "report-review", "description": "レビューする"}],
+                "agents": [],
+                "docs": [],
+                "install": "/plugin install research@gghatano-skills",
+            }
+        ]
+        details = {"report-review": {"tagline": "実験レポートを点検", "canDo": ["点検する"], "whenToUse": "公開前", "io": "入力/出力"}}
+        template = (
+            "{{SKILL_NAME}}|{{PLUGIN_NAME}}|{{PLUGIN_TITLE}}|{{TAGLINE}}|{{DESCRIPTION}}"
+            "|{{CANDO_ITEMS}}|{{WHENTOUSE}}|{{IO}}|{{INVOKE}}|{{INSTALL}}|{{SOURCE_URL}}"
+        )
+        pages = render_skill_detail_pages(template, plugins, details, marketplace, "gghatano/skill-repository")
+        self.assertEqual(["skills/report-review.html"], list(pages))
+        page = pages["skills/report-review.html"]
+        self.assertIn("report-review", page)
+        self.assertIn("実験レポートを点検", page)
+        self.assertIn("点検する", page)
+        self.assertIn("/research:report-review", page)
+        self.assertIn("gghatano/skill-repository/blob/main/plugins/research/skills/report-review/SKILL.md", page)
+        # No leftover placeholders.
+        self.assertNotIn("{{", page)
 
 
 class PortabilityTest(unittest.TestCase):

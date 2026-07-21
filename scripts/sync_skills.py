@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import html
 import json
 import os
 import re
@@ -788,6 +789,59 @@ def render_html(
     return template.replace("__CATALOG_DATA__", data)
 
 
+def load_skill_details(path: Path) -> dict[str, dict[str, Any]]:
+    """Return {skillName: {tagline, canDo[], whenToUse, io}} authored summaries."""
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data.get("skills", {}) if isinstance(data, dict) else {}
+
+
+def render_skill_detail_pages(
+    template: str,
+    plugins: list[dict[str, Any]],
+    details: dict[str, dict[str, Any]],
+    marketplace: dict[str, Any],
+    repo_slug: str,
+) -> dict[str, str]:
+    """Render one ``skills/<name>.html`` detail page per skill (relative filenames)."""
+    esc = lambda value: html.escape(str(value or ""), quote=True)
+    pages: dict[str, str] = {}
+    for plugin in plugins:
+        for skill in plugin["skills"]:
+            name = skill["name"]
+            detail = details.get(name, {})
+            can_do = detail.get("canDo") or []
+            items = "".join(
+                '<li class="flex gap-2.5 text-[15px] leading-relaxed">'
+                '<span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-apple-blue dark:bg-apple-blued"></span>'
+                f"<span>{esc(item)}</span></li>"
+                for item in can_do
+            ) or '<li class="text-[15px] leading-relaxed text-apple-sub dark:text-apple-subd">—</li>'
+            source_url = f"https://github.com/{repo_slug}/blob/main/plugins/{plugin['name']}/skills/{name}/SKILL.md"
+            replacements = {
+                "{{SKILL_NAME}}": esc(name),
+                "{{PLUGIN_NAME}}": esc(plugin["name"]),
+                "{{PLUGIN_TITLE}}": esc(plugin["displayName"]),
+                "{{TAGLINE}}": esc(detail.get("tagline") or skill.get("description", "")),
+                "{{DESCRIPTION}}": esc(skill.get("description", "")),
+                "{{CANDO_ITEMS}}": items,
+                "{{WHENTOUSE}}": esc(detail.get("whenToUse", "")),
+                "{{IO}}": esc(detail.get("io", "")),
+                "{{INVOKE}}": esc(f"/{plugin['name']}:{name}"),
+                "{{INSTALL}}": esc(plugin["install"]),
+                "{{SOURCE_URL}}": esc(source_url),
+            }
+            page = template
+            for token, value in replacements.items():
+                page = page.replace(token, value)
+            pages[f"skills/{name}.html"] = page
+    return pages
+
+
 def atomic_write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
@@ -894,6 +948,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--html", type=Path, default=Path("docs/index.html"))
     parser.add_argument("--html-template", type=Path, default=Path("web/index.template.html"))
+    parser.add_argument(
+        "--skill-details",
+        type=Path,
+        default=Path("catalog/skill-details.json"),
+        help="Authored per-skill summaries for the detail pages",
+    )
+    parser.add_argument(
+        "--skill-detail-template",
+        type=Path,
+        default=Path("web/skill-detail.template.html"),
+        help="Template for per-skill detail pages",
+    )
+    parser.add_argument(
+        "--skills-html-dir",
+        type=Path,
+        default=Path("docs/skills"),
+        help="Output directory for per-skill detail pages",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Discover skills without fetching files")
     parser.add_argument(
         "--from-manifest",
@@ -917,7 +989,7 @@ def _render_generated_files(
     except OSError as exc:
         raise SyncError(f"cannot read HTML template: {args.html_template}") from exc
     marketplace, plugins = load_plugins(args.plugins_dir, args.marketplace, args.repo_slug)
-    return {
+    rendered = {
         args.catalog: render_catalog(args.owner, entries),
         args.purpose_catalog: render_purpose_catalog(args.owner, entries, categories),
         args.porting_guide: render_porting_guide(args.owner, entries),
@@ -925,6 +997,16 @@ def _render_generated_files(
         args.manifest: render_manifest(args.owner, entries),
         args.html: render_html(args.owner, html_template, marketplace, plugins),
     }
+    try:
+        detail_template = args.skill_detail_template.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise SyncError(f"cannot read skill detail template: {args.skill_detail_template}") from exc
+    details = load_skill_details(args.skill_details)
+    for relative, content in render_skill_detail_pages(
+        detail_template, plugins, details, marketplace, args.repo_slug
+    ).items():
+        rendered[args.skills_html_dir / Path(relative).name] = content
+    return rendered
 
 
 def main(argv: list[str] | None = None, client: GitHubClient | None = None) -> int:
