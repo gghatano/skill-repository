@@ -1,221 +1,122 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ja" class="scroll-smooth">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="新しいリポジトリへ引き込める汎用 Claude Skills を目的別プラグインとして配布するカタログ・導入手順">
   <title>Skill Repository</title>
   <link rel="icon" href="https://github.com/gghatano.png?size=32">
-  <style>
-    :root {
-      color-scheme: light;
-      --ink: #18202a;
-      --muted: #5d6773;
-      --line: #d9dee5;
-      --soft: #f5f7f9;
-      --surface: #ffffff;
-      --green: #17663a;
-      --green-soft: #eaf6ef;
-      --blue: #155ea8;
-      --blue-soft: #eaf1f9;
-      --focus: #0969da;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      color: var(--ink);
-      background: var(--surface);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 14px;
-    }
-
-    button, input { font: inherit; }
-    button, a { -webkit-tap-highlight-color: transparent; }
-    a { color: var(--blue); }
-
-    .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
-
-    .site-header { border-bottom: 1px solid var(--line); background: #fbfcfd; }
-    .header-inner {
-      min-height: 92px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 28px;
-      padding: 18px 0;
-    }
-    .identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
-    .avatar { width: 52px; height: 52px; border: 1px solid var(--line); border-radius: 6px; }
-    h1 { margin: 0; font-size: 23px; line-height: 1.25; font-weight: 700; }
-    .subtitle { margin: 4px 0 0; color: var(--muted); line-height: 1.4; }
-
-    .summary { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 6px; }
-    .metric { min-width: 92px; padding: 10px 14px; text-align: right; }
-    .metric + .metric { border-left: 1px solid var(--line); }
-    .metric strong { display: block; font-size: 18px; line-height: 1.2; }
-    .metric span { color: var(--muted); font-size: 12px; }
-
-    main { padding: 28px 0 48px; }
-    section.block { padding: 6px 0 30px; margin-bottom: 26px; border-bottom: 1px solid var(--line); }
-    section.block:last-of-type { border-bottom: 0; }
-    .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 0 0 6px; }
-    h2 { margin: 0; font-size: 18px; }
-    .lead { margin: 0 0 16px; color: var(--muted); line-height: 1.6; max-width: 78ch; }
-    .count { color: var(--muted); font-size: 13px; }
-
-    /* Install steps */
-    .steps { display: grid; gap: 14px; }
-    .step { border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; background: #fbfcfd; }
-    .step h3 { margin: 0 0 4px; font-size: 14px; }
-    .step h3 .num {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 20px; height: 20px; margin-right: 8px; border-radius: 50%;
-      background: var(--blue); color: #fff; font-size: 12px; font-weight: 700;
-    }
-    .step p { margin: 2px 0 8px 28px; color: var(--muted); line-height: 1.55; }
-    .step .copy-line, .step .code-static { margin-left: 28px; }
-
-    .copy-line { display: grid; grid-template-columns: 1fr auto; align-items: stretch; margin-top: 8px; }
-    .copy-line + .copy-line { margin-top: 8px; }
-    .copy-line code, .code-static {
-      min-width: 0; overflow: auto; padding: 9px 11px;
-      border: 1px solid var(--line); background: var(--surface);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px;
-      white-space: nowrap;
-    }
-    .copy-line code { border-right: 0; border-radius: 4px 0 0 4px; }
-    .code-static { display: block; border-radius: 4px; margin-top: 8px; }
-    .copy-line button {
-      border: 1px solid #b8c0ca; border-radius: 0 4px 4px 0;
-      padding: 0 12px; color: var(--ink); background: var(--surface); cursor: pointer;
-    }
-    .copy-line button:hover { background: var(--soft); }
-
-    /* Plugin cards */
-    .plugin-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-    .plugin-card { border: 1px solid var(--line); border-radius: 8px; padding: 18px; background: #fbfcfd; display: flex; flex-direction: column; }
-    .plugin-card h3 { margin: 0 0 2px; font-size: 15px; }
-    .plugin-card .plugin-id { margin: 0 0 8px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
-    .plugin-card .plugin-desc { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.6; }
-    .field-label { margin: 12px 0 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
-    .pill-row { display: flex; flex-wrap: wrap; gap: 5px; }
-    .pill {
-      display: inline-flex; align-items: center; padding: 3px 8px;
-      border: 1px solid var(--line); border-radius: 4px; background: var(--surface);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
-    }
-    .pill.companion { color: var(--green); border-color: #cfe0d6; background: var(--green-soft); }
-    .plugin-install { margin-top: auto; padding-top: 14px; }
-
-    /* Skills */
-    .search-wrap { position: relative; max-width: 380px; margin-bottom: 16px; }
-    .search-wrap::before { content: "⌕"; position: absolute; left: 12px; top: 8px; color: var(--muted); font-size: 18px; }
-    #search {
-      width: 100%; min-height: 38px; padding: 7px 12px 7px 38px;
-      border: 1px solid #b8c0ca; border-radius: 5px; color: var(--ink);
-      background: var(--surface); outline: none;
-    }
-    #search:focus, .copy-line button:focus-visible, a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-
-    .skill-list { display: grid; gap: 12px; }
-    .skill-card { border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
-    .skill-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-    .skill-name { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; font-size: 14px; }
-    .plugin-tag { display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid #cfdcec; border-radius: 4px; color: var(--blue); background: var(--blue-soft); font-size: 11.5px; font-weight: 600; }
-    .skill-desc { margin: 8px 0 0; color: var(--muted); line-height: 1.6; }
-    .skill-invoke { margin-top: 10px; }
-    .empty { padding: 40px 20px; color: var(--muted); text-align: center; }
-
-    .site-footer { padding: 20px 0 30px; border-top: 1px solid var(--line); color: var(--muted); }
-    .footer-inner { display: flex; justify-content: space-between; gap: 20px; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-
-    @media (max-width: 640px) {
-      .shell { width: min(100% - 24px, 1120px); }
-      .header-inner { display: block; min-height: 0; }
-      .summary { margin-top: 16px; width: 100%; }
-      .metric { flex: 1; text-align: left; padding: 9px 10px; }
-      .plugin-cards { grid-template-columns: 1fr; }
-      .footer-inner { display: block; }
-    }
-  </style>
+  <!-- Tailwind CSS はビルド済みの ./tailwind.css を同梱（web/build-css.sh で再生成）。 -->
+  <link rel="stylesheet" href="./tailwind.css">
 </head>
-<body>
-  <header class="site-header">
-    <div class="shell header-inner">
-      <div class="identity">
-        <img class="avatar" src="https://github.com/gghatano.png?size=104" width="52" height="52" alt="gghatano">
-        <div>
-          <h1>Skill Repository</h1>
-          <p class="subtitle">目的別プラグインで配布する汎用 Claude Skills</p>
+<body class="min-h-screen bg-apple-bg text-apple-ink antialiased dark:bg-black dark:text-apple-inkd">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-30 border-b border-black/[0.06] bg-apple-bg/80 backdrop-blur-xl dark:border-white/10 dark:bg-black/70">
+    <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-6 px-5 py-3.5 sm:px-6">
+      <div class="flex min-w-0 items-center gap-3">
+        <img class="h-9 w-9 rounded-full ring-1 ring-black/10 dark:ring-white/15" src="https://github.com/gghatano.png?size=88" width="36" height="36" alt="gghatano">
+        <div class="min-w-0">
+          <p class="truncate text-[15px] font-semibold tracking-tight">Skill Repository</p>
+          <p class="truncate text-[12px] text-apple-sub dark:text-apple-subd">Claude Skills — plugins</p>
         </div>
       </div>
-      <div class="summary" aria-label="Catalog summary">
-        <div class="metric"><strong id="plugin-total">0</strong><span>プラグイン</span></div>
-        <div class="metric"><strong id="skill-total">0</strong><span>スキル</span></div>
-        <div class="metric"><strong id="companion-total">0</strong><span>同梱物</span></div>
-      </div>
+      <dl class="flex items-stretch divide-x divide-black/[0.08] rounded-2xl bg-white/60 ring-1 ring-black/[0.06] dark:divide-white/10 dark:bg-white/[0.04] dark:ring-white/10">
+        <div class="px-4 py-1.5 text-right">
+          <dd id="plugin-total" class="text-[17px] font-semibold leading-tight tracking-tight">0</dd>
+          <dt class="text-[11px] text-apple-sub dark:text-apple-subd">プラグイン</dt>
+        </div>
+        <div class="px-4 py-1.5 text-right">
+          <dd id="skill-total" class="text-[17px] font-semibold leading-tight tracking-tight">0</dd>
+          <dt class="text-[11px] text-apple-sub dark:text-apple-subd">スキル</dt>
+        </div>
+        <div class="hidden px-4 py-1.5 text-right sm:block">
+          <dd id="companion-total" class="text-[17px] font-semibold leading-tight tracking-tight">0</dd>
+          <dt class="text-[11px] text-apple-sub dark:text-apple-subd">同梱物</dt>
+        </div>
+      </dl>
     </div>
   </header>
 
-  <main class="shell">
-    <section class="block" aria-labelledby="install-heading">
-      <div class="section-heading">
-        <h2 id="install-heading">導入手順</h2>
-      </div>
-      <p class="lead">
-        Claude Code の <code>/plugin</code> でマーケットプレイスを追加し、目的のプラグインをインストールします。
-        スキルはプラグイン名前空間付き（<code>/&lt;plugin&gt;:&lt;skill&gt;</code>）で呼び出せます。
+  <!-- Hero -->
+  <section class="mx-auto w-full max-w-5xl px-5 pt-16 pb-10 text-center sm:px-6 sm:pt-24 sm:pb-14">
+    <h1 class="mx-auto max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">
+      必要なスキルを、<br class="hidden sm:block">プラグインで引き込む。
+    </h1>
+    <p class="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-apple-sub dark:text-apple-subd sm:text-xl">
+      役割ベースに汎化した汎用 Claude Skills を、目的別のプラグインとして配布。<code class="rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/plugin</code> の2コマンドで、必要なものだけ導入できます。
+    </p>
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <a href="#install" class="rounded-full bg-apple-blue px-5 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-apple-blueh">導入手順を見る</a>
+      <a href="#plugins" class="rounded-full px-5 py-2.5 text-[15px] font-medium text-apple-blue transition-colors hover:bg-apple-blue/[0.08] dark:text-apple-blued dark:hover:bg-apple-blued/10">プラグイン一覧 ↓</a>
+    </div>
+  </section>
+
+  <main class="mx-auto w-full max-w-5xl px-5 pb-24 sm:px-6">
+
+    <!-- Install -->
+    <section id="install" class="scroll-mt-20 py-12">
+      <h2 class="text-2xl font-semibold tracking-tight sm:text-3xl">導入手順</h2>
+      <p class="mt-2 max-w-2xl text-[15px] leading-relaxed text-apple-sub dark:text-apple-subd">
+        Claude Code の <code class="rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/plugin</code> でマーケットプレイスを追加し、目的のプラグインをインストールします。スキルは名前空間付き <code class="rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/&lt;plugin&gt;:&lt;skill&gt;</code> で呼び出せます。
       </p>
-      <div class="steps">
-        <div class="step">
-          <h3><span class="num">1</span>マーケットプレイスを追加</h3>
-          <p>このリポジトリをプラグインの配布元として登録します（初回のみ）。</p>
-          <div class="copy-line"><code id="mp-add">/plugin marketplace add gghatano/skill-repository</code><button type="button" data-copy="#mp-add">Copy</button></div>
-        </div>
-        <div class="step">
-          <h3><span class="num">2</span>プラグインをインストール</h3>
-          <p>必要なプラグインだけ入れられます（下の「プラグイン」の各カードからコマンドをコピーできます）。</p>
-          <code class="code-static" id="install-example">/plugin install &lt;name&gt;@&lt;marketplace&gt;</code>
-        </div>
-        <div class="step">
-          <h3><span class="num">3</span>スキルを使う</h3>
-          <p>インストール済みプラグインのスキルは名前空間付きで呼び出します（例）。</p>
-          <code class="code-static">/research:report-review</code>
-        </div>
-      </div>
+      <ol class="mt-7 grid gap-4 sm:grid-cols-3">
+        <li class="rounded-3xl bg-white p-6 shadow-apple ring-1 ring-black/[0.04] dark:bg-apple-card dark:ring-white/10">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-apple-blue text-[15px] font-semibold text-white">1</span>
+          <h3 class="mt-4 text-[15px] font-semibold">マーケットプレイスを追加</h3>
+          <p class="mt-1.5 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd">配布元として登録します（初回のみ）。</p>
+          <div class="mt-4" data-copy-code id="mp-add">/plugin marketplace add gghatano/skill-repository</div>
+        </li>
+        <li class="rounded-3xl bg-white p-6 shadow-apple ring-1 ring-black/[0.04] dark:bg-apple-card dark:ring-white/10">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-apple-blue text-[15px] font-semibold text-white">2</span>
+          <h3 class="mt-4 text-[15px] font-semibold">プラグインを導入</h3>
+          <p class="mt-1.5 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd">必要なものだけ選べます。各カードからコピー可。</p>
+          <div class="mt-4" data-copy-code id="install-example">/plugin install &lt;name&gt;@&lt;marketplace&gt;</div>
+        </li>
+        <li class="rounded-3xl bg-white p-6 shadow-apple ring-1 ring-black/[0.04] dark:bg-apple-card dark:ring-white/10">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-apple-blue text-[15px] font-semibold text-white">3</span>
+          <h3 class="mt-4 text-[15px] font-semibold">スキルを使う</h3>
+          <p class="mt-1.5 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd">名前空間付きで呼び出します（例）。</p>
+          <div class="mt-4" data-copy-code>/research:report-review</div>
+        </li>
+      </ol>
     </section>
 
-    <section class="block" id="plugins-section" aria-labelledby="plugins-heading" hidden>
-      <div class="section-heading">
-        <h2 id="plugins-heading">プラグイン</h2>
-        <span class="count" id="plugin-count"></span>
+    <!-- Plugins -->
+    <section id="plugins" class="scroll-mt-20 py-12">
+      <div class="flex items-baseline justify-between gap-4">
+        <h2 class="text-2xl font-semibold tracking-tight sm:text-3xl">プラグイン</h2>
+        <span id="plugin-count" class="text-[13px] text-apple-sub dark:text-apple-subd"></span>
       </div>
-      <p class="lead">目的ごとに、役割ベースに汎化したスキル本体・規約（docs）・サブエージェント（agents）を自己完結でまとめた配布単位です。</p>
-      <div id="plugin-cards" class="plugin-cards"></div>
+      <p class="mt-2 max-w-2xl text-[15px] leading-relaxed text-apple-sub dark:text-apple-subd">
+        目的ごとに、スキル本体・規約（docs）・サブエージェント（agents）を自己完結でまとめた配布単位です。
+      </p>
+      <div id="plugin-cards" class="mt-7 grid gap-5 sm:grid-cols-2"></div>
     </section>
 
-    <section class="block" aria-labelledby="skills-heading">
-      <div class="section-heading">
-        <h2 id="skills-heading">スキル一覧</h2>
-        <span class="count" id="skill-count"></span>
+    <!-- Skills -->
+    <section id="skills" class="scroll-mt-20 py-12">
+      <div class="flex items-baseline justify-between gap-4">
+        <h2 class="text-2xl font-semibold tracking-tight sm:text-3xl">スキル一覧</h2>
+        <span id="skill-count" class="text-[13px] text-apple-sub dark:text-apple-subd"></span>
       </div>
-      <p class="lead">各プラグインに含まれる汎用スキルです。所属プラグインのタグと呼び出しコマンドを添えています。</p>
-      <label class="search-wrap">
-        <span class="sr-only">スキルを検索</span>
-        <input id="search" type="search" placeholder="スキル名・説明・プラグインで検索" autocomplete="off">
-      </label>
-      <div id="skill-list" class="skill-list"></div>
-      <div id="empty" class="empty" hidden>該当するスキルがありません。</div>
+      <p class="mt-2 max-w-2xl text-[15px] leading-relaxed text-apple-sub dark:text-apple-subd">
+        各プラグインに含まれる汎用スキル。所属プラグインのタグと呼び出しコマンドを添えています。
+      </p>
+      <div class="relative mt-6 max-w-md">
+        <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-apple-sub dark:text-apple-subd" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.82l3.14 3.14a.75.75 0 1 0 1.06-1.06l-3.14-3.14A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/></svg>
+        <input id="search" type="search" autocomplete="off" placeholder="スキル名・説明・プラグインで検索"
+          class="w-full rounded-full border-0 bg-white py-3 pl-11 pr-4 text-[15px] ring-1 ring-black/[0.08] transition placeholder:text-apple-sub focus:outline-none focus:ring-2 focus:ring-apple-blue dark:bg-apple-card dark:ring-white/10 dark:placeholder:text-apple-subd">
+      </div>
+      <div id="skill-list" class="mt-6 grid gap-3"></div>
+      <div id="empty" class="hidden py-16 text-center text-[15px] text-apple-sub dark:text-apple-subd">該当するスキルがありません。</div>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="shell footer-inner">
-      <span>Generated from <code>plugins/</code> and <code>.claude-plugin/marketplace.json</code>.</span>
-      <a href="https://github.com/gghatano/skill-repository">gghatano/skill-repository</a>
+  <footer class="border-t border-black/[0.06] dark:border-white/10">
+    <div class="mx-auto flex w-full max-w-5xl flex-col gap-2 px-5 py-8 text-[13px] text-apple-sub dark:text-apple-subd sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <span>Generated from <code class="font-mono">plugins/</code> and <code class="font-mono">.claude-plugin/marketplace.json</code>.</span>
+      <a class="text-apple-blue hover:underline dark:text-apple-blued" href="https://github.com/gghatano/skill-repository">gghatano/skill-repository</a>
     </div>
   </footer>
 
@@ -233,50 +134,52 @@
         return node;
       };
 
-      const copyLine = (command) => {
-        const wrap = el("div", "copy-line");
-        const code = el("code", "", command);
+      const flashCopied = (button, label) => {
+        button.textContent = "Copied";
+        window.setTimeout(() => { button.textContent = label; }, 1200);
+      };
+
+      // A copyable code block (mono text + copy button).
+      const codeBlock = (command) => {
+        const wrap = el("div", "group flex items-stretch overflow-hidden rounded-xl bg-apple-bg2 ring-1 ring-black/[0.05] dark:bg-black/40 dark:ring-white/10");
+        const code = el("code", "min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-3.5 py-2.5 font-mono text-[12.5px] text-apple-ink dark:text-apple-inkd", command);
         code.title = command;
-        const button = el("button", "", "Copy");
+        const button = el("button", "shrink-0 border-l border-black/[0.06] px-3.5 text-[12.5px] font-medium text-apple-blue transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:text-apple-blued dark:hover:bg-white/10", "Copy");
         button.type = "button";
         button.addEventListener("click", async () => {
           try { await navigator.clipboard.writeText(command); } catch (_) { return; }
-          button.textContent = "Copied";
-          window.setTimeout(() => { button.textContent = "Copy"; }, 1200);
+          flashCopied(button, "Copy");
         });
         wrap.append(code, button);
         return wrap;
       };
 
-      // Populate the marketplace-add command from data.
+      // Turn the static install-step placeholders (data-copy-code) into code blocks.
       const mpAdd = document.getElementById("mp-add");
       if (mpAdd && marketplace.add) mpAdd.textContent = marketplace.add;
       const installExample = document.getElementById("install-example");
       if (installExample) installExample.textContent = `/plugin install <name>@${marketplace.name}`;
-
-      // Static copy buttons in the install steps.
-      document.querySelectorAll("[data-copy]").forEach((button) => {
-        button.addEventListener("click", async () => {
-          const target = document.querySelector(button.dataset.copy);
-          if (!target) return;
-          try { await navigator.clipboard.writeText(target.textContent); } catch (_) { return; }
-          button.textContent = "Copied";
-          window.setTimeout(() => { button.textContent = "Copy"; }, 1200);
-        });
+      document.querySelectorAll("[data-copy-code]").forEach((node) => {
+        node.replaceWith(codeBlock(node.textContent.trim()));
       });
 
       // --- Plugins ---
       if (plugins.length) {
         const cards = document.getElementById("plugin-cards");
         plugins.forEach((plugin) => {
-          const card = el("div", "plugin-card");
-          card.append(el("h3", "", `${plugin.displayName} (${plugin.skills.length})`));
-          card.append(el("p", "plugin-id", plugin.name));
-          if (plugin.description) card.append(el("p", "plugin-desc", plugin.description));
+          const card = el("div", "flex flex-col rounded-3xl bg-white p-6 shadow-apple ring-1 ring-black/[0.04] transition duration-300 hover:-translate-y-0.5 hover:shadow-applehover dark:bg-apple-card dark:ring-white/10");
+          const head = el("div", "flex items-baseline justify-between gap-3");
+          head.append(el("h3", "text-[17px] font-semibold tracking-tight", plugin.displayName));
+          head.append(el("span", "shrink-0 rounded-full bg-black/[0.05] px-2.5 py-0.5 text-[12px] font-medium text-apple-sub dark:bg-white/10 dark:text-apple-subd", `${plugin.skills.length} skills`));
+          card.append(head);
+          card.append(el("p", "mt-0.5 font-mono text-[12px] text-apple-sub dark:text-apple-subd", plugin.name));
+          if (plugin.description) card.append(el("p", "mt-3 text-[13.5px] leading-relaxed text-apple-sub dark:text-apple-subd", plugin.description));
 
-          card.append(el("div", "field-label", "含まれるスキル"));
-          const skillRow = el("div", "pill-row");
-          plugin.skills.forEach((skill) => skillRow.append(el("span", "pill", skill.name)));
+          card.append(el("p", "mt-5 text-[11px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "含まれるスキル"));
+          const skillRow = el("div", "mt-2 flex flex-wrap gap-1.5");
+          plugin.skills.forEach((skill) =>
+            skillRow.append(el("span", "rounded-md bg-apple-bg2 px-2 py-1 font-mono text-[11.5px] text-apple-ink ring-1 ring-black/[0.04] dark:bg-white/[0.06] dark:text-apple-inkd dark:ring-white/10", skill.name))
+          );
           card.append(skillRow);
 
           const companions = [
@@ -284,20 +187,21 @@
             ...plugin.docs.map((f) => `docs/${f}`),
           ];
           if (companions.length) {
-            card.append(el("div", "field-label", "同梱物（規約・エージェント）"));
-            const compRow = el("div", "pill-row");
-            companions.forEach((f) => compRow.append(el("span", "pill companion", f)));
+            card.append(el("p", "mt-4 text-[11px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "同梱物"));
+            const compRow = el("div", "mt-2 flex flex-wrap gap-1.5");
+            companions.forEach((f) =>
+              compRow.append(el("span", "rounded-md bg-emerald-500/[0.08] px-2 py-1 font-mono text-[11.5px] text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20", f))
+            );
             card.append(compRow);
           }
 
-          const install = el("div", "plugin-install");
-          install.append(el("div", "field-label", "導入コマンド"));
-          install.append(copyLine(plugin.install));
+          const install = el("div", "mt-auto pt-5");
+          install.append(el("p", "mb-2 text-[11px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "導入コマンド"));
+          install.append(codeBlock(plugin.install));
           card.append(install);
 
           cards.append(card);
         });
-        document.getElementById("plugins-section").hidden = false;
         document.getElementById("plugin-count").textContent = `${plugins.length} 件`;
       }
 
@@ -326,16 +230,16 @@
 
         list.replaceChildren();
         filtered.forEach((skill) => {
-          const card = el("div", "skill-card");
-          const top = el("div", "skill-top");
-          top.append(el("span", "skill-name", skill.name));
-          const tag = el("span", "plugin-tag", skill.pluginTitle);
+          const card = el("div", "rounded-2xl bg-white p-5 shadow-apple ring-1 ring-black/[0.04] dark:bg-apple-card dark:ring-white/10");
+          const top = el("div", "flex flex-wrap items-center gap-2.5");
+          top.append(el("span", "font-mono text-[14px] font-semibold", skill.name));
+          const tag = el("span", "rounded-full bg-apple-blue/[0.1] px-2.5 py-0.5 text-[11.5px] font-medium text-apple-blue dark:bg-apple-blued/15 dark:text-apple-blued", skill.pluginTitle);
           tag.title = `plugin: ${skill.plugin}`;
           top.append(tag);
           card.append(top);
-          if (skill.description) card.append(el("p", "skill-desc", skill.description));
-          const invoke = el("div", "skill-invoke");
-          invoke.append(copyLine(`/${skill.plugin}:${skill.name}`));
+          if (skill.description) card.append(el("p", "mt-2.5 text-[13.5px] leading-relaxed text-apple-sub dark:text-apple-subd", skill.description));
+          const invoke = el("div", "mt-3.5 max-w-md");
+          invoke.append(codeBlock(`/${skill.plugin}:${skill.name}`));
           card.append(invoke);
           list.append(card);
         });
