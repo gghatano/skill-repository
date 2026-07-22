@@ -169,7 +169,9 @@
         plugins.forEach((plugin) => {
           const card = el("div", "flex flex-col rounded-3xl bg-white p-6 shadow-apple ring-1 ring-black/[0.04] transition duration-300 hover:-translate-y-0.5 hover:shadow-applehover dark:bg-apple-card dark:ring-white/10");
           const head = el("div", "flex items-baseline justify-between gap-3");
-          head.append(el("h3", "text-[17px] font-semibold tracking-tight", plugin.displayName));
+          const titleLink = el("a", "text-[17px] font-semibold tracking-tight hover:text-apple-blue dark:hover:text-apple-blued", plugin.displayName);
+          titleLink.href = `./plugins/${plugin.name}.html`;
+          head.append(titleLink);
           head.append(el("span", "shrink-0 rounded-full bg-black/[0.05] px-2.5 py-0.5 text-[12px] font-medium text-apple-sub dark:bg-white/10 dark:text-apple-subd", `${plugin.skills.length} skills`));
           card.append(head);
           card.append(el("p", "mt-0.5 font-mono text-[12px] text-apple-sub dark:text-apple-subd", plugin.name));
@@ -198,6 +200,9 @@
           const install = el("div", "mt-auto pt-5");
           install.append(el("p", "mb-2 text-[11px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "導入コマンド"));
           install.append(codeBlock(plugin.install));
+          const detailLink = el("a", "mt-3 inline-block text-[13px] font-medium text-apple-blue hover:underline dark:text-apple-blued", "プラグインの詳細を見る →");
+          detailLink.href = `./plugins/${plugin.name}.html`;
+          install.append(detailLink);
           card.append(install);
 
           cards.append(card);
