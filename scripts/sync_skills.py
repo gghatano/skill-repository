@@ -913,6 +913,13 @@ def render_plugin_detail_pages(
         notes = adjust_notes.get(name, [])
         adjust_items = "".join(f"<p>{_inline_markdown(note)}</p>" for note in notes)
         detail = details.get(name, {})
+        example = detail.get("example") or []
+        example_items = "".join(
+            '<li class="flex gap-3 text-[15px] leading-relaxed">'
+            '<span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-apple-blue/10 text-[11px] font-semibold text-apple-blue dark:bg-apple-blued/15 dark:text-apple-blued">'
+            f"{step_number}</span><span>{_inline_markdown(step)}</span></li>"
+            for step_number, step in enumerate(example, 1)
+        )
         first_skill = plugin["skills"][0]["name"] if plugin["skills"] else ""
         replacements = {
             "{{PLUGIN_NAME}}": esc(name),
@@ -923,6 +930,7 @@ def render_plugin_detail_pages(
             "{{IO_OUTPUT}}": esc(detail.get("output", "")),
             "{{SKILL_COUNT}}": esc(len(plugin["skills"])),
             "{{SKILL_ITEMS}}": skill_items,
+            "{{EXAMPLE_ITEMS}}": example_items,
             "{{COMPANION_ITEMS}}": companion_items,
             "{{ADJUST_ITEMS}}": adjust_items,
             "{{INSTALL}}": esc(plugin["install"]),
@@ -935,6 +943,8 @@ def render_plugin_detail_pages(
         # Drop optional sections that have no content.
         if not detail:
             page = re.sub(r'\s*<section data-section="flow">.*?</section>', "", page, flags=re.S)
+        if not example:
+            page = re.sub(r'\s*<section data-section="example">.*?</section>', "", page, flags=re.S)
         if not companions:
             page = re.sub(r'\s*<section data-section="companions">.*?</section>', "", page, flags=re.S)
         if not notes:
