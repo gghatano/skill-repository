@@ -1,26 +1,49 @@
 {
   "schema_version": 1,
-  "note": "各プラグインの詳細ページ（docs/plugins/<name>.html）用の「何を入力して・何をして・何を得るか」要約。plugins/<name>/README.md の内容に基づき作成。",
+  "note": "各プラグインの詳細ページ（docs/plugins/<name>.html）用の「何を入力して・何をして・何を得るか」要約と実行手順の例。plugins/<name>/README.md の内容に基づき作成。",
   "plugins": {
     "dev": {
       "input": "作業対象の GitHub Issue（および対象リポジトリのコードとブランチ）。",
       "process": "Issue を作業単位に branch / worktree を用意し、実装・テスト追加・規約の検証コマンド・レビューを一貫して回す。",
-      "output": "検証を通した PR と、Issue への検証記録・相互リンク。"
+      "output": "検証を通した PR と、Issue への検証記録・相互リンク。",
+      "example": [
+        "`/dev:issue-triage` — 仕様や発見から Issue 候補を洗い出して整理する",
+        "`/dev:issue-driven-development` — Issue を選び、branch / worktree を用意して実装・テストを進める",
+        "`/dev:code-review` — 実装差分をレビュー基準で点検する",
+        "`/dev:pr-prep` → `/dev:pr-from-issue` — 最終確認のうえ PR を作成し Issue に紐づける"
+      ]
     },
     "generation": {
       "input": "生成対象の仕様とサンプル（タスクディレクトリ `$ARGUMENTS` 配下の `input/`）。",
       "process": "input-prepare → spec-ingest → generation-design → generate → evaluate-refine を回し、作って評価して直す。",
-      "output": "仕様を満たす生成物（`output/`）と、忠実性・有用性・プライバシーの評価結果。"
+      "output": "仕様を満たす生成物（`output/`）と、忠実性・有用性・プライバシーの評価結果。",
+      "example": [
+        "`/generation:input-prepare` — `input/` に仕様とサンプルを揃える",
+        "`/generation:spec-ingest` — 仕様を取り込んで生成要件に落とす",
+        "`/generation:generation-design` — 生成方式（ルール／統計／モデル／差分プライバシー）を設計する",
+        "`/generation:generate` — 生成物を `output/` に作る",
+        "`/generation:evaluate-refine` — 忠実性・有用性・プライバシーで評価して直す（`/generation:generation-cycle` で全体を自動運転も可）"
+      ]
     },
     "research": {
       "input": "実験のテーマ・データと、対象リポジトリのレイアウト（役割→パスの規約）。",
       "process": "レポート骨子の設計 → 実験の計画・実行 → 各種レビュー → 公開整合チェックを段階的に進める。",
-      "output": "レビュー済みの実験レポートと、公開できる成果物一式。"
+      "output": "レビュー済みの実験レポートと、公開できる成果物一式。",
+      "example": [
+        "`/research:report-skeleton` — レポートの骨子を設計する",
+        "`/research:experiment-plan` → `/research:experiment-run` — 実験を計画して実行する",
+        "`/research:report-review` / `repro-engineering-review` / `related-info-review` — 各観点でレビューする",
+        "`/research:publish-check` — 公開前の整合を確認する（`/research:research-cycle` が全体の進行役）"
+      ]
     },
     "writing": {
       "input": "AI が書いた日本語の下書き・文章。",
       "process": "主体の不在・命題型見出し・両論併記・記号アーティファクト等を検出して直す。",
-      "output": "人間が書いた文章に近づけた推敲済みテキストと、修正観点の指摘。"
+      "output": "人間が書いた文章に近づけた推敲済みテキストと、修正観点の指摘。",
+      "example": [
+        "`/writing:stop-ai-slop-jp` — 下書きを渡し、AI 臭い箇所を検出して直す",
+        "指摘を反映し、必要なら再度かけて仕上げる"
+      ]
     }
   }
 }

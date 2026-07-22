@@ -174,9 +174,9 @@
   **人手で書いた要約** `catalog/skill-details.json`（`tagline` / `canDo[]` / `whenToUse` / `io`）を流し込む。
 - **プラグイン詳細ページ**（`docs/plugins/<name>.html`）: プラグイン 1 件ごとに 1 枚。`web/plugin-detail.template.html` から
   生成する。**先頭に「何を入力して・何をして・何を得るか」（入力→処理→出力）の要約**を置き、含まれるスキル一覧・
-  同梱物（`agents/` `docs/`）・**導入後の調整**をその後に続ける。入力/処理/出力の要約は `catalog/plugin-details.json`
-  （`input` / `process` / `output`）から、調整メモは `plugins/<name>/README.md` の「導入後の調整」節を
-  `extract_readme_section` で引用する。
+  **実行手順の例**・同梱物（`agents/` `docs/`）・**導入後の調整**をその後に続ける。入力/処理/出力の要約と実行手順の例は
+  `catalog/plugin-details.json`（`input` / `process` / `output` / `example[]`）から、調整メモは
+  `plugins/<name>/README.md` の「導入後の調整」節を `extract_readme_section` で引用する。
 
 **考え方**: 詳細ページの主役は「含まれるスキルの一覧」ではなく、**「何を入力すると何が得られるか」という価値の流れ**。
 利用者がまず知りたいのは中身の部品ではなく、入力→出力の対応だからです。スキル一覧は「その流れをどう実現するか」の

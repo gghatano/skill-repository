@@ -458,11 +458,19 @@ class PluginHtmlTest(unittest.TestCase):
             },
         ]
         adjust = {"research": ["`docs/x.md` を調整してください。"]}
-        details = {"research": {"input": "テーマとデータ", "process": "計画して実行する", "output": "レポート一式"}}
+        details = {
+            "research": {
+                "input": "テーマとデータ",
+                "process": "計画して実行する",
+                "output": "レポート一式",
+                "example": ["`/research:report-skeleton` で骨子を作る", "実験して直す"],
+            }
+        }
         template = (
             'A{{PLUGIN_NAME}}|{{PLUGIN_TITLE}}|{{DESCRIPTION}}|{{SKILL_COUNT}}|{{SKILL_ITEMS}}'
             '|{{INSTALL}}|{{MARKETPLACE_ADD}}|{{FIRST_SKILL}}'
             '<section data-section="flow">F{{IO_INPUT}}|{{IO_PROCESS}}|{{IO_OUTPUT}}</section>'
+            '<section data-section="example">E{{EXAMPLE_ITEMS}}</section>'
             '<section data-section="companions">C{{COMPANION_ITEMS}}</section>'
             '<section data-section="adjust">D{{ADJUST_ITEMS}}</section>Z'
         )
@@ -476,12 +484,16 @@ class PluginHtmlTest(unittest.TestCase):
         self.assertIn("テーマとデータ", research)
         self.assertIn("計画して実行する", research)
         self.assertIn("レポート一式", research)
+        self.assertIn('data-section="example"', research)
+        self.assertIn("骨子を作る", research)  # example step, inline code rendered
+        self.assertIn("実験して直す", research)
         self.assertIn('data-section="companions"', research)
         self.assertIn('data-section="adjust"', research)
         self.assertNotIn("{{", research)
-        # writing has no flow/companions/adjust details: those sections are dropped.
+        # writing has no flow/example/companions/adjust details: those sections are dropped.
         writing = pages["plugins/writing.html"]
         self.assertNotIn('data-section="flow"', writing)
+        self.assertNotIn('data-section="example"', writing)
         self.assertNotIn('data-section="companions"', writing)
         self.assertNotIn('data-section="adjust"', writing)
 

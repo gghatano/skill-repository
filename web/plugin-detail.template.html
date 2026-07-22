@@ -36,16 +36,16 @@
       <section data-section="flow">
         <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">何を入力して、何をして、何を得るか</h2>
         <dl class="mt-3 overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.04] dark:bg-apple-card dark:ring-white/10">
-          <div class="flex flex-col gap-1 border-b border-black/[0.06] px-4 py-3.5 dark:border-white/10 sm:flex-row sm:gap-4">
-            <dt class="shrink-0 text-[12px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd sm:w-28 sm:pt-0.5">入力</dt>
+          <div class="flex flex-col gap-1.5 border-b border-black/[0.06] px-5 py-4 dark:border-white/10 sm:flex-row sm:gap-8 sm:py-5">
+            <dt class="shrink-0 text-[11px] font-semibold uppercase tracking-widest text-apple-blue dark:text-apple-blued sm:w-24 sm:pt-1">入力</dt>
             <dd class="text-[15px] leading-relaxed text-apple-ink dark:text-apple-inkd">{{IO_INPUT}}</dd>
           </div>
-          <div class="flex flex-col gap-1 border-b border-black/[0.06] px-4 py-3.5 dark:border-white/10 sm:flex-row sm:gap-4">
-            <dt class="shrink-0 text-[12px] font-semibold uppercase tracking-wide text-apple-blue dark:text-apple-blued sm:w-28 sm:pt-0.5">すること</dt>
+          <div class="flex flex-col gap-1.5 border-b border-black/[0.06] px-5 py-4 dark:border-white/10 sm:flex-row sm:gap-8 sm:py-5">
+            <dt class="shrink-0 text-[11px] font-semibold uppercase tracking-widest text-apple-blue dark:text-apple-blued sm:w-24 sm:pt-1">すること</dt>
             <dd class="text-[15px] leading-relaxed text-apple-ink dark:text-apple-inkd">{{IO_PROCESS}}</dd>
           </div>
-          <div class="flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:gap-4">
-            <dt class="shrink-0 text-[12px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd sm:w-28 sm:pt-0.5">得られるもの</dt>
+          <div class="flex flex-col gap-1.5 px-5 py-4 sm:flex-row sm:gap-8 sm:py-5">
+            <dt class="shrink-0 text-[11px] font-semibold uppercase tracking-widest text-apple-blue dark:text-apple-blued sm:w-24 sm:pt-1">得られるもの</dt>
             <dd class="text-[15px] leading-relaxed text-apple-ink dark:text-apple-inkd">{{IO_OUTPUT}}</dd>
           </div>
         </dl>
@@ -55,6 +55,12 @@
         <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">含まれるスキル（{{SKILL_COUNT}}）</h2>
         <p class="mt-1.5 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd">上の流れは、次のスキルを組み合わせて実現します。</p>
         <ul class="mt-3 divide-y divide-black/[0.06] rounded-2xl bg-white ring-1 ring-black/[0.04] dark:divide-white/10 dark:bg-apple-card dark:ring-white/10">{{SKILL_ITEMS}}</ul>
+      </section>
+
+      <section data-section="example">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">実行手順の例</h2>
+        <p class="mt-1.5 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd">代表的な流れです。状況に応じて省略・前後してかまいません。</p>
+        <ol class="mt-3 space-y-2.5">{{EXAMPLE_ITEMS}}</ol>
       </section>
 
       <section data-section="companions">
