@@ -888,6 +888,7 @@ def render_plugin_detail_pages(
     template: str,
     plugins: list[dict[str, Any]],
     adjust_notes: dict[str, list[str]],
+    details: dict[str, dict[str, Any]],
     marketplace: dict[str, Any],
     plugins_dir: Path,
 ) -> dict[str, str]:
@@ -911,11 +912,15 @@ def render_plugin_detail_pages(
         )
         notes = adjust_notes.get(name, [])
         adjust_items = "".join(f"<p>{_inline_markdown(note)}</p>" for note in notes)
+        detail = details.get(name, {})
         first_skill = plugin["skills"][0]["name"] if plugin["skills"] else ""
         replacements = {
             "{{PLUGIN_NAME}}": esc(name),
             "{{PLUGIN_TITLE}}": esc(plugin["displayName"]),
             "{{DESCRIPTION}}": esc(plugin["description"]),
+            "{{IO_INPUT}}": esc(detail.get("input", "")),
+            "{{IO_PROCESS}}": esc(detail.get("process", "")),
+            "{{IO_OUTPUT}}": esc(detail.get("output", "")),
             "{{SKILL_COUNT}}": esc(len(plugin["skills"])),
             "{{SKILL_ITEMS}}": skill_items,
             "{{COMPANION_ITEMS}}": companion_items,
@@ -928,12 +933,25 @@ def render_plugin_detail_pages(
         for token, value in replacements.items():
             page = page.replace(token, value)
         # Drop optional sections that have no content.
+        if not detail:
+            page = re.sub(r'\s*<section data-section="flow">.*?</section>', "", page, flags=re.S)
         if not companions:
             page = re.sub(r'\s*<section data-section="companions">.*?</section>', "", page, flags=re.S)
         if not notes:
             page = re.sub(r'\s*<section data-section="adjust">.*?</section>', "", page, flags=re.S)
         pages[f"plugins/{name}.html"] = page
     return pages
+
+
+def load_plugin_details(path: Path) -> dict[str, dict[str, Any]]:
+    """Return {pluginName: {input, process, output}} authored input→process→output summaries."""
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data.get("plugins", {}) if isinstance(data, dict) else {}
 
 
 def load_plugin_adjust_notes(plugins_dir: Path, plugins: list[dict[str, Any]]) -> dict[str, list[str]]:
@@ -1072,6 +1090,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output directory for per-skill detail pages",
     )
     parser.add_argument(
+        "--plugin-details",
+        type=Path,
+        default=Path("catalog/plugin-details.json"),
+        help="Authored per-plugin input/process/output summaries for the detail pages",
+    )
+    parser.add_argument(
         "--plugin-detail-template",
         type=Path,
         default=Path("web/plugin-detail.template.html"),
@@ -1128,8 +1152,9 @@ def _render_generated_files(
     except OSError as exc:
         raise SyncError(f"cannot read plugin detail template: {args.plugin_detail_template}") from exc
     adjust_notes = load_plugin_adjust_notes(args.plugins_dir, plugins)
+    plugin_details = load_plugin_details(args.plugin_details)
     for relative, content in render_plugin_detail_pages(
-        plugin_template, plugins, adjust_notes, marketplace, args.plugins_dir
+        plugin_template, plugins, adjust_notes, plugin_details, marketplace, args.plugins_dir
     ).items():
         rendered[args.plugins_html_dir / Path(relative).name] = content
     return rendered
