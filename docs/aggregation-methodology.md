@@ -157,11 +157,29 @@
 | `docs/skill-purpose-catalog.md` | 人間可読 | 目的カテゴリ別の一覧 |
 | `docs/skill-porting-guide.md` | 人間可読 | 移植チェックリスト（tier 別） |
 | `docs/skill-duplication.md` | 人間可読 | 複数リポジトリ重複の検出（集約候補） |
-| `docs/index.html` | 配布 | GitHub Pages（テンプレートにデータ差し込み） |
+| `docs/index.html` | 配布 | GitHub Pages 一覧（テンプレートにデータ差し込み） |
+| `docs/skills/<name>.html` | 配布 | 各**スキルの詳細ページ**（できること・使いどころ・入出力）。一覧のスキル名からリンク |
+| `docs/plugins/<name>.html` | 配布 | 各**プラグインの詳細ページ**（含まれるスキル・同梱物・導入後の調整・導入手順）。一覧のプラグインカードからリンク |
 | `plugins/<name>/` | 配布 | 目的別プラグイン（`/plugin` で導入） |
 
 **考え方**: **manifest を真実源**にし、`--from-manifest` で GitHub を叩かずに全派生物を再生成できるようにする。
 これにより「表示の作り直し」と「収集のやり直し」を分離でき、オフラインでも整合を保てます。
+
+#### 一覧ページと詳細ページ — 生成物を「入口」と「深掘り」に分ける
+
+配布物の HTML は 1 枚ではなく、**一覧（index）→ 詳細（detail）**の 2 層で構成します。
+
+- **一覧ページ**（`docs/index.html`）: 全スキル・全プラグインの入口。カード/名前から詳細ページへリンクする。
+- **スキル詳細ページ**（`docs/skills/<name>.html`）: スキル 1 件ごとに 1 枚。`web/skill-detail.template.html` に
+  **人手で書いた要約** `catalog/skill-details.json`（`tagline` / `canDo[]` / `whenToUse` / `io`）を流し込む。
+- **プラグイン詳細ページ**（`docs/plugins/<name>.html`）: プラグイン 1 件ごとに 1 枚。`web/plugin-detail.template.html` から
+  生成し、含まれるスキル（各スキル詳細へリンク）・同梱物（`agents/` `docs/`）・**導入後の調整**を表示する。
+  調整メモは `plugins/<name>/README.md` の「導入後の調整」節を `extract_readme_section` で引用する。
+
+**考え方**: 一覧は機械的に導ける事実（名前・概要・出典）で作り、詳細は**人手の説明を上乗せ**する。
+これは 2.3 の「収集は機械 / 意味づけは人手」を**出力側にも一貫させた**もので、`skill-details.json` と
+README の「導入後の調整」節が、`categories.json` と並ぶ**人手管理の意味づけソース**になります。
+同梱物や調整メモが無いプラグイン（例: `writing`）では、該当セクションを**省く**（空欄を晒さない）。
 
 ### 3.2 出力検証ゲート — 「壊さない」ための順序と原子性
 
@@ -169,7 +187,7 @@
 
 | 技法 | 何をするか | なぜ |
 | --- | --- | --- |
-| **render-before-mutate** | `skills/` を差し替える**前に**全ドキュメントを文字列として生成しきる | テンプレート不備等の失敗を、破壊的操作の前に検知する |
+| **render-before-mutate** | `skills/` を差し替える**前に**全ドキュメント（一覧・詳細ページ・マニフェスト含む）を文字列として生成しきる | テンプレート不備等の失敗を、破壊的操作の前に検知する |
 | **一時ディレクトリにステージング** | 新しい `skills/` は temp に組み立ててから入れ替える | 組み立て中の中間状態を本番に晒さない |
 | **バックアップ付き入れ替え**（`replace_directory`） | `X` → `X.previous` に退避 → 新 `X` を配置 → 失敗時は**ロールバック** | 差し替えの原子性と復旧可能性 |
 | **原子的書き込み**（`atomic_write`） | 一時ファイルに書いて `os.replace` で置換 | 書き込み途中のファイルを読ませない |
@@ -199,8 +217,9 @@
 | 取込単位ファイル | `SKILL.md` | 「単位ディレクトリの目印ファイル」を差し替え |
 | 目的タクソノミー | `catalog/categories.json` | 自分のドメインのカテゴリで定義し直す |
 | 移植性バケット | `bundled/parameterized/companions/external` | 自分の資産の「外部依存の形」に合わせて正規表現・接頭辞を調整 |
-| 配布物 | 4 プラグイン + Pages | 不要なら `plugins/` と HTML 生成を外す |
-| 出力先 | `skills/` `docs/` `catalog/` | `build_parser` の各パス引数 |
+| 詳細ページの人手要約 | `catalog/skill-details.json` | 各項目の説明（tagline / できること / 使いどころ / 入出力）を自分のドメインで用意 |
+| 配布物 | 4 プラグイン + 一覧/詳細ページ | 不要なら `plugins/` や詳細ページ生成（`--skill-detail-template` / `--plugin-detail-template`）を外す |
+| 出力先 | `skills/` `docs/` `docs/skills/` `docs/plugins/` `catalog/` | `build_parser` の各パス引数 |
 
 ### 4.2 変えない箇所（不変条件 = 再現性の核）
 
@@ -224,7 +243,8 @@
 - [ ] **意味づけ**の自動導出（依存・移植性など）を、自分のドメインの関心事に置き換える。
 - [ ] **タクソノミー**（`categories.json` 相当）を人手で定義し、名前で突き合わせる。
 - [ ] **真実源となる manifest** のスキーマを決め、派生ドキュメントを render 関数として書く。
-- [ ] **出力の原子性**（render-before-mutate / staging / backup 入れ替え / atomic write）を必ず入れる。
+- [ ] 表示は**一覧→詳細の 2 層**で設計する。詳細ページの人手要約（`skill-details.json` 相当）は任意だが、あると価値が伝わりやすい。
+- [ ] **出力の原子性**（render-before-mutate / staging / backup 入れ替え / atomic write）を必ず入れる。詳細ページも同じ render セットに含める。
 - [ ] **決定論テスト**と**検証ゲートのテスト**を用意する。
 - [ ] 定期実行（CI）で**同期 PR 自動作成**まで繋ぐと運用が回る（`.github/workflows/sync-skills.yml` 参照）。
 
@@ -242,6 +262,7 @@
 | PROCESS | 意味づけ（依存・パス・移植性） | `detect_tools`, `detect_project_paths`, `classify_portability` |
 | PROCESS | 分類（タクソノミー） | `load_categories`, `assign_categories` |
 | OUTPUT | 派生ドキュメント生成 | `render_catalog`, `render_purpose_catalog`, `render_porting_guide`, `render_duplication_report`, `render_manifest`, `render_html` |
+| OUTPUT | 詳細ページ生成（一覧→詳細の 2 層） | `render_skill_detail_pages`, `render_plugin_detail_pages`, `load_skill_details`, `load_plugin_adjust_notes`, `extract_readme_section` |
 | OUTPUT | 原子性・順序・入れ替え | `_render_generated_files`, `atomic_write`, `replace_directory`, `main` |
 | OUTPUT | 真実源からの再生成 | `entries_from_manifest`（`--from-manifest`） |
 | 全体 | 不変条件の回帰テスト | `tests/test_sync_skills.py` |
