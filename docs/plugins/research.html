@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="研究レポート作成ライフサイクル — 実験レポートの骨子設計から実験の計画・実行、レビュー、公開までを一式で進める研究リポジトリ向けのスキル群。役割ベースのスキル本体・規約・サブエージェントを同梱。">
+  <title>研究レポート作成ライフサイクル · Skill Repository</title>
+  <link rel="icon" href="https://github.com/gghatano.png?size=32">
+  <link rel="stylesheet" href="../tailwind.css">
+</head>
+<body class="min-h-screen bg-apple-bg text-apple-ink antialiased dark:bg-black dark:text-apple-inkd">
+
+  <header class="sticky top-0 z-30 border-b border-black/[0.06] bg-apple-bg/80 backdrop-blur-xl dark:border-white/10 dark:bg-black/70">
+    <div class="mx-auto flex w-full max-w-3xl items-center justify-between gap-6 px-5 py-3.5 sm:px-6">
+      <a href="../index.html" class="flex min-w-0 items-center gap-2 text-apple-sub transition-colors hover:text-apple-ink dark:text-apple-subd dark:hover:text-apple-inkd">
+        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 0 1 0 1.06L9.06 10l3.73 3.71a.75.75 0 1 1-1.06 1.06l-4.24-4.24a.75.75 0 0 1 0-1.06l4.24-4.24a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/></svg>
+        <span class="text-[14px] font-medium">Skill Repository</span>
+      </a>
+      <a href="../index.html#plugins" class="text-[13px] text-apple-blue hover:underline dark:text-apple-blued">プラグイン一覧</a>
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-3xl px-5 py-12 sm:px-6 sm:py-16">
+    <span class="inline-flex items-center rounded-full bg-black/[0.05] px-3 py-1 font-mono text-[12.5px] text-apple-sub dark:bg-white/10 dark:text-apple-subd">research</span>
+    <h1 class="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">研究レポート作成ライフサイクル</h1>
+    <p class="mt-3 text-lg leading-relaxed text-apple-sub dark:text-apple-subd sm:text-xl">実験レポートの骨子設計から実験の計画・実行、レビュー、公開までを一式で進める研究リポジトリ向けのスキル群。役割ベースのスキル本体・規約・サブエージェントを同梱。</p>
+
+    <div class="mt-6">
+      <div class="group flex max-w-md items-stretch overflow-hidden rounded-xl bg-apple-bg2 ring-1 ring-black/[0.05] dark:bg-black/40 dark:ring-white/10">
+        <code data-copy-text="/plugin install research@gghatano-skills" class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-3.5 py-2.5 font-mono text-[13px]">/plugin install research@gghatano-skills</code>
+        <button type="button" data-copy-btn class="shrink-0 border-l border-black/[0.06] px-3.5 text-[12.5px] font-medium text-apple-blue transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:text-apple-blued dark:hover:bg-white/10">Copy</button>
+      </div>
+    </div>
+
+    <div class="mt-10 space-y-10">
+      <section data-section="skills">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">含まれるスキル（9）</h2>
+        <ul class="mt-3 divide-y divide-black/[0.06] rounded-2xl bg-white ring-1 ring-black/[0.04] dark:divide-white/10 dark:bg-apple-card dark:ring-white/10"><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/doc-cycle.html">doc-cycle</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="ドキュメント全体の整理・レビュー・対応サイクルを一括実行するオーケストレーター。report-review → repro-engineering-review → related-info-review → publish-check を順次呼び出し、横断的な指摘をまとめて報告する。実験の追記後・公開前・定期点検に使う。">ドキュメント全体の整理・レビュー・対応サイクルを一括実行するオーケストレーター。report-review → repro-engineering-review → related-info-review → publish-check を順次呼び出し、横断的な指摘をまとめて報告する。実験の追記後・公開前・定期点検に使う。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/experiment-plan.html">experiment-plan</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="実験計画の作成とレビュー。レポート骨子から抽出した実験一覧をもとに、既存研究に準拠した指標による公平な比較条件と、業務課題を反映した評価シナリオを計画書（docs/plans/）に落とす。実験の追加・比較条件の変更時にも使う。">実験計画の作成とレビュー。レポート骨子から抽出した実験一覧をもとに、既存研究に準拠した指標による公平な比較条件と、業務課題を反映した評価シナリオを計画書（docs/plans/）に落とす。実験の追加・比較条件の変更時にも使う。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/experiment-run.html">experiment-run</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="実験の実行と結果の記録。計画書（docs/plans/）に基づき、uv による固定環境でスクリプトを実行し、結果をレポート規約（実行条件の明記・図表・所見）に沿って整理する。実験の再実行・シード追加・新実験スクリプトの追加時にも使う。">実験の実行と結果の記録。計画書（docs/plans/）に基づき、uv による固定環境でスクリプトを実行し、結果をレポート規約（実行条件の明記・図表・所見）に沿って整理する。実験の再実行・シード追加・新実験スクリプトの追加時にも使う。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/publish-check.html">publish-check</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/03_build_html.py）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。">公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/03_build_html.py）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/related-info-review.html">related-info-review</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="関連情報の整理。参考文献・出典タグ・上流リポジトリ情報・手法解説ページの参考リンク・残課題（GitHub Issues）を点検し、リンク切れや対応漏れを整理する。文献追加、上流の更新追従、Issue 化の準備時にも使う。">関連情報の整理。参考文献・出典タグ・上流リポジトリ情報・手法解説ページの参考リンク・残課題（GitHub Issues）を点検し、リンク切れや対応漏れを整理する。文献追加、上流の更新追従、Issue 化の準備時にも使う。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/report-review.html">report-review</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="実験レポート（前提・結果・考察・課題）の整理とレビュー。レポート本体や追加実験の Markdown を、事実と推定の分離・数値の整合・統計的な断定の妥当性・アカデミック体裁・課題の追跡可能性の観点で点検し、軽微な問題は修正する。レポートの章立て直し、実験結果の追記、考察の見直し時にも使う。">実験レポート（前提・結果・考察・課題）の整理とレビュー。レポート本体や追加実験の Markdown を、事実と推定の分離・数値の整合・統計的な断定の妥当性・アカデミック体裁・課題の追跡可能性の観点で点検し、軽微な問題は修正する。レポートの章立て直し、実験結果の追記、考察の見直し時にも使う。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/report-skeleton.html">report-skeleton</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="レポート骨子の設計。実験を始める前にレポートの章立て・各章の主張・必要な実験と指標を骨子として固め、段階的に埋めるための TODO 付きスケルトンを content/ に用意する。新しい評価対象に着手するとき・レポートの再構成時に最初に使う。">レポート骨子の設計。実験を始める前にレポートの章立て・各章の主張・必要な実験と指標を骨子として固め、段階的に埋めるための TODO 付きスケルトンを content/ に用意する。新しい評価対象に着手するとき・レポートの再構成時に最初に使う。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/repro-engineering-review.html">repro-engineering-review</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="再現手順とエンジニアリングノートのレビュー。setup/usage/reproduce/engineering-notes とスクリプト・依存固定・パッチの整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。">再現手順とエンジニアリングノートのレビュー。setup/usage/reproduce/engineering-notes とスクリプト・依存固定・パッチの整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/research-cycle.html">research-cycle</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="実験レポート作成のライフサイクル全体を統括するトップレベルのオーケストレーター。report-skeleton → experiment-plan → experiment-run（実験ごとに反復）→ doc-cycle を順に進め、現在地（stage・未実施の計画・残 TODO）を判定して次のプロセスへ誘導する。新しい評価対象への着手時、または「いま何をすべきか」の確認に使う。">実験レポート作成のライフサイクル全体を統括するトップレベルのオーケストレーター。report-skeleton → experiment-plan → experiment-run（実験ごとに反復）→ doc-cycle を順に進め、現在地（stage・未実施の計画・残 TODO）を判定して次のプロセスへ誘導する。新しい評価対象への着手時、または「いま何をすべきか」の確認に使う。</span></li></ul>
+      </section>
+
+      <section data-section="companions">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">同梱物（規約・エージェント）</h2>
+        <div class="mt-3 flex flex-wrap gap-1.5"><span class="rounded-md bg-emerald-500/[0.08] px-2 py-1 font-mono text-[11.5px] text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20">agents/implementer.md</span><span class="rounded-md bg-emerald-500/[0.08] px-2 py-1 font-mono text-[11.5px] text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20">agents/planner.md</span><span class="rounded-md bg-emerald-500/[0.08] px-2 py-1 font-mono text-[11.5px] text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20">agents/reviewer.md</span><span class="rounded-md bg-emerald-500/[0.08] px-2 py-1 font-mono text-[11.5px] text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20">docs/documentation-conventions.md</span></div>
+      </section>
+
+      <section data-section="adjust">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">導入後の調整</h2>
+        <div class="mt-3 space-y-3 text-[15px] leading-relaxed"><p><code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10">docs/documentation-conventions.md</code> の §1「パスの読み替え（役割→既定パス）」表を、対象リポジトリの実際のレイアウトに合わせて調整してください。役割ベースのスキル本体は編集不要です。</p><p><code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10">writing</code> プラグインの <code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10">stop-ai-slop-jp</code> を併せて導入していると、<code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10">report-review</code> が自動で連携します。</p></div>
+      </section>
+
+      <section>
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">導入手順</h2>
+        <ol class="mt-3 space-y-3 text-[15px] leading-relaxed">
+          <li class="flex gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-apple-blue dark:bg-apple-blued"></span><span>マーケットプレイスを追加（初回のみ）<code class="ml-1 rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/plugin marketplace add gghatano/skill-repository</code></span></li>
+          <li class="flex gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-apple-blue dark:bg-apple-blued"></span><span>このプラグインを導入 <code class="ml-1 rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/plugin install research@gghatano-skills</code></span></li>
+          <li class="flex gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-apple-blue dark:bg-apple-blued"></span><span>スキルを名前空間付きで呼び出す（例 <code class="rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/research:doc-cycle</code>）</span></li>
+        </ol>
+      </section>
+    </div>
+
+    <div class="mt-14 border-t border-black/[0.06] pt-6 dark:border-white/10">
+      <a href="../index.html#plugins" class="text-[14px] text-apple-blue hover:underline dark:text-apple-blued">← プラグイン一覧に戻る</a>
+    </div>
+  </main>
+
+  <footer class="border-t border-black/[0.06] dark:border-white/10">
+    <div class="mx-auto w-full max-w-3xl px-5 py-8 text-[13px] text-apple-sub dark:text-apple-subd sm:px-6">
+      <a class="text-apple-blue hover:underline dark:text-apple-blued" href="https://github.com/gghatano/skill-repository">gghatano/skill-repository</a>
+    </div>
+  </footer>
+
+  <!-- Python 側で生成する繰り返し要素のサンプル（Tailwind 走査用）:
+       スキル: <li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued"></a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd"></span></li>
+       同梱物: <span class="rounded-md bg-emerald-500/[0.08] px-2 py-1 font-mono text-[11.5px] text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20"></span>
+       調整メモ段落: <p></p> / <code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10"></code> -->
+  <script>
+    document.querySelectorAll("[data-copy-btn]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const code = button.parentElement.querySelector("[data-copy-text]");
+        if (!code) return;
+        try { await navigator.clipboard.writeText(code.getAttribute("data-copy-text")); } catch (_) { return; }
+        button.textContent = "Copied";
+        window.setTimeout(() => { button.textContent = "Copy"; }, 1200);
+      });
+    });
+  </script>
+</body>
+</html>

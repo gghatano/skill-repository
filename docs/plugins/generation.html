@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="仕様駆動 生成・評価サイクル — 仕様から成果物を作り、評価して直す汎用サイクル（input-prepare → spec-ingest → generation-design → generate → evaluate-refine）。骨格は領域非依存で、現在の中身は合成データ生成プロファイル。">
+  <title>仕様駆動 生成・評価サイクル · Skill Repository</title>
+  <link rel="icon" href="https://github.com/gghatano.png?size=32">
+  <link rel="stylesheet" href="../tailwind.css">
+</head>
+<body class="min-h-screen bg-apple-bg text-apple-ink antialiased dark:bg-black dark:text-apple-inkd">
+
+  <header class="sticky top-0 z-30 border-b border-black/[0.06] bg-apple-bg/80 backdrop-blur-xl dark:border-white/10 dark:bg-black/70">
+    <div class="mx-auto flex w-full max-w-3xl items-center justify-between gap-6 px-5 py-3.5 sm:px-6">
+      <a href="../index.html" class="flex min-w-0 items-center gap-2 text-apple-sub transition-colors hover:text-apple-ink dark:text-apple-subd dark:hover:text-apple-inkd">
+        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 0 1 0 1.06L9.06 10l3.73 3.71a.75.75 0 1 1-1.06 1.06l-4.24-4.24a.75.75 0 0 1 0-1.06l4.24-4.24a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/></svg>
+        <span class="text-[14px] font-medium">Skill Repository</span>
+      </a>
+      <a href="../index.html#plugins" class="text-[13px] text-apple-blue hover:underline dark:text-apple-blued">プラグイン一覧</a>
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-3xl px-5 py-12 sm:px-6 sm:py-16">
+    <span class="inline-flex items-center rounded-full bg-black/[0.05] px-3 py-1 font-mono text-[12.5px] text-apple-sub dark:bg-white/10 dark:text-apple-subd">generation</span>
+    <h1 class="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">仕様駆動 生成・評価サイクル</h1>
+    <p class="mt-3 text-lg leading-relaxed text-apple-sub dark:text-apple-subd sm:text-xl">仕様から成果物を作り、評価して直す汎用サイクル（input-prepare → spec-ingest → generation-design → generate → evaluate-refine）。骨格は領域非依存で、現在の中身は合成データ生成プロファイル。</p>
+
+    <div class="mt-6">
+      <div class="group flex max-w-md items-stretch overflow-hidden rounded-xl bg-apple-bg2 ring-1 ring-black/[0.05] dark:bg-black/40 dark:ring-white/10">
+        <code data-copy-text="/plugin install generation@gghatano-skills" class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-3.5 py-2.5 font-mono text-[13px]">/plugin install generation@gghatano-skills</code>
+        <button type="button" data-copy-btn class="shrink-0 border-l border-black/[0.06] px-3.5 text-[12.5px] font-medium text-apple-blue transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:text-apple-blued dark:hover:bg-white/10">Copy</button>
+      </div>
+    </div>
+
+    <div class="mt-10 space-y-10">
+      <section data-section="skills">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">含まれるスキル（6）</h2>
+        <ul class="mt-3 divide-y divide-black/[0.06] rounded-2xl bg-white ring-1 ring-black/[0.04] dark:divide-white/10 dark:bg-apple-card dark:ring-white/10"><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/evaluate-refine.html">evaluate-refine</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="タスクディレクトリ ($ARGUMENTS) の合成データを、仕様・サンプル・制約に照らして評価し、必要に応じて generator.py を修正する。evaluation_report.md と constraints_check.csv を出力する。">タスクディレクトリ ($ARGUMENTS) の合成データを、仕様・サンプル・制約に照らして評価し、必要に応じて generator.py を修正する。evaluation_report.md と constraints_check.csv を出力する。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/generate.html">generate</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="タスクディレクトリ ($ARGUMENTS) の generation_plan.md に基づき、src/generator.py を実装し、output/ に合成データを生成する。">タスクディレクトリ ($ARGUMENTS) の generation_plan.md に基づき、src/generator.py を実装し、output/ に合成データを生成する。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/generation-cycle.html">generation-cycle</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="合成データ生成パイプラインの PM (project manager) エージェントとして起動する。必要に応じて原資料から input/ を作成し、5 つの SKILL (input-prepare → spec-ingest → generation-design → generate → evaluate-refine) を順次サブエージェントに委譲し、各ステップの Acceptance Criteria 充足を確認しながら end-to-end で実行する。">合成データ生成パイプラインの PM (project manager) エージェントとして起動する。必要に応じて原資料から input/ を作成し、5 つの SKILL (input-prepare → spec-ingest → generation-design → generate → evaluate-refine) を順次サブエージェントに委譲し、各ステップの Acceptance Criteria 充足を確認しながら end-to-end で実行する。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/generation-design.html">generation-design</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="タスクディレクトリ ($ARGUMENTS) の inferred_schema.json と constraint_plan.md をもとに、各列の生成方式を設計し work/generation_plan.md を作成する。">タスクディレクトリ ($ARGUMENTS) の inferred_schema.json と constraint_plan.md をもとに、各列の生成方式を設計し work/generation_plan.md を作成する。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/input-prepare.html">input-prepare</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="タスクディレクトリ ($ARGUMENTS) の原データ・仕様書・業務ドキュメントを読み取り、合成データ生成パイプラインが参照する input/ 配下の table_definition、sample_data、data_spec.md、constraints.md を作成・更新する。">タスクディレクトリ ($ARGUMENTS) の原データ・仕様書・業務ドキュメントを読み取り、合成データ生成パイプラインが参照する input/ 配下の table_definition、sample_data、data_spec.md、constraints.md を作成・更新する。</span></li><li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/spec-ingest.html">spec-ingest</a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="タスクディレクトリ ($ARGUMENTS) の input/ を読み取り、合成データ生成に必要な仕様を機械可読化する。work/inferred_schema.json と work/constraint_plan.md を作成する。">タスクディレクトリ ($ARGUMENTS) の input/ を読み取り、合成データ生成に必要な仕様を機械可読化する。work/inferred_schema.json と work/constraint_plan.md を作成する。</span></li></ul>
+      </section>
+
+      <section data-section="companions">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">同梱物（規約・エージェント）</h2>
+        <div class="mt-3 flex flex-wrap gap-1.5"><span class="rounded-md bg-emerald-500/[0.08] px-2 py-1 font-mono text-[11.5px] text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20">docs/generation-cycle-conventions.md</span></div>
+      </section>
+
+      <section data-section="adjust">
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">導入後の調整</h2>
+        <div class="mt-3 space-y-3 text-[15px] leading-relaxed"><p>汎用の生成・評価サイクルです。骨格（フェーズ）は領域非依存で、<code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10">docs/generation-cycle-conventions.md</code> にプロファイルの考え方をまとめています。各スキルはタスクディレクトリ（<code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10">$ARGUMENTS</code>）配下の <code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10">input/ work/ output/ src/</code> を読み書きします。別の生成領域を扱うときは、骨格・スキル名はそのままに、各フェーズの中身を差し替えたプロファイルを用意してください。</p></div>
+      </section>
+
+      <section>
+        <h2 class="text-[13px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd">導入手順</h2>
+        <ol class="mt-3 space-y-3 text-[15px] leading-relaxed">
+          <li class="flex gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-apple-blue dark:bg-apple-blued"></span><span>マーケットプレイスを追加（初回のみ）<code class="ml-1 rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/plugin marketplace add gghatano/skill-repository</code></span></li>
+          <li class="flex gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-apple-blue dark:bg-apple-blued"></span><span>このプラグインを導入 <code class="ml-1 rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/plugin install generation@gghatano-skills</code></span></li>
+          <li class="flex gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-apple-blue dark:bg-apple-blued"></span><span>スキルを名前空間付きで呼び出す（例 <code class="rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/generation:evaluate-refine</code>）</span></li>
+        </ol>
+      </section>
+    </div>
+
+    <div class="mt-14 border-t border-black/[0.06] pt-6 dark:border-white/10">
+      <a href="../index.html#plugins" class="text-[14px] text-apple-blue hover:underline dark:text-apple-blued">← プラグイン一覧に戻る</a>
+    </div>
+  </main>
+
+  <footer class="border-t border-black/[0.06] dark:border-white/10">
+    <div class="mx-auto w-full max-w-3xl px-5 py-8 text-[13px] text-apple-sub dark:text-apple-subd sm:px-6">
+      <a class="text-apple-blue hover:underline dark:text-apple-blued" href="https://github.com/gghatano/skill-repository">gghatano/skill-repository</a>
+    </div>
+  </footer>
+
+  <!-- Python 側で生成する繰り返し要素のサンプル（Tailwind 走査用）:
+       スキル: <li class="flex items-baseline justify-between gap-3 px-4 py-3"><a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued"></a><span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd"></span></li>
+       同梱物: <span class="rounded-md bg-emerald-500/[0.08] px-2 py-1 font-mono text-[11.5px] text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20"></span>
+       調整メモ段落: <p></p> / <code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10"></code> -->
+  <script>
+    document.querySelectorAll("[data-copy-btn]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const code = button.parentElement.querySelector("[data-copy-text]");
+        if (!code) return;
+        try { await navigator.clipboard.writeText(code.getAttribute("data-copy-text")); } catch (_) { return; }
+        button.textContent = "Copied";
+        window.setTimeout(() => { button.textContent = "Copy"; }, 1200);
+      });
+    });
+  </script>
+</body>
+</html>

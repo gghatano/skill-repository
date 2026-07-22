@@ -2,7 +2,12 @@
  *  Build: web/build-css.sh  (outputs docs/tailwind.css, committed as a vendored asset)
  */
 module.exports = {
-  content: ["./web/index.template.html", "./web/skill-detail.template.html", "./scripts/sync_skills.py"],
+  content: [
+    "./web/index.template.html",
+    "./web/skill-detail.template.html",
+    "./web/plugin-detail.template.html",
+    "./scripts/sync_skills.py",
+  ],
   darkMode: "media",
   theme: {
     extend: {

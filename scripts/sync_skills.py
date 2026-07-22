@@ -842,6 +842,111 @@ def render_skill_detail_pages(
     return pages
 
 
+def extract_readme_section(readme_path: Path, heading: str) -> list[str]:
+    """Return the paragraphs under a ``## <heading>`` section of a README (markdown source)."""
+    if not readme_path.is_file():
+        return []
+    try:
+        lines = readme_path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+    collecting = False
+    body: list[str] = []
+    for line in lines:
+        if line.startswith("## "):
+            if collecting:
+                break
+            collecting = line[3:].strip() == heading
+            continue
+        if collecting:
+            body.append(line)
+    # Split the collected block into paragraphs on blank lines.
+    paragraphs: list[str] = []
+    current: list[str] = []
+    for line in body:
+        if line.strip():
+            current.append(line.strip())
+        elif current:
+            paragraphs.append(" ".join(current))
+            current = []
+    if current:
+        paragraphs.append(" ".join(current))
+    return paragraphs
+
+
+def _inline_markdown(text: str) -> str:
+    """Escape HTML and render inline `code` spans for a plain paragraph."""
+    escaped = html.escape(text, quote=True)
+    return re.sub(
+        r"`([^`]+)`",
+        r'<code class="rounded bg-black/[0.05] px-1 font-mono text-[0.9em] dark:bg-white/10">\1</code>',
+        escaped,
+    )
+
+
+def render_plugin_detail_pages(
+    template: str,
+    plugins: list[dict[str, Any]],
+    adjust_notes: dict[str, list[str]],
+    marketplace: dict[str, Any],
+    plugins_dir: Path,
+) -> dict[str, str]:
+    """Render one ``plugins/<name>.html`` detail page per plugin (relative filenames)."""
+    esc = lambda value: html.escape(str(value or ""), quote=True)
+    pages: dict[str, str] = {}
+    for plugin in plugins:
+        name = plugin["name"]
+        skill_items = "".join(
+            '<li class="flex items-baseline justify-between gap-3 px-4 py-3">'
+            f'<a class="font-mono text-[14px] font-semibold text-apple-ink hover:text-apple-blue dark:text-apple-inkd dark:hover:text-apple-blued" href="../skills/{esc(skill["name"])}.html">{esc(skill["name"])}</a>'
+            f'<span class="min-w-0 flex-1 truncate text-right text-[12.5px] text-apple-sub dark:text-apple-subd" title="{esc(skill.get("description", ""))}">{esc(skill.get("description", ""))}</span>'
+            "</li>"
+            for skill in plugin["skills"]
+        )
+        companions = [f"agents/{f}" for f in plugin["agents"]] + [f"docs/{f}" for f in plugin["docs"]]
+        companion_items = "".join(
+            '<span class="rounded-md bg-emerald-500/[0.08] px-2 py-1 font-mono text-[11.5px] text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20">'
+            f"{esc(item)}</span>"
+            for item in companions
+        )
+        notes = adjust_notes.get(name, [])
+        adjust_items = "".join(f"<p>{_inline_markdown(note)}</p>" for note in notes)
+        first_skill = plugin["skills"][0]["name"] if plugin["skills"] else ""
+        replacements = {
+            "{{PLUGIN_NAME}}": esc(name),
+            "{{PLUGIN_TITLE}}": esc(plugin["displayName"]),
+            "{{DESCRIPTION}}": esc(plugin["description"]),
+            "{{SKILL_COUNT}}": esc(len(plugin["skills"])),
+            "{{SKILL_ITEMS}}": skill_items,
+            "{{COMPANION_ITEMS}}": companion_items,
+            "{{ADJUST_ITEMS}}": adjust_items,
+            "{{INSTALL}}": esc(plugin["install"]),
+            "{{MARKETPLACE_ADD}}": esc(marketplace.get("add", "")),
+            "{{FIRST_SKILL}}": esc(first_skill),
+        }
+        page = template
+        for token, value in replacements.items():
+            page = page.replace(token, value)
+        # Drop optional sections that have no content.
+        if not companions:
+            page = re.sub(r'\s*<section data-section="companions">.*?</section>', "", page, flags=re.S)
+        if not notes:
+            page = re.sub(r'\s*<section data-section="adjust">.*?</section>', "", page, flags=re.S)
+        pages[f"plugins/{name}.html"] = page
+    return pages
+
+
+def load_plugin_adjust_notes(plugins_dir: Path, plugins: list[dict[str, Any]]) -> dict[str, list[str]]:
+    """Return {pluginName: [paragraph, ...]} from each plugin README's 導入後の調整 section."""
+    notes: dict[str, list[str]] = {}
+    for plugin in plugins:
+        readme = plugins_dir / plugin["name"] / "README.md"
+        section = extract_readme_section(readme, "導入後の調整")
+        if section:
+            notes[plugin["name"]] = section
+    return notes
+
+
 def atomic_write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
@@ -966,6 +1071,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path("docs/skills"),
         help="Output directory for per-skill detail pages",
     )
+    parser.add_argument(
+        "--plugin-detail-template",
+        type=Path,
+        default=Path("web/plugin-detail.template.html"),
+        help="Template for per-plugin detail pages",
+    )
+    parser.add_argument(
+        "--plugins-html-dir",
+        type=Path,
+        default=Path("docs/plugins"),
+        help="Output directory for per-plugin detail pages",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Discover skills without fetching files")
     parser.add_argument(
         "--from-manifest",
@@ -1006,6 +1123,15 @@ def _render_generated_files(
         detail_template, plugins, details, marketplace, args.repo_slug
     ).items():
         rendered[args.skills_html_dir / Path(relative).name] = content
+    try:
+        plugin_template = args.plugin_detail_template.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise SyncError(f"cannot read plugin detail template: {args.plugin_detail_template}") from exc
+    adjust_notes = load_plugin_adjust_notes(args.plugins_dir, plugins)
+    for relative, content in render_plugin_detail_pages(
+        plugin_template, plugins, adjust_notes, marketplace, args.plugins_dir
+    ).items():
+        rendered[args.plugins_html_dir / Path(relative).name] = content
     return rendered
 
 

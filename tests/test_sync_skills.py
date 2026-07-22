@@ -17,6 +17,8 @@ from scripts.sync_skills import (
     render_catalog,
     render_html,
     render_skill_detail_pages,
+    render_plugin_detail_pages,
+    extract_readme_section,
     render_duplication_report,
     render_manifest,
     render_porting_guide,
@@ -408,6 +410,60 @@ class PluginHtmlTest(unittest.TestCase):
         self.assertIn("gghatano/skill-repository/blob/main/plugins/research/skills/report-review/SKILL.md", page)
         # No leftover placeholders.
         self.assertNotIn("{{", page)
+
+    def test_extract_readme_section(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            readme = Path(temp) / "README.md"
+            readme.write_text(
+                "# title\n\n## 導入\n本文\n\n## 導入後の調整\n段落A。\n\n段落B。\n\n## 含まれるスキル\nx\n",
+                encoding="utf-8",
+            )
+            section = extract_readme_section(readme, "導入後の調整")
+            self.assertEqual(["段落A。", "段落B。"], section)
+            self.assertEqual([], extract_readme_section(readme, "存在しない"))
+
+    def test_render_plugin_detail_pages(self) -> None:
+        marketplace = {"name": "gghatano-skills", "add": "/plugin marketplace add gghatano/skill-repository"}
+        plugins = [
+            {
+                "name": "research",
+                "displayName": "研究",
+                "description": "説明",
+                "skills": [{"name": "report-review", "description": "レビュー"}],
+                "agents": ["planner.md"],
+                "docs": ["documentation-conventions.md"],
+                "install": "/plugin install research@gghatano-skills",
+            },
+            {
+                "name": "writing",
+                "displayName": "文章",
+                "description": "自己完結",
+                "skills": [{"name": "stop-ai-slop-jp", "description": "AI 臭を直す"}],
+                "agents": [],
+                "docs": [],
+                "install": "/plugin install writing@gghatano-skills",
+            },
+        ]
+        adjust = {"research": ["`docs/x.md` を調整してください。"]}
+        template = (
+            'A{{PLUGIN_NAME}}|{{PLUGIN_TITLE}}|{{DESCRIPTION}}|{{SKILL_COUNT}}|{{SKILL_ITEMS}}'
+            '|{{INSTALL}}|{{MARKETPLACE_ADD}}|{{FIRST_SKILL}}'
+            '<section data-section="companions">C{{COMPANION_ITEMS}}</section>'
+            '<section data-section="adjust">D{{ADJUST_ITEMS}}</section>Z'
+        )
+        pages = render_plugin_detail_pages(template, plugins, adjust, marketplace, Path("plugins"))
+        self.assertEqual({"plugins/research.html", "plugins/writing.html"}, set(pages))
+        research = pages["plugins/research.html"]
+        self.assertIn("../skills/report-review.html", research)
+        self.assertIn("agents/planner.md", research)
+        self.assertIn("<code", research)  # inline markdown rendered
+        self.assertIn('data-section="companions"', research)
+        self.assertIn('data-section="adjust"', research)
+        self.assertNotIn("{{", research)
+        # writing has no companions/adjust: those sections are dropped.
+        writing = pages["plugins/writing.html"]
+        self.assertNotIn('data-section="companions"', writing)
+        self.assertNotIn('data-section="adjust"', writing)
 
 
 class PortabilityTest(unittest.TestCase):
