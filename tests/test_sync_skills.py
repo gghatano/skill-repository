@@ -13,6 +13,7 @@ from scripts.sync_skills import (
     discover_skills,
     entries_from_manifest,
     load_categories,
+    load_plugin_details,
     parse_frontmatter,
     render_catalog,
     render_html,
@@ -411,6 +412,18 @@ class PluginHtmlTest(unittest.TestCase):
         # No leftover placeholders.
         self.assertNotIn("{{", page)
 
+    def test_load_plugin_details(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "plugin-details.json"
+            path.write_text(
+                '{"plugins": {"dev": {"input": "i", "process": "p", "output": "o"}}}',
+                encoding="utf-8",
+            )
+            details = load_plugin_details(path)
+            self.assertEqual({"input": "i", "process": "p", "output": "o"}, details["dev"])
+            # Missing file returns empty, not an error.
+            self.assertEqual({}, load_plugin_details(Path(temp) / "missing.json"))
+
     def test_extract_readme_section(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             readme = Path(temp) / "README.md"
@@ -445,23 +458,30 @@ class PluginHtmlTest(unittest.TestCase):
             },
         ]
         adjust = {"research": ["`docs/x.md` を調整してください。"]}
+        details = {"research": {"input": "テーマとデータ", "process": "計画して実行する", "output": "レポート一式"}}
         template = (
             'A{{PLUGIN_NAME}}|{{PLUGIN_TITLE}}|{{DESCRIPTION}}|{{SKILL_COUNT}}|{{SKILL_ITEMS}}'
             '|{{INSTALL}}|{{MARKETPLACE_ADD}}|{{FIRST_SKILL}}'
+            '<section data-section="flow">F{{IO_INPUT}}|{{IO_PROCESS}}|{{IO_OUTPUT}}</section>'
             '<section data-section="companions">C{{COMPANION_ITEMS}}</section>'
             '<section data-section="adjust">D{{ADJUST_ITEMS}}</section>Z'
         )
-        pages = render_plugin_detail_pages(template, plugins, adjust, marketplace, Path("plugins"))
+        pages = render_plugin_detail_pages(template, plugins, adjust, details, marketplace, Path("plugins"))
         self.assertEqual({"plugins/research.html", "plugins/writing.html"}, set(pages))
         research = pages["plugins/research.html"]
         self.assertIn("../skills/report-review.html", research)
         self.assertIn("agents/planner.md", research)
         self.assertIn("<code", research)  # inline markdown rendered
+        self.assertIn('data-section="flow"', research)
+        self.assertIn("テーマとデータ", research)
+        self.assertIn("計画して実行する", research)
+        self.assertIn("レポート一式", research)
         self.assertIn('data-section="companions"', research)
         self.assertIn('data-section="adjust"', research)
         self.assertNotIn("{{", research)
-        # writing has no companions/adjust: those sections are dropped.
+        # writing has no flow/companions/adjust details: those sections are dropped.
         writing = pages["plugins/writing.html"]
+        self.assertNotIn('data-section="flow"', writing)
         self.assertNotIn('data-section="companions"', writing)
         self.assertNotIn('data-section="adjust"', writing)
 
