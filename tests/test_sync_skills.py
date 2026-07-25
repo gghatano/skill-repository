@@ -662,6 +662,19 @@ class RealArtifactSmokeTest(unittest.TestCase):
         self.assertNotIn('data-section="flow"', page)
         self.assertIn("incomplete input/process/output", captured.getvalue())
 
+    def test_plugin_missing_from_details_is_reported(self) -> None:
+        with contextlib.redirect_stderr(io.StringIO()) as captured:
+            self._render({})
+        warning = captured.getvalue()
+        self.assertIn("no entry in the details file", warning)
+        for plugin in self.plugins:
+            self.assertIn(plugin["name"], warning)
+
+    def test_fully_described_plugins_produce_no_warning(self) -> None:
+        with contextlib.redirect_stderr(io.StringIO()) as captured:
+            self._render(self.details)
+        self.assertEqual("", captured.getvalue())
+
     def test_authored_values_cannot_expand_into_other_tokens(self) -> None:
         name = self.plugins[0]["name"]
         polluted = {
@@ -672,7 +685,8 @@ class RealArtifactSmokeTest(unittest.TestCase):
                 "usage": {"command": "/x:y", "note": "n"},
             }
         }
-        page = self._render(polluted)[f"plugins/{name}.html"]
+        with contextlib.redirect_stderr(io.StringIO()):
+            page = self._render(polluted)[f"plugins/{name}.html"]
         # The literal token survives as text; the output value does not leak into it.
         self.assertIn("{{IO_OUTPUT}}", page)
         self.assertEqual(1, page.count("LEAKED"))
