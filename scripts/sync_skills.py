@@ -924,6 +924,7 @@ def render_plugin_detail_pages(
     """Render one ``plugins/<name>.html`` detail page per plugin (relative filenames)."""
     esc = lambda value: html.escape(str(value or ""), quote=True)
     pages: dict[str, str] = {}
+    undescribed: list[str] = []
     for plugin in plugins:
         name = plugin["name"]
         skill_items = "".join(
@@ -942,6 +943,8 @@ def render_plugin_detail_pages(
         notes = adjust_notes.get(name, [])
         adjust_items = "".join(f"<p>{_inline_markdown(note)}</p>" for note in notes)
         detail = details.get(name, {})
+        if not detail:
+            undescribed.append(name)
         usage = detail.get("usage") or {}
         example = detail.get("example") or []
         example_items = "".join(
@@ -991,6 +994,14 @@ def render_plugin_detail_pages(
         if not notes:
             page = re.sub(r'\s*<section data-section="adjust">.*?</section>', "", page, flags=re.S)
         pages[f"plugins/{name}.html"] = page
+    if undescribed:
+        # Same posture as uncategorized skills: a gap in the authored data is a
+        # gap in the pages, so name it rather than shipping a thinner page quietly.
+        print(
+            f"warning: {len(undescribed)} plugin(s) have no entry in the details file, "
+            f"so their value sections were omitted: {', '.join(undescribed)}",
+            file=sys.stderr,
+        )
     return pages
 
 

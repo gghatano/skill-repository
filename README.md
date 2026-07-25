@@ -53,6 +53,7 @@ Claude Code のプロンプトで、マーケットプレイスを追加し、�
 - `docs/`: 横断カタログと GitHub Pages（下記）
 - `catalog/manifest.json` / `catalog/categories.json`: 機械可読マニフェストと目的タクソノミー
 - `catalog/skill-details.json`: 各スキルの詳細ページ（できること・使いどころ・入出力）用の要約
+- `catalog/plugin-details.json`: 各プラグインの詳細ページ用の要約（入力→処理→出力・かんたんな使い方・実行手順の例）
 
 ### スキルの収集とカタログ
 
@@ -96,7 +97,8 @@ python3 -m unittest discover -s tests -v
 `docs/index.html` は `web/index.template.html`（Apple 調・Tailwind CSS）にカタログデータを差し込んで
 生成します。各スキルの詳細ページ `docs/skills/<name>.html` は `web/skill-detail.template.html` に
 `catalog/skill-details.json` の要約を流し込んで生成し、一覧のスキル名からリンクします。各プラグインの
-詳細ページ `docs/plugins/<name>.html` は `web/plugin-detail.template.html` から生成し、導入後の調整メモは
+詳細ページ `docs/plugins/<name>.html` は `web/plugin-detail.template.html` に
+`catalog/plugin-details.json` の要約を流し込んで生成し、導入後の調整メモは
 `plugins/<name>/README.md` の「導入後の調整」節を引用します。スタイルは
 `docs/tailwind.css` にビルド済みで同梱し、テンプレートのクラスを変更したときだけ再ビルドします
 （npm レジストリへのアクセスが必要）。
@@ -104,6 +106,10 @@ python3 -m unittest discover -s tests -v
 ```bash
 ./web/build-css.sh   # docs/tailwind.css を再生成
 ```
+
+**プラグインを追加したとき**は `catalog/plugin-details.json` にも項目（`input` / `process` / `output` /
+`usage` / `example`）を追加してください。未記載のプラグインは詳細ページから該当セクションが省かれ、
+同期時に警告が出ます。要約が壊れた JSON になっている場合は、中身の抜けたページを配布しないよう同期を中断します。
 
 ### 定期更新
 
