@@ -173,10 +173,15 @@
 - **スキル詳細ページ**（`docs/skills/<name>.html`）: スキル 1 件ごとに 1 枚。`web/skill-detail.template.html` に
   **人手で書いた要約** `catalog/skill-details.json`（`tagline` / `canDo[]` / `whenToUse` / `io`）を流し込む。
 - **プラグイン詳細ページ**（`docs/plugins/<name>.html`）: プラグイン 1 件ごとに 1 枚。`web/plugin-detail.template.html` から
-  生成する。**先頭に「何を入力して・何をして・何を得るか」（入力→処理→出力）の要約**を置き、含まれるスキル一覧・
-  **実行手順の例**・同梱物（`agents/` `docs/`）・**導入後の調整**をその後に続ける。入力/処理/出力の要約と実行手順の例は
-  `catalog/plugin-details.json`（`input` / `process` / `output` / `example[]`）から、調整メモは
+  生成する。**先頭に「何を入力して・何をして・何を得るか」（入力→処理→出力）の要約**を置き、そのすぐ下に
+  **かんたんな使い方**（コマンド 1 つ＋一言）、続けて含まれるスキル一覧・**実行手順の例**・同梱物（`agents/` `docs/`）・
+  **導入後の調整**を並べる。要約・使い方・実行手順の例は `catalog/plugin-details.json`
+  （`input` / `process` / `output` / `usage{command,note}` / `example[]`）から、調整メモは
   `plugins/<name>/README.md` の「導入後の調整」節を `extract_readme_section` で引用する。
+
+  **並び順の意図**: 入力→処理→出力（価値）→ **いちばん簡単な始め方**（すぐ試せる 1 コマンド）→ 中身（スキル）→
+  詳しい手順、という**浅い理解から深い実践へ**の順にする。まず「何が得られるか」、次に「最短でどう始めるか」を見せ、
+  詳細は後ろに回す段階的開示（progressive disclosure）。
 
 **考え方**: 詳細ページの主役は「含まれるスキルの一覧」ではなく、**「何を入力すると何が得られるか」という価値の流れ**。
 利用者がまず知りたいのは中身の部品ではなく、入力→出力の対応だからです。スキル一覧は「その流れをどう実現するか」の

@@ -913,6 +913,7 @@ def render_plugin_detail_pages(
         notes = adjust_notes.get(name, [])
         adjust_items = "".join(f"<p>{_inline_markdown(note)}</p>" for note in notes)
         detail = details.get(name, {})
+        usage = detail.get("usage") or {}
         example = detail.get("example") or []
         example_items = "".join(
             '<li class="flex gap-3 text-[15px] leading-relaxed">'
@@ -928,6 +929,8 @@ def render_plugin_detail_pages(
             "{{IO_INPUT}}": esc(detail.get("input", "")),
             "{{IO_PROCESS}}": esc(detail.get("process", "")),
             "{{IO_OUTPUT}}": esc(detail.get("output", "")),
+            "{{USAGE_CMD}}": esc(usage.get("command", "")),
+            "{{USAGE_NOTE}}": esc(usage.get("note", "")),
             "{{SKILL_COUNT}}": esc(len(plugin["skills"])),
             "{{SKILL_ITEMS}}": skill_items,
             "{{EXAMPLE_ITEMS}}": example_items,
@@ -943,6 +946,8 @@ def render_plugin_detail_pages(
         # Drop optional sections that have no content.
         if not detail:
             page = re.sub(r'\s*<section data-section="flow">.*?</section>', "", page, flags=re.S)
+        if not usage.get("command"):
+            page = re.sub(r'\s*<section data-section="usage">.*?</section>', "", page, flags=re.S)
         if not example:
             page = re.sub(r'\s*<section data-section="example">.*?</section>', "", page, flags=re.S)
         if not companions:
