@@ -789,15 +789,34 @@ def render_html(
     return template.replace("__CATALOG_DATA__", data)
 
 
-def load_skill_details(path: Path) -> dict[str, dict[str, Any]]:
-    """Return {skillName: {tagline, canDo[], whenToUse, io}} authored summaries."""
+def _load_authored_details(path: Path, key: str) -> dict[str, dict[str, Any]]:
+    """Load an authored detail file. Absent is fine (the pages degrade); corrupt is not.
+
+    A missing file means the optional summaries were never written. A file that
+    exists but cannot be parsed means the summaries were lost, and silently
+    rendering pages without them would ship gutted output under a green run.
+    """
     if not path.is_file():
         return {}
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    return data.get("skills", {}) if isinstance(data, dict) else {}
+        raw = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise SyncError(f"cannot read details file: {path}") from exc
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise SyncError(f"details file is not valid JSON: {path}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise SyncError(f"details file must be a JSON object: {path}")
+    section = data.get(key, {})
+    if not isinstance(section, dict):
+        raise SyncError(f"'{key}' must be a JSON object in {path}")
+    return section
+
+
+def load_skill_details(path: Path) -> dict[str, dict[str, Any]]:
+    """Return {skillName: {tagline, canDo[], whenToUse, io}} authored summaries."""
+    return _load_authored_details(path, "skills")
 
 
 def render_skill_detail_pages(
@@ -835,10 +854,7 @@ def render_skill_detail_pages(
                 "{{INSTALL}}": esc(plugin["install"]),
                 "{{SOURCE_URL}}": esc(source_url),
             }
-            page = template
-            for token, value in replacements.items():
-                page = page.replace(token, value)
-            pages[f"skills/{name}.html"] = page
+            pages[f"skills/{name}.html"] = _fill_template(template, replacements)
     return pages
 
 
@@ -872,6 +888,19 @@ def extract_readme_section(readme_path: Path, heading: str) -> list[str]:
     if current:
         paragraphs.append(" ".join(current))
     return paragraphs
+
+
+TEMPLATE_TOKEN_RE = re.compile(r"\{\{[A-Z_]+\}\}")
+
+
+def _fill_template(template: str, replacements: dict[str, str]) -> str:
+    """Substitute every {{TOKEN}} in one pass.
+
+    Applying replacements sequentially would rescan text that was just inserted,
+    so an authored value containing a literal ``{{TOKEN}}`` would be expanded by
+    a later substitution. One pass makes values inert.
+    """
+    return TEMPLATE_TOKEN_RE.sub(lambda match: replacements.get(match.group(0), match.group(0)), template)
 
 
 def _inline_markdown(text: str) -> str:
@@ -940,11 +969,18 @@ def render_plugin_detail_pages(
             "{{MARKETPLACE_ADD}}": esc(marketplace.get("add", "")),
             "{{FIRST_SKILL}}": esc(first_skill),
         }
-        page = template
-        for token, value in replacements.items():
-            page = page.replace(token, value)
-        # Drop optional sections that have no content.
-        if not detail:
+        page = _fill_template(template, replacements)
+        # Drop optional sections that have no content. The flow section is an
+        # input/process/output triple by design, so a partially filled one would
+        # render blank rows: drop it and say which plugin needs finishing.
+        flow_fields = [detail.get("input", ""), detail.get("process", ""), detail.get("output", "")]
+        if not all(flow_fields):
+            if any(flow_fields):
+                print(
+                    f"warning: plugin '{name}' has an incomplete input/process/output summary; "
+                    "the flow section was omitted",
+                    file=sys.stderr,
+                )
             page = re.sub(r'\s*<section data-section="flow">.*?</section>', "", page, flags=re.S)
         if not usage.get("command"):
             page = re.sub(r'\s*<section data-section="usage">.*?</section>', "", page, flags=re.S)
@@ -959,14 +995,8 @@ def render_plugin_detail_pages(
 
 
 def load_plugin_details(path: Path) -> dict[str, dict[str, Any]]:
-    """Return {pluginName: {input, process, output}} authored input→process→output summaries."""
-    if not path.is_file():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    return data.get("plugins", {}) if isinstance(data, dict) else {}
+    """Return {pluginName: {input, process, output, usage, example}} authored summaries."""
+    return _load_authored_details(path, "plugins")
 
 
 def load_plugin_adjust_notes(plugins_dir: Path, plugins: list[dict[str, Any]]) -> dict[str, list[str]]:

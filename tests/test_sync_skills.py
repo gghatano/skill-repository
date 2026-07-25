@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import os
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,6 +17,7 @@ from scripts.sync_skills import (
     entries_from_manifest,
     load_categories,
     load_plugin_details,
+    load_skill_details,
     parse_frontmatter,
     render_catalog,
     render_html,
@@ -566,6 +570,112 @@ class PortabilityTest(unittest.TestCase):
         self.assertIn("# Skill Porting Guide", guide)
         self.assertIn("## そのまま", guide)
         self.assertIn("`issue-planner`", guide)
+
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+class AuthoredDetailsLoadingTest(unittest.TestCase):
+    """The authored summaries are optional, but losing them must never pass silently."""
+
+    def test_corrupt_details_file_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "plugin-details.json"
+            path.write_text('{"plugins": {"dev": ,}}', encoding="utf-8")
+            with self.assertRaises(SyncError):
+                load_plugin_details(path)
+            with self.assertRaises(SyncError):
+                load_skill_details(path)
+
+    def test_non_object_details_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "d.json"
+            path.write_text("[1, 2, 3]", encoding="utf-8")
+            with self.assertRaises(SyncError):
+                load_plugin_details(path)
+            path.write_text('{"plugins": "nope"}', encoding="utf-8")
+            with self.assertRaises(SyncError):
+                load_plugin_details(path)
+
+    def test_missing_details_file_is_tolerated(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            self.assertEqual({}, load_plugin_details(Path(temp) / "absent.json"))
+            self.assertEqual({}, load_skill_details(Path(temp) / "absent.json"))
+
+
+class RealArtifactSmokeTest(unittest.TestCase):
+    """Render the shipped templates with the shipped data.
+
+    The other render tests use synthetic templates, so they cannot notice a
+    template token that was renamed or authored data that lost a field.
+    """
+
+    def setUp(self) -> None:
+        from scripts.sync_skills import load_plugins
+
+        self.marketplace, self.plugins = load_plugins(
+            REPO_ROOT / "plugins",
+            REPO_ROOT / ".claude-plugin" / "marketplace.json",
+            "gghatano/skill-repository",
+        )
+        self.details = load_plugin_details(REPO_ROOT / "catalog" / "plugin-details.json")
+        self.template = (REPO_ROOT / "web" / "plugin-detail.template.html").read_text(encoding="utf-8")
+
+    def _render(self, details: dict) -> dict[str, str]:
+        return render_plugin_detail_pages(
+            self.template, self.plugins, {}, details, self.marketplace, REPO_ROOT / "plugins"
+        )
+
+    def test_every_plugin_page_has_the_value_sections(self) -> None:
+        pages = self._render(self.details)
+        self.assertTrue(pages)
+        for filename, page in pages.items():
+            with self.subTest(page=filename):
+                for section in ("flow", "usage", "skills", "example"):
+                    self.assertIn(f'data-section="{section}"', page)
+                self.assertNotIn("{{", page)
+                self.assertNotIn("<dd></dd>", page)
+
+    def test_authored_commands_exist_as_real_skills(self) -> None:
+        available = {
+            plugin["name"]: {skill["name"] for skill in plugin["skills"]} for plugin in self.plugins
+        }
+        commands: list[str] = []
+        for detail in self.details.values():
+            command = detail.get("usage", {}).get("command")
+            if command:
+                commands.append(command)
+            for step in detail.get("example", []):
+                commands.extend(re.findall(r"`(/[a-z-]+:[a-z0-9_-]+)`", step))
+        self.assertTrue(commands)
+        for command in commands:
+            with self.subTest(command=command):
+                plugin_name, _, skill_name = command[1:].partition(":")
+                self.assertIn(plugin_name, available)
+                self.assertIn(skill_name, available[plugin_name])
+
+    def test_incomplete_flow_summary_drops_the_section_instead_of_blank_rows(self) -> None:
+        name = self.plugins[0]["name"]
+        partial = {name: {"input": "あり", "usage": {"command": "/x:y", "note": "n"}}}
+        with contextlib.redirect_stderr(io.StringIO()) as captured:
+            page = self._render(partial)[f"plugins/{name}.html"]
+        self.assertNotIn('data-section="flow"', page)
+        self.assertIn("incomplete input/process/output", captured.getvalue())
+
+    def test_authored_values_cannot_expand_into_other_tokens(self) -> None:
+        name = self.plugins[0]["name"]
+        polluted = {
+            name: {
+                "input": "{{IO_OUTPUT}}",
+                "process": "p",
+                "output": "LEAKED",
+                "usage": {"command": "/x:y", "note": "n"},
+            }
+        }
+        page = self._render(polluted)[f"plugins/{name}.html"]
+        # The literal token survives as text; the output value does not leak into it.
+        self.assertIn("{{IO_OUTPUT}}", page)
+        self.assertEqual(1, page.count("LEAKED"))
 
 
 if __name__ == "__main__":

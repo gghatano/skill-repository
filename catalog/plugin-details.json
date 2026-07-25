@@ -44,7 +44,7 @@
       "example": [
         "`/research:report-skeleton` — レポートの骨子を設計する",
         "`/research:experiment-plan` → `/research:experiment-run` — 実験を計画して実行する",
-        "`/research:report-review` / `repro-engineering-review` / `related-info-review` — 各観点でレビューする",
+        "`/research:report-review` / `/research:repro-engineering-review` / `/research:related-info-review` — 各観点でレビューする",
         "`/research:publish-check` — 公開前の整合を確認する（`/research:research-cycle` が全体の進行役）"
       ]
     },
