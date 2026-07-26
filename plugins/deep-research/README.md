@@ -73,7 +73,7 @@ Phase 4 以降で `vault-maintain`（Vault の再利用・SQLite 索引）を追
 - `docs/*.md` — 規約（Canonical Query / Evidence Provenance / Source Independence / Patch-only /
   Human Intervention / Sensitive Data）
 - `schemas/*.json` — Run・実行契約・論点分解・情報源・主張・矛盾・追加調査・レビュー指摘・Patch・検証結果の JSON Schema
-- `scripts/research_lint.py` — スキーマ検証と Lint 13 種（標準ライブラリのみ）
+- `scripts/research_lint.py` — スキーマ検証と Lint 15 種（標準ライブラリのみ）
 - `config/profiles/*.toml` — Quick / Standard / Extended の既定値
 
 ## 導入後の調整
@@ -97,4 +97,5 @@ python3 <plugin>/scripts/research_lint.py research/runs/<run-id>
 - **Patch-only**: 初稿の確定後は全文を書き直さず、Finding 単位で局所修正する
 - **Source Independence**: 転載や再掲を独立した根拠として数えない
 - **反証を探した記録を残す**: 「探して見つからなかった」と「探していない」を区別する
+- **Lint は下限**: 機械的に検査できるのは「根拠が無い」ことまで。内容の正しさは Reviewer と人間が担保する
 - **取得失敗を成功として扱わない**: 未取得・未検証は明示して残す

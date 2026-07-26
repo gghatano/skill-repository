@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -709,6 +710,91 @@ class GapFillScopeTest(unittest.TestCase):
             path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
             report = research_lint.run_lints(run_dir)
             self.assertEqual("block", report["verdict"])
+
+
+class AdversarialBypassTest(unittest.TestCase):
+    """Ways a run could look shippable while breaking a rule the design states.
+
+    Each of these passed before the corresponding guard existed.
+    """
+
+    def _full_run(self, temp: str) -> Path:
+        run_dir = build_run(Path(temp))
+        add_phase2_artifacts(run_dir)
+        add_phase3_artifacts(run_dir)
+        return run_dir
+
+    def _failed(self, run_dir: Path) -> set[str]:
+        report = research_lint.run_lints(run_dir)
+        self.assertEqual("block", report["verdict"])
+        return {f["lint"] for f in report["findings"] if f["result"] == "fail"}
+
+    def test_gap_fill_without_any_findings_blocks(self) -> None:
+        """Bounding gap-fill by findings must not switch off when there are none."""
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            shutil.rmtree(run_dir / "reviews")
+            self.assertIn("gap-fill-scope", self._failed(run_dir))
+
+    def test_escalated_patch_blocks_shipping(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["patches"][0]["status"] = "escalated"
+            data["patches"][0]["escalation_reason"] = "章構成の変更が必要"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("patch-scope", self._failed(run_dir))
+
+    def test_blocked_ship_must_not_leave_a_final_report(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            path = run_dir / "verification" / "ship-check.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["verdict"] = "block"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("ship-consistency", self._failed(run_dir))
+
+    def test_passing_ship_without_a_final_report_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            (run_dir / "final-report.md").unlink()
+            self.assertIn("ship-consistency", self._failed(run_dir))
+
+    def test_standard_tier_with_one_reviewer_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            path = run_dir / "run.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["tier"] = "standard"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            failed = self._failed(run_dir)
+            self.assertIn("reviewer-coverage", failed)
+
+    def test_quick_tier_may_ship_with_fewer_reviewers(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)  # fixture tier is quick
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+
+    def test_inline_quote_is_verified_like_a_blockquote(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            report = run_dir / "final-report.md"
+            report.write_text(
+                report.read_text(encoding="utf-8")
+                + "\n\nREADME には「この設計は全ての用途に最適である」と明記されている。\n",
+                encoding="utf-8")
+            self.assertIn("quote-integrity", self._failed(run_dir))
+
+    def test_units_outside_the_original_list_are_traced(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            report = run_dir / "final-report.md"
+            report.write_text(
+                report.read_text(encoding="utf-8") + "\n\nこの方式は5社が採用し、2週で完了した。\n",
+                encoding="utf-8")
+            self.assertIn("numeric-traceability", self._failed(run_dir))
 
 
 class PluginLayoutTest(unittest.TestCase):

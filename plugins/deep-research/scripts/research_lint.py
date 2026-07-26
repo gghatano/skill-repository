@@ -35,6 +35,8 @@ ACTIVE_LINTS = (
     "numeric-traceability",
     "independence-count",
     "gap-fill-scope",
+    "reviewer-coverage",
+    "ship-consistency",
     "patch-scope",
     "critical-findings",
     "internal-leak",
@@ -43,13 +45,29 @@ ACTIVE_LINTS = (
 
 # A number is worth tracing when it carries a unit, a decimal point, or enough
 # magnitude to be a finding rather than an ordinal ("記述1" is not a measurement).
+#
+# This is a heuristic, not a proof: a unit outside this list on a one- or two-digit
+# number is not caught, and matching is by token, so the same figure used for a
+# different quantity still matches. Judging whether a number means what the text
+# claims stays with citation-verify; this lint only catches figures with no
+# grounding at all.
+NUMERIC_UNITS = (
+    "%|％|倍|件|人|名|社|台|回|個|項目|章|節|"
+    "年|か月|ヶ月|カ月|週|週間|日|日間|時間|時|分|秒|"
+    "ms|s|min|h|GB|MB|KB|TB|B|km|m|cm|kg|g|"
+    "円|ドル|万円|億円|USD|JPY|pt|ポイント"
+)
 NUMERIC_RE = re.compile(
-    r"\d+(?:\.\d+)?\s*(?:%|％|倍|件|人|年|か月|ヶ月|日間|時間|分|秒|ms|GB|MB|KB|円|ドル)"
+    rf"\d+(?:\.\d+)?\s*(?:{NUMERIC_UNITS})(?![A-Za-z])"
     r"|\d+\.\d+"
     r"|\d{3,}"
 )
 CODE_SPAN_RE = re.compile(r"`[^`]*`")
 LINK_TARGET_RE = re.compile(r"\]\([^)]*\)")
+
+# multi-review defines four reviewers; a Standard-or-larger run that ships after
+# only some of them ran has skipped whole classes of failure.
+REQUIRED_REVIEWERS = ("evidence", "coverage", "counterargument", "instruction")
 
 # The default ceiling when a patch plan does not carry its own limit.
 DEFAULT_MAX_TOTAL_CHANGED_RATIO = 0.25
@@ -176,16 +194,29 @@ def extract_section(text: str, heading: str) -> str:
     return "\n".join(body)
 
 
-def blockquote_lines(text: str) -> list[str]:
-    """Verbatim quotes in a draft are written as markdown blockquotes."""
-    quotes = []
+INLINE_QUOTE_RE = re.compile(r"「([^「」]{10,})」")
+
+
+def verbatim_quotes(text: str) -> list[str]:
+    """Quotes a draft presents as the source's own words.
+
+    Both markdown blockquotes and 「…」 spans count: checking only the former
+    would leave "README には「…」と明記されている" unverified, which is the more
+    natural way to fabricate one.
+    """
+    quotes: list[str] = []
     for line in text.splitlines():
         stripped = line.strip()
         if stripped.startswith(">"):
             quote = stripped.lstrip(">").strip()
             if len(quote) >= 10:
                 quotes.append(quote)
+    quotes.extend(INLINE_QUOTE_RE.findall(text))
     return quotes
+
+
+# Kept as an alias: the blockquote-only view is still useful on its own.
+blockquote_lines = verbatim_quotes
 
 
 def _result(name: str, result: str, detail: str, target: str = "") -> dict[str, str]:
@@ -319,7 +350,7 @@ def lint_quote_integrity(run_dir: Path, vault_root: Path) -> list[dict[str, str]
     draft = _draft_path(run_dir)
     if draft is None:
         return [_result("quote-integrity", "skipped", "草稿が未生成", "drafts/")]
-    quotes = blockquote_lines(draft.read_text(encoding="utf-8"))
+    quotes = verbatim_quotes(draft.read_text(encoding="utf-8"))
     if not quotes:
         return [_result("quote-integrity", "pass", "逐語引用なし", str(draft.name))]
 
@@ -531,6 +562,13 @@ def lint_gap_fill_scope(run_dir: Path) -> list[dict[str, str]]:
 
     known = _known_finding_ids(run_dir)
     findings: list[dict[str, str]] = []
+    if gaps and not known:
+        # Bounding gap-fill by findings is meaningless if we skip the check whenever
+        # there are no findings to bound it by: that is exactly the unbounded case.
+        findings.append(_result(
+            "gap-fill-scope", "fail",
+            f"{len(gaps)} 件の追加調査があるが、紐づけ先の Reviewer 指摘が存在しない",
+            "gap-fill.json"))
     for gap in gaps:
         finding_id = gap.get("finding_id")
         if known and finding_id not in known:
@@ -575,6 +613,15 @@ def lint_patch_scope(run_dir: Path) -> list[dict[str, str]]:
     changed_by_file: dict[str, int] = {}
     for patch in patches:
         patch_id = patch.get("patch_id", "?")
+        if patch.get("status") == "escalated":
+            # Escalation means the fix did not fit as a local patch. Leaving it
+            # unresolved and shipping is the failure this rule exists to prevent.
+            findings.append(_result(
+                "patch-scope", "fail",
+                f"{patch_id}: 構造問題としてエスカレーションされたまま解消していない"
+                f"（{patch.get('escalation_reason', '理由未記載')}）",
+                "patches/"))
+            continue
         if patch.get("status") != "applied":
             continue
         changed = patch.get("changed_lines")
@@ -648,6 +695,65 @@ def lint_critical_findings(run_dir: Path) -> list[dict[str, str]]:
     return findings
 
 
+def lint_reviewer_coverage(run_dir: Path) -> list[dict[str, str]]:
+    """Standard and Extended runs must have run all four reviewers."""
+    tier = _run_tier(run_dir)
+    reviews_dir = run_dir / "reviews"
+    if not reviews_dir.is_dir() or not any(reviews_dir.glob("*.json")):
+        return [_result("reviewer-coverage", "skipped", "reviews/ が未生成", "reviews/")]
+    if tier == "quick":
+        return [_result("reviewer-coverage", "skipped", "Quick Tier はレビューを省ける", "reviews/")]
+
+    seen: set[str] = set()
+    for path in sorted(reviews_dir.glob("*.json")):
+        try:
+            seen.add(load_json(path).get("reviewer", ""))
+        except json.JSONDecodeError:
+            continue
+    missing = [r for r in REQUIRED_REVIEWERS if r not in seen]
+    if missing:
+        return [_result(
+            "reviewer-coverage", "fail",
+            f"{tier} Tier だが実行されていない Reviewer がある: {', '.join(missing)}", "reviews/")]
+    return [_result("reviewer-coverage", "pass", "4 観点すべてがレビュー済み", "reviews/")]
+
+
+def _run_tier(run_dir: Path) -> str:
+    path = run_dir / "run.json"
+    if not path.is_file():
+        return ""
+    try:
+        return str(load_json(path).get("tier", ""))
+    except json.JSONDecodeError:
+        return ""
+
+
+def lint_ship_consistency(run_dir: Path) -> list[dict[str, str]]:
+    """A blocked run must not leave a shippable artefact behind."""
+    check = run_dir / "verification" / "ship-check.json"
+    report = run_dir / "final-report.md"
+    if not check.is_file():
+        if report.is_file():
+            return [_result(
+                "ship-consistency", "fail",
+                "ship-check.json が無いのに final-report.md が存在する", "final-report.md")]
+        return [_result("ship-consistency", "skipped", "ship-check.json が未生成", "verification/")]
+    try:
+        verdict = str(load_json(check).get("verdict", ""))
+    except json.JSONDecodeError:
+        return [_result("ship-consistency", "skipped", "ship-check.json を読めない", "verification/")]
+
+    if verdict == "block" and report.is_file():
+        return [_result(
+            "ship-consistency", "fail",
+            "Ship 判定が block なのに final-report.md が出力されている", "final-report.md")]
+    if verdict in {"pass", "pass_with_warnings"} and not report.is_file():
+        return [_result(
+            "ship-consistency", "fail",
+            f"Ship 判定が {verdict} なのに final-report.md が無い", "final-report.md")]
+    return [_result("ship-consistency", "pass", f"Ship 判定（{verdict}）と成果物が整合", "final-report.md")]
+
+
 def lint_internal_leak(run_dir: Path) -> list[dict[str, str]]:
     report = run_dir / "final-report.md"
     if not report.is_file():
@@ -694,6 +800,8 @@ def run_lints(run_dir: Path, vault_root: Path | None = None) -> dict[str, Any]:
     findings += lint_numeric_traceability(run_dir, vault)
     findings += lint_independence_count(run_dir)
     findings += lint_gap_fill_scope(run_dir)
+    findings += lint_reviewer_coverage(run_dir)
+    findings += lint_ship_consistency(run_dir)
     findings += lint_patch_scope(run_dir)
     findings += lint_critical_findings(run_dir)
     findings += lint_internal_leak(run_dir)
