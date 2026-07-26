@@ -23,18 +23,24 @@ from typing import Any
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = PLUGIN_ROOT / "schemas"
 
-# Phase 1 lints. The remaining lints in the design (claim-provenance, patch-scope,
-# critical-findings, numeric-traceability, independence-count) need artefacts that
-# later phases produce, so they are not registered yet.
-PHASE1_LINTS = (
+# Lints active through Phase 2. The remaining design lints (numeric-traceability,
+# independence-count) need artefacts that Phase 3 produces, so they stay unregistered
+# rather than silently passing on absent data.
+ACTIVE_LINTS = (
     "query-preserved",
     "schema-valid",
     "coverage-complete",
     "source-metadata",
     "quote-integrity",
+    "claim-provenance",
+    "patch-scope",
+    "critical-findings",
     "internal-leak",
     "placeholder-check",
 )
+
+# The default ceiling when a patch plan does not carry its own limit.
+DEFAULT_MAX_TOTAL_CHANGED_RATIO = 0.25
 
 PLACEHOLDER_RE = re.compile(r"\bTODO\b|\bFIXME\b|\bTBD\b|\{\{[^}]*\}\}|<[A-Za-z_]+>")
 INTERNAL_MARKERS = ("research/runs/", "scaffold.md", ".agents/", "coverage-matrix.md")
@@ -192,6 +198,13 @@ SCHEMA_TARGETS = (
     ("execution-contract.json", "execution-contract.schema.json", True),
     ("decomposition.json", "decomposition.schema.json", False),
     ("sources.json", "source.schema.json", False),
+    ("claims.json", "claim.schema.json", False),
+    ("reviews/evidence-review.json", "review-finding.schema.json", False),
+    ("reviews/coverage-review.json", "review-finding.schema.json", False),
+    ("reviews/counterargument-review.json", "review-finding.schema.json", False),
+    ("reviews/instruction-review.json", "review-finding.schema.json", False),
+    ("patches/patch-plan.json", "patch.schema.json", False),
+    ("patches/applied-patches.json", "patch.schema.json", False),
     ("verification/citation-check.json", "verification.schema.json", False),
     ("verification/ship-check.json", "verification.schema.json", False),
 )
@@ -338,6 +351,143 @@ def _draft_path(run_dir: Path) -> Path | None:
     return drafts[0] if drafts else None
 
 
+def lint_claim_provenance(run_dir: Path) -> list[dict[str, str]]:
+    """Every claim is either backed by a source or declared as our own inference."""
+    path = run_dir / "claims.json"
+    if not path.is_file():
+        return [_result("claim-provenance", "skipped", "claims.json が未生成", "claims.json")]
+    try:
+        claims = load_json(path).get("claims", [])
+    except json.JSONDecodeError:
+        return [_result("claim-provenance", "skipped", "claims.json を読めない", "claims.json")]
+
+    known_sources = _known_source_ids(run_dir)
+    findings: list[dict[str, str]] = []
+    for claim in claims:
+        claim_id = claim.get("claim_id", "?")
+        supports = claim.get("supports") or []
+        if not supports:
+            if claim.get("claim_type") != "inference":
+                findings.append(_result(
+                    "claim-provenance", "fail",
+                    f"{claim_id}: 根拠が無いのに inference ではない", "claims.json"))
+            continue
+        missing_location = [s for s in supports if not s.get("location")]
+        if missing_location:
+            findings.append(_result(
+                "claim-provenance", "fail", f"{claim_id}: 出典位置が無い根拠がある", "claims.json"))
+        unknown = [s.get("source_id") for s in supports if s.get("source_id") not in known_sources]
+        if known_sources and unknown:
+            findings.append(_result(
+                "claim-provenance", "fail",
+                f"{claim_id}: sources.json に無い情報源を参照している: {', '.join(map(str, unknown))}",
+                "claims.json"))
+    if not findings:
+        findings.append(_result(
+            "claim-provenance", "pass", f"{len(claims)} 件の主張に根拠または推論区分がある", "claims.json"))
+    return findings
+
+
+def _known_source_ids(run_dir: Path) -> set[str]:
+    path = run_dir / "sources.json"
+    if not path.is_file():
+        return set()
+    try:
+        return {s.get("source_id") for s in load_json(path).get("sources", [])}
+    except json.JSONDecodeError:
+        return set()
+
+
+def lint_patch_scope(run_dir: Path) -> list[dict[str, str]]:
+    """Applied patches stay local: within their declared size and the overall ratio."""
+    path = run_dir / "patches" / "applied-patches.json"
+    if not path.is_file():
+        return [_result("patch-scope", "skipped", "applied-patches.json が未生成", "patches/")]
+    try:
+        data = load_json(path)
+    except json.JSONDecodeError:
+        return [_result("patch-scope", "skipped", "applied-patches.json を読めない", "patches/")]
+
+    patches = data.get("patches", [])
+    findings: list[dict[str, str]] = []
+    # The ratio is per patched file: measuring against anything else compares a
+    # patch to a document it never touched.
+    changed_by_file: dict[str, int] = {}
+    for patch in patches:
+        patch_id = patch.get("patch_id", "?")
+        if patch.get("status") != "applied":
+            continue
+        changed = patch.get("changed_lines")
+        if changed is None:
+            findings.append(_result(
+                "patch-scope", "fail", f"{patch_id}: 適用済みだが changed_lines が無い", "patches/"))
+            continue
+        target = patch.get("target_file", "")
+        changed_by_file[target] = changed_by_file.get(target, 0) + changed
+        limit = patch.get("max_changed_lines", 0)
+        if limit and changed > limit:
+            findings.append(_result(
+                "patch-scope", "fail",
+                f"{patch_id}: {changed} 行変更（上限 {limit} 行）", "patches/"))
+
+    ratio_limit = data.get("max_total_changed_ratio", DEFAULT_MAX_TOTAL_CHANGED_RATIO)
+    for target, changed in sorted(changed_by_file.items()):
+        path = run_dir / target
+        if not path.is_file():
+            findings.append(_result(
+                "patch-scope", "fail", f"Patch 対象が実在しない: {target}", target))
+            continue
+        total_lines = len(path.read_text(encoding="utf-8").splitlines()) or 1
+        ratio = changed / total_lines
+        if ratio > ratio_limit:
+            findings.append(_result(
+                "patch-scope", "fail",
+                f"{target}: 変更総量が全体の {ratio:.0%}（上限 {ratio_limit:.0%}）。構造問題として扱う",
+                target))
+
+    if not findings:
+        findings.append(_result(
+            "patch-scope", "pass", f"{len(patches)} 件の Patch が許容範囲内", "patches/"))
+    return findings
+
+
+def lint_critical_findings(run_dir: Path) -> list[dict[str, str]]:
+    """A critical finding must be resolved, escalated, or explicitly accepted."""
+    reviews_dir = run_dir / "reviews"
+    files = sorted(reviews_dir.glob("*.json")) if reviews_dir.is_dir() else []
+    if not files:
+        return [_result("critical-findings", "skipped", "reviews/ が未生成", "reviews/")]
+
+    findings: list[dict[str, str]] = []
+    open_criticals: list[str] = []
+    for path in files:
+        try:
+            review = load_json(path)
+        except json.JSONDecodeError:
+            findings.append(_result(
+                "critical-findings", "fail", f"{path.name} を読めない", f"reviews/{path.name}"))
+            continue
+        for finding in review.get("findings", []):
+            if finding.get("severity") != "critical":
+                continue
+            status = finding.get("status")
+            if status in {"open", "unresolved"}:
+                open_criticals.append(finding.get("finding_id", "?"))
+            elif status == "accepted" and not finding.get("accepted_reason"):
+                findings.append(_result(
+                    "critical-findings", "fail",
+                    f"{finding.get('finding_id', '?')}: critical を理由なく受容している",
+                    f"reviews/{path.name}"))
+
+    if open_criticals:
+        findings.append(_result(
+            "critical-findings", "fail",
+            f"未解決の Critical Finding: {', '.join(open_criticals)}", "reviews/"))
+    if not findings:
+        findings.append(_result("critical-findings", "pass", "未解決の Critical なし", "reviews/"))
+    return findings
+
+
 def lint_internal_leak(run_dir: Path) -> list[dict[str, str]]:
     report = run_dir / "final-report.md"
     if not report.is_file():
@@ -380,6 +530,9 @@ def run_lints(run_dir: Path, vault_root: Path | None = None) -> dict[str, Any]:
     findings += lint_coverage_complete(run_dir)
     findings += lint_source_metadata(run_dir, vault)
     findings += lint_quote_integrity(run_dir, vault)
+    findings += lint_claim_provenance(run_dir)
+    findings += lint_patch_scope(run_dir)
+    findings += lint_critical_findings(run_dir)
     findings += lint_internal_leak(run_dir)
     findings += lint_placeholder_check(run_dir)
 

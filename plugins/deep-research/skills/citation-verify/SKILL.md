@@ -78,8 +78,8 @@ version: 0.1
 # Failure Handling
 
 - Critical な `fail` がある場合: `verdict` を `block` にする。
-  Phase 1（`patch-apply` 無し）では、該当箇所と理由をユーザーに提示して停止する。
-  草稿を自分で書き直さない。
+  該当箇所と理由を `patch-apply` へ渡して局所修正させる。草稿を自分で書き直さない。
+  `patch-apply` を経ても解消しない場合は、ユーザーに提示して停止する。
 
 # Next Skill
 

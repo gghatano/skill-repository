@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reviewer Findings",
+  "description": "reviews/<reviewer>-review.json の形。Reviewer ごとに独立して生成する。",
+  "type": "object",
+  "required": ["run_id", "reviewer", "reviewed_file", "findings"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "reviewer": { "type": "string",
+      "enum": ["evidence", "coverage", "counterargument", "instruction"] },
+    "reviewed_file": { "type": "string", "minLength": 1 },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "reviewer", "severity", "target", "problem",
+                     "recommended_action", "requires_additional_research", "status"],
+        "properties": {
+          "finding_id": { "type": "string", "pattern": "^F-[0-9]{3,}$" },
+          "reviewer": { "type": "string",
+            "enum": ["evidence", "coverage", "counterargument", "instruction"] },
+          "severity": { "type": "string",
+            "enum": ["critical", "major", "minor", "suggestion"] },
+          "target": {
+            "type": "object",
+            "required": ["file", "section"],
+            "properties": {
+              "file": { "type": "string", "minLength": 1 },
+              "section": { "type": "string", "minLength": 1 },
+              "quote": { "type": "string" }
+            }
+          },
+          "problem": { "type": "string", "minLength": 1 },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "recommended_action": { "type": "string", "minLength": 1 },
+          "requires_additional_research": { "type": "boolean" },
+          "status": { "type": "string",
+            "enum": ["open", "resolved", "escalated", "accepted", "unresolved"] },
+          "accepted_reason": {
+            "description": "status が accepted のとき、なぜ直さずに受容したか。",
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

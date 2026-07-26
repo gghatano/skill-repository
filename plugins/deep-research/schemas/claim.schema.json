@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Structured Claims",
+  "type": "object",
+  "required": ["run_id", "claims"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim_id", "statement", "claim_type", "confidence",
+                     "supports", "related_atomic_items"],
+        "properties": {
+          "claim_id": { "type": "string", "pattern": "^C-[0-9]{3,}$" },
+          "statement": { "type": "string", "minLength": 1 },
+          "claim_type": { "type": "string",
+            "enum": ["fact", "definition", "empirical", "causal", "comparative",
+                     "normative", "forecast", "author-claim", "inference"] },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+          "supports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["source_id", "location", "evidence_type"],
+              "properties": {
+                "source_id": { "type": "string", "pattern": "^src-[0-9]{3,}$" },
+                "location": { "type": "string", "minLength": 1 },
+                "evidence_type": { "type": "string", "minLength": 1 }
+              }
+            }
+          },
+          "derived_from": {
+            "description": "claim_type が inference のとき、根拠にした Claim ID。",
+            "type": "array", "items": { "type": "string" }
+          },
+          "contradicts": { "type": "array", "items": { "type": "string" } },
+          "conditions": { "type": "array", "items": { "type": "string" } },
+          "limitations": { "type": "array", "items": { "type": "string" } },
+          "related_atomic_items": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@
   "plugins": {
     "deep-research": {
       "input": "調査したい問いと、任意の実行条件（出力形式・言語・引用方式・禁止事項）。",
-      "process": "依頼を正本として固定し、論点へ分解し、公式・一次情報を優先して集め、集めた根拠だけで初稿を書き、引用を検証して出荷可否を判定する。",
+      "process": "依頼を正本として固定し、論点へ分解し、公式・一次情報を優先して集め、主張と根拠を構造化し、その根拠だけで初稿を書き、4観点でレビューして局所修正し、引用を検証して出荷可否を判定する。",
       "output": "引用付きの調査レポート（`final-report.md`）と、再利用できる Source Note 群・検証結果の記録。",
       "usage": {
         "command": "/deep-research:research-router",
@@ -14,7 +14,10 @@
         "`/deep-research:research-router` — 依頼を `query.md` に固定し、Run と調査規模（Tier）を決める",
         "`/deep-research:query-decompose` — 何を調べれば答えたことになるかを論点へ分解する",
         "`/deep-research:source-collect` — 公式・一次情報を優先して集め、Source Note に保存する",
+        "`/deep-research:evidence-organize` — 主張と根拠を `claims.json` へ構造化する",
         "`/deep-research:draft-compose` — 集めた根拠だけで初稿を書く（新たな検索はしない）",
+        "`/deep-research:multi-review` — 根拠・網羅・反証・依頼適合の4観点で独立にレビューする",
+        "`/deep-research:patch-apply` — 指摘を局所修正で反映する（全文は書き直さない）",
         "`/deep-research:citation-verify` → `/deep-research:ship-verify` — 引用を検証し、Ship Gate を通れば最終レポートを出す"
       ]
     },

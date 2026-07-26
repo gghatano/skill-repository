@@ -100,4 +100,4 @@ supports: [Q-01, Q-03]
 
 # Next Skill
 
-Phase 1 では `draft-compose`。`evidence-organize` が利用可能な場合はそちらを先に通す。
+`evidence-organize`（主張と根拠を構造化してから草稿へ進む）。

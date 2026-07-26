@@ -905,7 +905,10 @@ Domain-specific Reviewer / 法令・標準の版管理 / DOI、撤回情報、�
 | --- | --- |
 | `execution-contract.schema.json` | §7 の schemas 一覧に無いが、S00 の Exit Criteria が「Schema に適合する」ことを要求しているため追加した |
 | Quick Tier の経路 | §6.1 は `S00 → S01 → S02 → S03 → S05 → S09 → S10` と `S03` を含むが、`S03`（evidence-organize）は Phase 2 の実装対象である。Phase 1 の Quick は `S00 → S01 → S02 → S05 → S09 → S10` とし、`claims.json` を任意入力として扱う |
-| Lint の適用時期 | §13 の 12 種のうち、Phase 1 で判定できるのは `query-preserved` / `schema-valid` / `coverage-complete` / `source-metadata` / `quote-integrity` / `internal-leak` / `placeholder-check` の 7 種。残る 5 種は対象ファイル（claims / reviews / patches）が Phase 2 以降に生成されるため、その時点で有効化する |
+| Lint の適用時期 | §13 の 12 種のうち、Phase 1 で判定できるのは `query-preserved` / `schema-valid` / `coverage-complete` / `source-metadata` / `quote-integrity` / `internal-leak` / `placeholder-check` の 7 種。Phase 2 で `claim-provenance` / `patch-scope` / `critical-findings` を追加して 10 種。残る `numeric-traceability` / `independence-count` は Phase 3 で有効化する |
+| `patch.schema.json` | §7 の schemas 一覧に無いが、§10.9 が `patch-plan.json` と `applied-patches.json` を出力と定め、§13 が `patch-scope` Lint を要求しているため追加した。`verification.schema.json` と同様に `kind`（`plan` / `applied`）で両者を兼ねる |
+| `patch-scope` の分母 | 変更総量の比率は、**Patch が対象としたファイル**の行数に対して測る。最終レポートなど別ファイルを分母にすると、触っていない文書との比較になる |
+| Critical の受容 | §10.9 は Critical を `resolved` または `escalated` にすることを求めるが、ユーザーが明示的に受容する場合の経路が無い。`status: accepted` を認め、その場合は `accepted_reason` を必須とした（理由の無い受容は Lint で落とす） |
 | Run ID の slug | §8.1 の `<slug>` は Canonical Query から機械生成すると再現性が下がるため、S00 が英小文字・数字・ハイフンに正規化した短い識別子を用いる |
 
 ---

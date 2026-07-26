@@ -108,12 +108,19 @@ def build_run(root: Path, *, shipped: bool = True) -> Path:
         }],
     }, ensure_ascii=False), encoding="utf-8")
 
+    # Long enough that the patch-scope ratio means something: a two-line document
+    # would make any single patch look like a rewrite.
+    filler = "\n\n".join(
+        f"README の記述{n}から読み取れる方針を、対応する箇所とともに整理する。"
+        for n in range(1, 13)
+    )
     body = (
         "# example/repo の設計思想\n\n"
         "## 設計思想\n\n"
         "README は小さな中核を保つ方針を明示している"
         "（[example/repo README](https://github.com/example/repo)）。\n\n"
-        f"> {QUOTE}\n"
+        f"> {QUOTE}\n\n"
+        f"{filler}\n"
     )
     (run_dir / "drafts" / "draft-01.md").write_text(body, encoding="utf-8")
     (run_dir / "verification" / "citation-check.json").write_text(json.dumps({
@@ -308,12 +315,238 @@ class LintFailureTest(unittest.TestCase):
         return {f["lint"] for f in report["findings"] if f["result"] == "fail"}
 
 
+def add_phase2_artifacts(run_dir: Path, *, severity: str = "critical",
+                         status: str = "resolved", changed_lines: int = 4) -> None:
+    """Layer claims / reviews / patches onto a Phase 1 run."""
+    (run_dir / "reviews").mkdir(exist_ok=True)
+    (run_dir / "patches").mkdir(exist_ok=True)
+
+    (run_dir / "claims.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "claims": [
+            {
+                "claim_id": "C-001",
+                "statement": "README は小さな中核を保つ方針を掲げている",
+                "claim_type": "author-claim",
+                "confidence": "high",
+                "supports": [{"source_id": "src-001", "location": "README 冒頭",
+                              "evidence_type": "document"}],
+                "conditions": [], "limitations": [],
+                "related_atomic_items": ["Q-01"],
+            },
+            {
+                "claim_id": "C-002",
+                "statement": "この方針は依存追加への慎重さとして表れていると考えられる",
+                "claim_type": "inference",
+                "confidence": "medium",
+                "supports": [],
+                "derived_from": ["C-001"],
+                "conditions": [], "limitations": ["著者の明示的な主張ではない"],
+                "related_atomic_items": ["Q-01"],
+            },
+        ],
+    }, ensure_ascii=False), encoding="utf-8")
+
+    (run_dir / "reviews" / "evidence-review.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "reviewer": "evidence",
+        "reviewed_file": "drafts/draft-01.md",
+        "findings": [{
+            "finding_id": "F-001",
+            "reviewer": "evidence",
+            "severity": severity,
+            "target": {"file": "drafts/draft-01.md", "section": "設計思想",
+                       "quote": "小さな中核を保つ方針"},
+            "problem": "推論を著者の主張として書いている",
+            "evidence": ["src-001"],
+            "recommended_action": "推論であることを明示する",
+            "requires_additional_research": False,
+            "status": status,
+        }],
+    }, ensure_ascii=False), encoding="utf-8")
+
+    (run_dir / "patches" / "applied-patches.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "kind": "applied",
+        "max_total_changed_ratio": 0.25,
+        "patches": [{
+            "patch_id": "P-001",
+            "finding_ids": ["F-001"],
+            "target_file": "drafts/draft-01.md",
+            "target_section": "設計思想",
+            "operation": "replace",
+            "before_summary": "推論を著者の主張として記述",
+            "after_summary": "推論であることを明示",
+            "max_changed_lines": 8,
+            "changed_lines": changed_lines,
+            "status": "applied",
+        }],
+    }, ensure_ascii=False), encoding="utf-8")
+
+
+class Phase2EndToEndTest(unittest.TestCase):
+    def test_run_with_reviews_and_patches_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            report = research_lint.run_lints(run_dir)
+            failed = [f for f in report["findings"] if f["result"] == "fail"]
+            self.assertEqual([], failed, failed)
+            lints = {f["lint"] for f in report["findings"] if f["result"] == "pass"}
+            self.assertIn("claim-provenance", lints)
+            self.assertIn("patch-scope", lints)
+            self.assertIn("critical-findings", lints)
+
+    def test_phase1_run_skips_phase2_lints(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            report = research_lint.run_lints(build_run(Path(temp)))
+            skipped = {f["lint"] for f in report["findings"] if f["result"] == "skipped"}
+            self.assertEqual("pass", report["verdict"])
+            self.assertIn("claim-provenance", skipped)
+            self.assertIn("patch-scope", skipped)
+            self.assertIn("critical-findings", skipped)
+
+
+class Phase2LintFailureTest(unittest.TestCase):
+    def test_unresolved_critical_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir, status="open")
+            self.assertIn("critical-findings", self._failed(run_dir))
+
+    def test_critical_accepted_without_reason_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir, status="accepted")
+            self.assertIn("critical-findings", self._failed(run_dir))
+
+    def test_open_minor_finding_does_not_block(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir, severity="minor", status="open")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+
+    def test_patch_exceeding_its_limit_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir, changed_lines=40)  # declared max is 8
+            self.assertIn("patch-scope", self._failed(run_dir))
+
+    def test_per_patch_limit_blocks_even_when_the_ratio_is_fine(self) -> None:
+        """The per-patch ceiling must stand on its own, not ride on the ratio check."""
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            draft = run_dir / "drafts" / "draft-01.md"
+            draft.write_text(draft.read_text(encoding="utf-8") + "\n".join(
+                f"補足 {n} 行目。" for n in range(200)), encoding="utf-8")
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            # 12 lines against a ~200-line draft is 6% — under the ratio ceiling —
+            # but still over this patch's own declared maximum of 8.
+            data["patches"][0]["changed_lines"] = 12
+            data["patches"][0]["max_changed_lines"] = 8
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            failed = self._failed(run_dir)
+            self.assertIn("patch-scope", failed)
+            report = research_lint.run_lints(run_dir)
+            details = [f["detail"] for f in report["findings"]
+                       if f["lint"] == "patch-scope" and f["result"] == "fail"]
+            self.assertTrue(any("上限 8 行" in d for d in details), details)
+            self.assertFalse(any("変更総量" in d for d in details), details)
+
+    def test_total_change_ratio_over_the_limit_blocks(self) -> None:
+        """Many individually-small patches still add up to a rewrite."""
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            template = data["patches"][0]
+            data["patches"] = [
+                {**template, "patch_id": f"P-{i:03d}", "changed_lines": 8, "status": "applied"}
+                for i in range(1, 8)
+            ]
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            failed = self._failed(run_dir)
+            self.assertIn("patch-scope", failed)
+
+    def test_patch_targeting_a_missing_file_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["patches"][0]["target_file"] = "drafts/draft-99.md"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("patch-scope", self._failed(run_dir))
+
+    def test_applied_patch_without_changed_lines_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            del data["patches"][0]["changed_lines"]
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("patch-scope", self._failed(run_dir))
+
+    def test_claim_without_support_or_inference_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "claims.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["claims"][0]["supports"] = []  # still typed author-claim
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("claim-provenance", self._failed(run_dir))
+
+    def test_claim_support_without_location_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "claims.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["claims"][0]["supports"][0]["location"] = ""
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("claim-provenance", self._failed(run_dir))
+
+    def test_claim_citing_unknown_source_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "claims.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["claims"][0]["supports"][0]["source_id"] = "src-999"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("claim-provenance", self._failed(run_dir))
+
+    def test_review_schema_violation_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "reviews" / "evidence-review.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["findings"][0]["severity"] = "blocker"  # not in the enum
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("schema-valid", self._failed(run_dir))
+
+    def _failed(self, run_dir: Path) -> set[str]:
+        report = research_lint.run_lints(run_dir)
+        self.assertEqual("block", report["verdict"])
+        return {f["lint"] for f in report["findings"] if f["result"] == "fail"}
+
+
 class PluginLayoutTest(unittest.TestCase):
     """The design maps skills/rules/schemas onto the plugin layout; keep them in sync."""
 
-    PHASE1_SKILLS = (
+    IMPLEMENTED_SKILLS = (
+        # Phase 1
         "research-router", "query-decompose", "source-collect",
         "draft-compose", "citation-verify", "ship-verify",
+        # Phase 2
+        "evidence-organize", "multi-review", "patch-apply",
     )
     REQUIRED_SECTIONS = (
         "# Purpose", "# Inputs", "# Outputs", "# Preconditions", "# Allowed Tools",
@@ -321,8 +554,8 @@ class PluginLayoutTest(unittest.TestCase):
         "# Failure Handling", "# Next Skill",
     )
 
-    def test_every_phase1_skill_exists_with_the_common_structure(self) -> None:
-        for skill in self.PHASE1_SKILLS:
+    def test_every_implemented_skill_has_the_common_structure(self) -> None:
+        for skill in self.IMPLEMENTED_SKILLS:
             path = PLUGIN_ROOT / "skills" / skill / "SKILL.md"
             with self.subTest(skill=skill):
                 self.assertTrue(path.is_file(), f"{path} が無い")
