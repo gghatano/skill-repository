@@ -4,9 +4,9 @@
 必要なスキルを `/plugin` の2コマンドで、どのリポジトリにも引き込めます。
 
 複数リポジトリに散らばっていたスキルのうち再利用できるものを役割ベースに汎化し、
-スキル本体・規約・サブエージェントを**自己完結**でまとめた4つのプラグインにしています。
+スキル本体・規約・サブエージェントを**自己完結**でまとめたプラグインとして配布しています。
 
-- 🔌 目的別に選べる **4プラグイン**（dev / generation / research / writing）
+- 🔌 目的別に選べる **5プラグイン**（deep-research / dev / generation / research / writing）
 - ⚡ `/plugin` の**2コマンド**で導入、必要なものだけ
 - 🔎 一覧・検索できる Pages → **https://gghatano.github.io/skill-repository/**
 
@@ -29,6 +29,7 @@ Claude Code のプロンプトで、マーケットプレイスを追加し、�
 
 | プラグイン | 用途 | 導入コマンド |
 | --- | --- | --- |
+| `deep-research` | 調査ワークフロー（依頼固定 → 収集 → 引用検証 → 出荷判定） | `/plugin install deep-research@gghatano-skills` |
 | `dev` | 開発ワークフロー（Git / Issue / PR） | `/plugin install dev@gghatano-skills` |
 | `generation` | 仕様駆動 生成・評価サイクル | `/plugin install generation@gghatano-skills` |
 | `research` | 研究レポート作成ライフサイクル（規約・サブエージェント同梱） | `/plugin install research@gghatano-skills` |
@@ -48,12 +49,13 @@ Claude Code のプロンプトで、マーケットプレイスを追加し、�
 ### 構成
 
 - `plugins/<name>/`: 配布用の**プラグイン**（`.claude-plugin/plugin.json` ＋ `skills/` ＋ 任意で `docs/`・`agents/`）
-- `.claude-plugin/marketplace.json`: 4プラグインを掲載する**マーケットプレイス** `gghatano-skills`
+- `.claude-plugin/marketplace.json`: 5プラグインを掲載する**マーケットプレイス** `gghatano-skills`
 - `skills/<repository>/<skill>/`: 出典リポジトリから同期したスキル一式（横断カタログの素材）
 - `docs/`: 横断カタログと GitHub Pages（下記）
 - `catalog/manifest.json` / `catalog/categories.json`: 機械可読マニフェストと目的タクソノミー
 - `catalog/skill-details.json`: 各スキルの詳細ページ（できること・使いどころ・入出力）用の要約
 - `catalog/plugin-details.json`: 各プラグインの詳細ページ用の要約（入力→処理→出力・かんたんな使い方・実行手順の例）
+- `docs/design/`: 個別 Skill Pack の設計書（例 `deep-research-skill-pack.md`）
 
 ### スキルの収集とカタログ
 

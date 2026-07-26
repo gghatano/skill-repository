@@ -5,6 +5,14 @@
   "metadata": { "pluginRoot": "./plugins" },
   "plugins": [
     {
+      "name": "deep-research",
+      "source": "./deep-research",
+      "displayName": "調査ワークフロー（Deep Research）",
+      "description": "調査を再現可能で検査可能な工程として実行するスキル群。依頼の固定、論点分解、情報源収集、引用検証、出荷判定までをファイル受け渡しで進める。規約・スキーマ・Lint 同梱。",
+      "version": "0.1.0",
+      "keywords": ["research", "investigation", "citation", "evidence", "provenance", "workflow"]
+    },
+    {
       "name": "dev",
       "source": "./dev",
       "displayName": "開発ワークフロー（Git / Issue / PR）",

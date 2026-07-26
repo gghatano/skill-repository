@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Research Run Manifest",
+  "type": "object",
+  "required": ["run_id", "status", "tier", "current_step", "created_at", "updated_at",
+               "query_file", "execution_contract_file", "completed_steps", "failed_steps",
+               "blocked_reasons", "human_actions_required"],
+  "properties": {
+    "run_id": { "type": "string", "pattern": "^[a-z0-9-]+-[0-9]{8}-[a-z0-9]{6}$" },
+    "status": { "type": "string",
+      "enum": ["initialized", "running", "blocked", "needs_human", "failed", "completed", "shipped"] },
+    "tier": { "type": "string", "enum": ["quick", "standard", "extended"] },
+    "modality": { "type": "string",
+      "enum": ["collect", "compare", "synthesize", "evaluate", "forecast", "design"] },
+    "current_step": { "type": "string" },
+    "next_step": { "type": "string" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "query_file": { "type": "string" },
+    "execution_contract_file": { "type": "string" },
+    "completed_steps": { "type": "array", "items": { "type": "string" } },
+    "failed_steps": { "type": "array", "items": { "type": "string" } },
+    "blocked_reasons": { "type": "array", "items": { "type": "string" } },
+    "human_actions_required": { "type": "array", "items": { "type": "string" } }
+  }
+}

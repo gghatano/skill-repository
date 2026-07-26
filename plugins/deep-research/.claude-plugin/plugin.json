@@ -1,0 +1,10 @@
+{
+  "name": "deep-research",
+  "displayName": "調査ワークフロー（Deep Research）",
+  "description": "記事・論文・OSS・制度資料などの調査を、再現可能で検査可能な工程として実行するスキル群。依頼の固定、論点分解、情報源収集、引用検証、出荷判定までをファイル受け渡しで進め、中断と再開に耐える。規約・スキーマ・Lint を同梱。",
+  "version": "0.1.0",
+  "author": { "name": "gghatano", "url": "https://github.com/gghatano" },
+  "homepage": "https://github.com/gghatano/skill-repository",
+  "repository": "https://github.com/gghatano/skill-repository",
+  "keywords": ["research", "investigation", "citation", "evidence", "provenance", "workflow"]
+}

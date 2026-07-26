@@ -1,0 +1,25 @@
+name = "quick"
+
+[source]
+target_min = 3
+target_max = 10
+primary_source_min = 1
+official_source_min = 1
+
+[draft]
+count = 1
+target_words = 1200
+
+[review]
+evidence = true
+coverage = false
+counterargument = false
+instruction = true
+
+[gap_fill]
+enabled = false
+
+[verification]
+require_citation_check = true
+require_numeric_check = false
+block_on_critical = true

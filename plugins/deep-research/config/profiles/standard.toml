@@ -1,0 +1,31 @@
+name = "standard"
+
+[source]
+target_min = 10
+target_max = 40
+primary_source_min = 3
+official_source_min = 1
+
+[draft]
+count = 1
+target_words = 4000
+
+[review]
+evidence = true
+coverage = true
+counterargument = true
+instruction = true
+
+[gap_fill]
+enabled = true
+max_queries = 8
+max_new_sources = 12
+
+[patch]
+max_lines_per_patch = 20
+max_total_changed_ratio = 0.25
+
+[verification]
+require_citation_check = true
+require_numeric_check = true
+block_on_critical = true

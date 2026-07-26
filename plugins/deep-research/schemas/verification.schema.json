@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Verification Result",
+  "description": "citation-check.json と ship-check.json が共有する検証結果の形。",
+  "type": "object",
+  "required": ["run_id", "kind", "verdict", "checked_at", "checks"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "kind": { "type": "string", "enum": ["citation", "ship"] },
+    "verdict": { "type": "string", "enum": ["pass", "pass_with_warnings", "block"] },
+    "checked_at": { "type": "string" },
+    "unverified_numbers": { "type": "array", "items": { "type": "string" } },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check_id", "name", "result", "detail"],
+        "properties": {
+          "check_id": { "type": "string" },
+          "name": { "type": "string" },
+          "result": { "type": "string", "enum": ["pass", "warn", "fail", "skipped"] },
+          "severity": { "type": "string", "enum": ["critical", "major", "minor", "suggestion"] },
+          "detail": { "type": "string" },
+          "target": { "type": "string" }
+        }
+      }
+    }
+  }
+}
