@@ -905,10 +905,31 @@ Domain-specific Reviewer / 法令・標準の版管理 / DOI、撤回情報、�
 | --- | --- |
 | `execution-contract.schema.json` | §7 の schemas 一覧に無いが、S00 の Exit Criteria が「Schema に適合する」ことを要求しているため追加した |
 | Quick Tier の経路 | §6.1 は `S00 → S01 → S02 → S03 → S05 → S09 → S10` と `S03` を含むが、`S03`（evidence-organize）は Phase 2 の実装対象である。Phase 1 の Quick は `S00 → S01 → S02 → S05 → S09 → S10` とし、`claims.json` を任意入力として扱う |
-| Lint の適用時期 | §13 の 12 種のうち、Phase 1 で判定できるのは `query-preserved` / `schema-valid` / `coverage-complete` / `source-metadata` / `quote-integrity` / `internal-leak` / `placeholder-check` の 7 種。残る 5 種は対象ファイル（claims / reviews / patches）が Phase 2 以降に生成されるため、その時点で有効化する |
+| Lint の適用時期 | §13 の 12 種を、対象ファイルが生成される Phase で順に有効化した。Phase 1 で 7 種、Phase 2 で `claim-provenance` / `patch-scope` / `critical-findings`、Phase 3 で `numeric-traceability` / `independence-count` を追加し、12 種すべてが有効になった |
+| `gap-fill.schema.json` と `gap-fill-scope` Lint | §7 の schemas 一覧にも §13 の Lint 一覧にも無いが、Phase 3 の完了条件「Gap Fill が Finding ID に限定される」を機械的に確認する手段が他に無いため追加した |
+| `numeric-traceability` の対象 | すべての数字を追跡対象にすると、見出しの年号・箇条書き番号・URL 内の数字で誤検出する。単位を伴う数値・小数・3 桁以上の数値に限り、見出し行・コードスパン・リンク先を除外する |
+| 反証探索の記録 | §10.5 は反証探索の実施を求めるが、実施したかどうかを残す形が無い。`contradictions.json` に `counterargument_search` を必須で持たせ、`none-found`（探して見つからない）と `not-searched`（探していない）を区別する |
+| `patch.schema.json` | §7 の schemas 一覧に無いが、§10.9 が `patch-plan.json` と `applied-patches.json` を出力と定め、§13 が `patch-scope` Lint を要求しているため追加した。`verification.schema.json` と同様に `kind`（`plan` / `applied`）で両者を兼ねる |
+| `patch-scope` の分母 | 変更総量の比率は、**Patch が対象としたファイル**の行数に対して測る。最終レポートなど別ファイルを分母にすると、触っていない文書との比較になる |
+| Critical の受容 | §10.9 は Critical を `resolved` または `escalated` にすることを求めるが、ユーザーが明示的に受容する場合の経路が無い。`status: accepted` を認め、その場合は `accepted_reason` を必須とした（理由の無い受容は Lint で落とす） |
 | Run ID の slug | §8.1 の `<slug>` は Canonical Query から機械生成すると再現性が下がるため、S00 が英小文字・数字・ハイフンに正規化した短い識別子を用いる |
 
 ---
+
+## 21.1 Lint の限界（敵対的検証で確認した到達点）
+
+Lint は「書かれていないこと」を機械的に捕まえるが、「書かれている内容が正しいか」までは判定できない。
+敵対的検証で確認した、**原理的に Lint では埋まらない領域**を明記する。ここは `citation-verify` と
+`multi-review`（Evidence Reviewer）の責務として残る。
+
+| 限界 | 具体例 | 誰が担保するか |
+| --- | --- | --- |
+| **数値の文脈一致** | Claim が「ライセンス費用は 3 倍」でも、本文に「処理速度は 3 倍」と書けば `numeric-traceability` は通る。トークンの存在しか見ていないため | `citation-verify` の「数値の一致（値・単位・期間・母集団）」検査 |
+| **単位の網羅** | `numeric-traceability` は単位のホワイトリスト方式。リスト外の単位を持つ 1〜2 桁の数値は検出されない | 同上。Lint は「根拠がまったく無い数値」を捕まえる網であり、正しさの証明ではない |
+| **引用の文意** | 引用文字列が情報源に存在しても、条件付きの主張を無条件に引用していれば `quote-integrity` は通る | `citation-verify` の「文脈の保存」検査、Evidence Reviewer |
+
+**設計上の姿勢**: Lint が通ったことを「検証済み」と読み替えない。Lint は**下限**であり、
+上限は Reviewer と人間が担保する。
 
 ## 22. 実装マッピング（本リポジトリでの配置）
 

@@ -66,7 +66,20 @@ version: 0.1
 # Validation
 
 `python3 <plugin>/scripts/research_lint.py research/runs/<run-id>` を実行し、
-`quote-integrity` と `schema-valid` が通ることを確認する。
+`quote-integrity` / `numeric-traceability` / `schema-valid` が通ることを確認する。
+
+## Lint に任せられないこと
+
+Lint は文字列の照合しかしない。**次はこのスキルが担保する**（Lint が通っても未検査である）。
+
+- **数値の文脈**: 「3倍」という文字列が根拠のどこかにあっても、それが**同じ量**について
+  述べたものとは限らない。値・単位・期間・母集団の一致を、こちらが確認する。
+- **単位のリスト外**: `numeric-traceability` は単位のホワイトリスト方式で、
+  取りこぼしがある。本文の数値は Lint の結果に関わらず全件見る。
+- **引用の文意**: 引用文字列が存在しても、条件付きの主張を無条件に引用していれば誤り。
+  原文の条件・限定が落ちていないかを読んで確認する。
+
+Lint が `pass` でも、上記を確認していなければ Exit Criteria を満たさない。
 
 # Exit Criteria
 
@@ -78,8 +91,8 @@ version: 0.1
 # Failure Handling
 
 - Critical な `fail` がある場合: `verdict` を `block` にする。
-  Phase 1（`patch-apply` 無し）では、該当箇所と理由をユーザーに提示して停止する。
-  草稿を自分で書き直さない。
+  該当箇所と理由を `patch-apply` へ渡して局所修正させる。草稿を自分で書き直さない。
+  `patch-apply` を経ても解消しない場合は、ユーザーに提示して停止する。
 
 # Next Skill
 

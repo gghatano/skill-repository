@@ -26,6 +26,18 @@
       "whenToUse": "実装完了前に必ず使う。差分をレビュー観点で評価し承認可否を判断するとき。",
       "io": "入力は git diff、出力はサマリと深刻度付き指摘。基準は規約と docs/review-checklist.md に従い、修正は実装担当の責務とする。"
     },
+    "contradiction-analyze": {
+      "tagline": "矛盾を整理し、結論を覆す反証を明示的に探す。",
+      "canDo": [
+        "情報源間の食い違いを型で分類する",
+        "見かけ上の矛盾と実質的な矛盾を区別する",
+        "結論を覆す一次情報を能動的に探す",
+        "探していないことを none-found と偽らない",
+        "未解決の対立を隠さず残す"
+      ],
+      "whenToUse": "主張を構造化した後、草稿を書く前。調査が結論の補強に偏るのを防ぎたいとき。",
+      "io": "入力は claims.json と sources.json、出力は contradictions.json と source-tensions.md。反証探索の実施記録も残す。"
+    },
     "doc-cycle": {
       "tagline": "ドキュメント整理・レビュー・公開を一括実行するオーケストレーター。",
       "canDo": [
@@ -62,6 +74,18 @@
       "whenToUse": "generate 完了後、成果物の品質と制約充足を評価し、軽微な問題は generator.py に最小修正するとき（step4）に使う。",
       "io": "入力は input/sample_data・output のデータ・work 仕様・generator.py、出力は evaluate.py・evaluation_report.md・constraints_check.csv・quality_gate.json。最終的な再生成ループの判断は PM に委ねる。"
     },
+    "evidence-organize": {
+      "tagline": "情報源から主張と根拠を抽出し、構造化する。",
+      "canDo": [
+        "Source Note から主張を1件ずつ取り出す",
+        "主張に出典位置・条件・限界を付ける",
+        "著者の主張と自分の推論を型で区別する",
+        "相関を因果として登録しない",
+        "論点ごとの根拠の有無を可視化する"
+      ],
+      "whenToUse": "情報源を集めた後、草稿を書く前。文章ではなく構造に対してレビューできるようにするとき。",
+      "io": "入力は sources.json と Source Note、出力は claims.json と evidence-digest.md。根拠のない主張を確定事項にしない。"
+    },
     "experiment-plan": {
       "tagline": "公平な比較条件と業務シナリオを備えた実験計画書を作成する。",
       "canDo": [
@@ -85,6 +109,18 @@
       ],
       "whenToUse": "docs/plans/ の計画書がある実験を実行・再実行・シード追加・新スクリプト追加するとき。計画書がなければ先に experiment-plan へ差し戻す。",
       "io": "入力は計画書、出力は生成物（outputs/figures/）・run_meta・レポート反映。1 worktree = 1 issue = 1 エージェントで implementer（下位）へ委譲、解釈は呼び出し元が担う。"
+    },
+    "gap-fill": {
+      "tagline": "レビュー指摘に紐づく範囲だけ、限定的に再調査する。",
+      "canDo": [
+        "追加調査が必要な Finding だけを対象にする",
+        "各調査を Finding ID に紐づけて記録する",
+        "既取得の情報源を再取得しない",
+        "新情報が既存主張に与えた影響を残す",
+        "埋まらなかった不足を unresolved にする"
+      ],
+      "whenToUse": "レビュー後、修正の前。穴を埋めたいが調査全体をやり直したくないとき。",
+      "io": "入力は reviews/*.json と sources.json、出力は gap-fill.json・追加 Source Note・更新した claims.json。範囲外の調査はしない。"
     },
     "generate": {
       "tagline": "設計に基づき generator.py を実装し合成データを生成するスキル。",
@@ -157,6 +193,30 @@
       ],
       "whenToUse": "Issue を作る前の計画時に使う。この段階では Issue を大量作成しない。",
       "io": "入力は仕様書と発見事項、出力は docs/implementation-plan.md へ追記する Issue 候補一覧。spec-analyst サブエージェントと連携し、人間確認後に gh issue create する。"
+    },
+    "multi-review": {
+      "tagline": "4つの観点で独立にレビューし、指摘を構造化する。",
+      "canDo": [
+        "根拠・網羅・反証・依頼適合を別々にレビューする",
+        "各 Reviewer を独立に走らせ結論の引きずりを防ぐ",
+        "指摘に対象箇所と推奨アクションを必ず付ける",
+        "深刻度を critical / major / minor で切り分ける",
+        "抽象的な指摘だけを残さない"
+      ],
+      "whenToUse": "初稿ができた後。一度のレビューでは見つからない失敗を観点ごとに拾うとき。",
+      "io": "入力は草稿と claims.json・decomposition.json、出力は reviews/*.json。草稿は修正しない。"
+    },
+    "patch-apply": {
+      "tagline": "指摘にもとづき草稿を局所修正する（全文再生成しない）。",
+      "canDo": [
+        "Finding 単位で Patch を計画し適用する",
+        "Edit のみを使い全文書き換えを構造的に防ぐ",
+        "変更行数の上限と変更総量の比率を守る",
+        "上限を超える修正をエスカレーションする",
+        "各 Finding の解消状態を追跡可能にする"
+      ],
+      "whenToUse": "レビュー指摘を反映するとき。書き直しではなく、直した箇所を追跡したいとき。",
+      "io": "入力は reviews/*.json と草稿、出力は patches/*.json と局所修正された草稿。Write は使わない。"
     },
     "pr-from-issue": {
       "tagline": "Issue に紐づく PR を作成し相互リンクする手順。",

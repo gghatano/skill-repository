@@ -17,7 +17,7 @@ version: 0.1
 | `decomposition.json` / `coverage-matrix.md` | 論点の網羅状況 |
 | `drafts/draft-01.md` | 出荷候補 |
 | `verification/citation-check.json` | 引用検証の結果 |
-| `reviews/*.json` | 任意。Phase 2 以降 |
+| `reviews/*.json` | Reviewer 指摘。Standard 以上では必須 |
 
 # Outputs
 
@@ -50,7 +50,7 @@ Ship Gate の 5 群を順に検査し、`checks` に記録する。
 2. **Evidence**
    - 主要主張に根拠がある。
    - `citation-check.json` の `verdict` が `block` でない。`block` ならここで `fail` / `critical`。
-3. **Review**（Phase 2 以降。`reviews/` が無ければ `skipped`）
+3. **Review**（`reviews/` が無い Quick Tier では `skipped`）
    - 未解決の Critical Finding が無い。
    - Major Finding は解消済み、または受容理由が記録されている。
 4. **Hygiene**

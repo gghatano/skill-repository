@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -108,12 +109,19 @@ def build_run(root: Path, *, shipped: bool = True) -> Path:
         }],
     }, ensure_ascii=False), encoding="utf-8")
 
+    # Long enough that the patch-scope ratio means something: a two-line document
+    # would make any single patch look like a rewrite.
+    filler = "\n\n".join(
+        f"README の記述{n}から読み取れる方針を、対応する箇所とともに整理する。"
+        for n in range(1, 13)
+    )
     body = (
         "# example/repo の設計思想\n\n"
         "## 設計思想\n\n"
         "README は小さな中核を保つ方針を明示している"
         "（[example/repo README](https://github.com/example/repo)）。\n\n"
-        f"> {QUOTE}\n"
+        f"> {QUOTE}\n\n"
+        f"{filler}\n"
     )
     (run_dir / "drafts" / "draft-01.md").write_text(body, encoding="utf-8")
     (run_dir / "verification" / "citation-check.json").write_text(json.dumps({
@@ -308,12 +316,498 @@ class LintFailureTest(unittest.TestCase):
         return {f["lint"] for f in report["findings"] if f["result"] == "fail"}
 
 
+def add_phase2_artifacts(run_dir: Path, *, severity: str = "critical",
+                         status: str = "resolved", changed_lines: int = 4) -> None:
+    """Layer claims / reviews / patches onto a Phase 1 run."""
+    (run_dir / "reviews").mkdir(exist_ok=True)
+    (run_dir / "patches").mkdir(exist_ok=True)
+
+    (run_dir / "claims.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "claims": [
+            {
+                "claim_id": "C-001",
+                "statement": "README は小さな中核を保つ方針を掲げている",
+                "claim_type": "author-claim",
+                "confidence": "high",
+                "supports": [{"source_id": "src-001", "location": "README 冒頭",
+                              "evidence_type": "document"}],
+                "conditions": [], "limitations": [],
+                "related_atomic_items": ["Q-01"],
+            },
+            {
+                "claim_id": "C-002",
+                "statement": "この方針は依存追加への慎重さとして表れていると考えられる",
+                "claim_type": "inference",
+                "confidence": "medium",
+                "supports": [],
+                "derived_from": ["C-001"],
+                "conditions": [], "limitations": ["著者の明示的な主張ではない"],
+                "related_atomic_items": ["Q-01"],
+            },
+        ],
+    }, ensure_ascii=False), encoding="utf-8")
+
+    (run_dir / "reviews" / "evidence-review.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "reviewer": "evidence",
+        "reviewed_file": "drafts/draft-01.md",
+        "findings": [{
+            "finding_id": "F-001",
+            "reviewer": "evidence",
+            "severity": severity,
+            "target": {"file": "drafts/draft-01.md", "section": "設計思想",
+                       "quote": "小さな中核を保つ方針"},
+            "problem": "推論を著者の主張として書いている",
+            "evidence": ["src-001"],
+            "recommended_action": "推論であることを明示する",
+            "requires_additional_research": False,
+            "status": status,
+        }],
+    }, ensure_ascii=False), encoding="utf-8")
+
+    (run_dir / "patches" / "applied-patches.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "kind": "applied",
+        "max_total_changed_ratio": 0.25,
+        "patches": [{
+            "patch_id": "P-001",
+            "finding_ids": ["F-001"],
+            "target_file": "drafts/draft-01.md",
+            "target_section": "設計思想",
+            "operation": "replace",
+            "before_summary": "推論を著者の主張として記述",
+            "after_summary": "推論であることを明示",
+            "max_changed_lines": 8,
+            "changed_lines": changed_lines,
+            "status": "applied",
+        }],
+    }, ensure_ascii=False), encoding="utf-8")
+
+
+class Phase2EndToEndTest(unittest.TestCase):
+    def test_run_with_reviews_and_patches_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            report = research_lint.run_lints(run_dir)
+            failed = [f for f in report["findings"] if f["result"] == "fail"]
+            self.assertEqual([], failed, failed)
+            lints = {f["lint"] for f in report["findings"] if f["result"] == "pass"}
+            self.assertIn("claim-provenance", lints)
+            self.assertIn("patch-scope", lints)
+            self.assertIn("critical-findings", lints)
+
+    def test_phase1_run_skips_phase2_lints(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            report = research_lint.run_lints(build_run(Path(temp)))
+            skipped = {f["lint"] for f in report["findings"] if f["result"] == "skipped"}
+            self.assertEqual("pass", report["verdict"])
+            self.assertIn("claim-provenance", skipped)
+            self.assertIn("patch-scope", skipped)
+            self.assertIn("critical-findings", skipped)
+
+
+class Phase2LintFailureTest(unittest.TestCase):
+    def test_unresolved_critical_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir, status="open")
+            self.assertIn("critical-findings", self._failed(run_dir))
+
+    def test_critical_accepted_without_reason_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir, status="accepted")
+            self.assertIn("critical-findings", self._failed(run_dir))
+
+    def test_open_minor_finding_does_not_block(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir, severity="minor", status="open")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+
+    def test_patch_exceeding_its_limit_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir, changed_lines=40)  # declared max is 8
+            self.assertIn("patch-scope", self._failed(run_dir))
+
+    def test_per_patch_limit_blocks_even_when_the_ratio_is_fine(self) -> None:
+        """The per-patch ceiling must stand on its own, not ride on the ratio check."""
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            draft = run_dir / "drafts" / "draft-01.md"
+            draft.write_text(draft.read_text(encoding="utf-8") + "\n".join(
+                f"補足 {n} 行目。" for n in range(200)), encoding="utf-8")
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            # 12 lines against a ~200-line draft is 6% — under the ratio ceiling —
+            # but still over this patch's own declared maximum of 8.
+            data["patches"][0]["changed_lines"] = 12
+            data["patches"][0]["max_changed_lines"] = 8
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            failed = self._failed(run_dir)
+            self.assertIn("patch-scope", failed)
+            report = research_lint.run_lints(run_dir)
+            details = [f["detail"] for f in report["findings"]
+                       if f["lint"] == "patch-scope" and f["result"] == "fail"]
+            self.assertTrue(any("上限 8 行" in d for d in details), details)
+            self.assertFalse(any("変更総量" in d for d in details), details)
+
+    def test_total_change_ratio_over_the_limit_blocks(self) -> None:
+        """Many individually-small patches still add up to a rewrite."""
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            template = data["patches"][0]
+            data["patches"] = [
+                {**template, "patch_id": f"P-{i:03d}", "changed_lines": 8, "status": "applied"}
+                for i in range(1, 8)
+            ]
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            failed = self._failed(run_dir)
+            self.assertIn("patch-scope", failed)
+
+    def test_patch_targeting_a_missing_file_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["patches"][0]["target_file"] = "drafts/draft-99.md"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("patch-scope", self._failed(run_dir))
+
+    def test_applied_patch_without_changed_lines_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            del data["patches"][0]["changed_lines"]
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("patch-scope", self._failed(run_dir))
+
+    def test_claim_without_support_or_inference_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "claims.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["claims"][0]["supports"] = []  # still typed author-claim
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("claim-provenance", self._failed(run_dir))
+
+    def test_claim_support_without_location_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "claims.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["claims"][0]["supports"][0]["location"] = ""
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("claim-provenance", self._failed(run_dir))
+
+    def test_claim_citing_unknown_source_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "claims.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["claims"][0]["supports"][0]["source_id"] = "src-999"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("claim-provenance", self._failed(run_dir))
+
+    def test_review_schema_violation_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "reviews" / "evidence-review.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["findings"][0]["severity"] = "blocker"  # not in the enum
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("schema-valid", self._failed(run_dir))
+
+    def _failed(self, run_dir: Path) -> set[str]:
+        report = research_lint.run_lints(run_dir)
+        self.assertEqual("block", report["verdict"])
+        return {f["lint"] for f in report["findings"] if f["result"] == "fail"}
+
+
+def add_phase3_artifacts(run_dir: Path, *, finding_id: str = "F-001") -> None:
+    """Layer contradictions and a gap-fill record onto a Phase 2 run."""
+    (run_dir / "contradictions.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "counterargument_search": [{
+            "claim_id": "C-001",
+            "searched": True,
+            "queries": ["example/repo criticism", "example/repo design tradeoffs"],
+            "outcome": "none-found",
+            "note": "反対する一次情報は見つからなかった",
+        }],
+        "contradictions": [{
+            "contradiction_id": "X-001",
+            "claim_a": "C-001",
+            "claim_b": "C-002",
+            "type": "scope-difference",
+            "severity": "low",
+            "resolution": "C-002 は推論であり、著者の主張と対象が異なる",
+            "additional_evidence_needed": False,
+        }],
+    }, ensure_ascii=False), encoding="utf-8")
+
+    (run_dir / "gap-fill.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "gaps": [{
+            "gap_id": "G-001",
+            "finding_id": finding_id,
+            "queries": ["example/repo dependency policy"],
+            "new_source_ids": [],
+            "affected_claim_ids": ["C-002"],
+            "impact": "推論であることを明示する必要が確認された（主張は変わらず）",
+            "status": "resolved",
+        }],
+    }, ensure_ascii=False), encoding="utf-8")
+
+
+class Phase3EndToEndTest(unittest.TestCase):
+    def test_full_pipeline_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            add_phase3_artifacts(run_dir)
+            report = research_lint.run_lints(run_dir)
+            failed = [f for f in report["findings"] if f["result"] == "fail"]
+            self.assertEqual([], failed, failed)
+            passed = {f["lint"] for f in report["findings"] if f["result"] == "pass"}
+            for lint in ("numeric-traceability", "independence-count", "gap-fill-scope"):
+                self.assertIn(lint, passed)
+
+    def test_earlier_phases_skip_phase3_lints(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            report = research_lint.run_lints(build_run(Path(temp)))
+            skipped = {f["lint"] for f in report["findings"] if f["result"] == "skipped"}
+            self.assertIn("independence-count", skipped)
+            self.assertIn("gap-fill-scope", skipped)
+
+
+class NumericTraceabilityTest(unittest.TestCase):
+    def _report_with(self, run_dir: Path, sentence: str) -> None:
+        report = run_dir / "final-report.md"
+        report.write_text(report.read_text(encoding="utf-8") + f"\n\n{sentence}\n", encoding="utf-8")
+
+    def test_number_absent_from_evidence_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            self._report_with(run_dir, "この方針により処理速度は3倍になった。")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("block", report["verdict"])
+            self.assertIn("numeric-traceability",
+                          {f["lint"] for f in report["findings"] if f["result"] == "fail"})
+
+    def test_number_present_in_a_claim_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "claims.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["claims"][0]["statement"] = "README によれば処理速度は3倍になった"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self._report_with(run_dir, "この方針により処理速度は3倍になった。")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+
+    def test_declared_unverified_number_warns_without_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "verification" / "citation-check.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["unverified_numbers"] = ["3倍"]
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self._report_with(run_dir, "この方針により処理速度は3倍になったとされる。")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+            self.assertIn("numeric-traceability",
+                          {f["lint"] for f in report["findings"] if f["result"] == "warn"})
+
+    def test_ordinals_and_urls_are_not_treated_as_measurements(self) -> None:
+        numbers = research_lint._report_numbers(
+            "# 見出し 2024\n\n記述1 と 記述2 を参照（[repo](https://example.com/v2/page7)）。\n"
+            "`--limit 100` を指定する。\n"
+        )
+        self.assertEqual([], numbers)
+
+
+class IndependenceCountTest(unittest.TestCase):
+    def _with_second_source(self, run_dir: Path, cluster: str) -> None:
+        vault = run_dir.parent.parent
+        (vault / "notes" / "src-002.md").write_text(
+            "---\nsource_id: src-002\ntitle: 転載記事\nurl: https://example.com/repost\n"
+            "source_type: article\nretrieved_at: 2026-07-26T15:20:00+09:00\n"
+            f"independence_cluster: {cluster}\n---\n\n# Quotable Passages\n\n-\n",
+            encoding="utf-8")
+        path = run_dir / "sources.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["sources"].append({
+            "source_id": "src-002", "title": "転載記事", "url": "https://example.com/repost",
+            "source_type": "article", "retrieved_at": "2026-07-26T15:20:00+09:00",
+            "independence_cluster": cluster, "quality_status": "provisional",
+            "sensitivity": "public", "supports": ["Q-01"], "note_path": "notes/src-002.md",
+        })
+        path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+        claims = run_dir / "claims.json"
+        cdata = json.loads(claims.read_text(encoding="utf-8"))
+        cdata["claims"][0]["supports"].append(
+            {"source_id": "src-002", "location": "本文", "evidence_type": "document"})
+        claims.write_text(json.dumps(cdata, ensure_ascii=False), encoding="utf-8")
+
+    def test_reprint_counted_as_second_source_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            self._with_second_source(run_dir, "cluster-001")  # same origin as src-001
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("block", report["verdict"])
+            self.assertIn("independence-count",
+                          {f["lint"] for f in report["findings"] if f["result"] == "fail"})
+
+    def test_genuinely_independent_sources_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            self._with_second_source(run_dir, "cluster-002")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+
+
+class GapFillScopeTest(unittest.TestCase):
+    def test_gap_referencing_an_unknown_finding_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            add_phase3_artifacts(run_dir, finding_id="F-999")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("block", report["verdict"])
+            self.assertIn("gap-fill-scope",
+                          {f["lint"] for f in report["findings"] if f["result"] == "fail"})
+
+    def test_contradiction_schema_violation_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            add_phase3_artifacts(run_dir)
+            path = run_dir / "contradictions.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["contradictions"][0]["type"] = "vibes-difference"  # not in the enum
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("block", report["verdict"])
+
+
+class AdversarialBypassTest(unittest.TestCase):
+    """Ways a run could look shippable while breaking a rule the design states.
+
+    Each of these passed before the corresponding guard existed.
+    """
+
+    def _full_run(self, temp: str) -> Path:
+        run_dir = build_run(Path(temp))
+        add_phase2_artifacts(run_dir)
+        add_phase3_artifacts(run_dir)
+        return run_dir
+
+    def _failed(self, run_dir: Path) -> set[str]:
+        report = research_lint.run_lints(run_dir)
+        self.assertEqual("block", report["verdict"])
+        return {f["lint"] for f in report["findings"] if f["result"] == "fail"}
+
+    def test_gap_fill_without_any_findings_blocks(self) -> None:
+        """Bounding gap-fill by findings must not switch off when there are none."""
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            shutil.rmtree(run_dir / "reviews")
+            self.assertIn("gap-fill-scope", self._failed(run_dir))
+
+    def test_escalated_patch_blocks_shipping(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            path = run_dir / "patches" / "applied-patches.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["patches"][0]["status"] = "escalated"
+            data["patches"][0]["escalation_reason"] = "章構成の変更が必要"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("patch-scope", self._failed(run_dir))
+
+    def test_blocked_ship_must_not_leave_a_final_report(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            path = run_dir / "verification" / "ship-check.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["verdict"] = "block"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self.assertIn("ship-consistency", self._failed(run_dir))
+
+    def test_passing_ship_without_a_final_report_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            (run_dir / "final-report.md").unlink()
+            self.assertIn("ship-consistency", self._failed(run_dir))
+
+    def test_standard_tier_with_one_reviewer_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            path = run_dir / "run.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["tier"] = "standard"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            failed = self._failed(run_dir)
+            self.assertIn("reviewer-coverage", failed)
+
+    def test_quick_tier_may_ship_with_fewer_reviewers(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)  # fixture tier is quick
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+
+    def test_inline_quote_is_verified_like_a_blockquote(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            report = run_dir / "final-report.md"
+            report.write_text(
+                report.read_text(encoding="utf-8")
+                + "\n\nREADME には「この設計は全ての用途に最適である」と明記されている。\n",
+                encoding="utf-8")
+            self.assertIn("quote-integrity", self._failed(run_dir))
+
+    def test_units_outside_the_original_list_are_traced(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = self._full_run(temp)
+            report = run_dir / "final-report.md"
+            report.write_text(
+                report.read_text(encoding="utf-8") + "\n\nこの方式は5社が採用し、2週で完了した。\n",
+                encoding="utf-8")
+            self.assertIn("numeric-traceability", self._failed(run_dir))
+
+
 class PluginLayoutTest(unittest.TestCase):
     """The design maps skills/rules/schemas onto the plugin layout; keep them in sync."""
 
-    PHASE1_SKILLS = (
+    IMPLEMENTED_SKILLS = (
+        # Phase 1
         "research-router", "query-decompose", "source-collect",
         "draft-compose", "citation-verify", "ship-verify",
+        # Phase 2
+        "evidence-organize", "multi-review", "patch-apply",
+        # Phase 3
+        "contradiction-analyze", "gap-fill",
     )
     REQUIRED_SECTIONS = (
         "# Purpose", "# Inputs", "# Outputs", "# Preconditions", "# Allowed Tools",
@@ -321,8 +815,8 @@ class PluginLayoutTest(unittest.TestCase):
         "# Failure Handling", "# Next Skill",
     )
 
-    def test_every_phase1_skill_exists_with_the_common_structure(self) -> None:
-        for skill in self.PHASE1_SKILLS:
+    def test_every_implemented_skill_has_the_common_structure(self) -> None:
+        for skill in self.IMPLEMENTED_SKILLS:
             path = PLUGIN_ROOT / "skills" / skill / "SKILL.md"
             with self.subTest(skill=skill):
                 self.assertTrue(path.is_file(), f"{path} が無い")

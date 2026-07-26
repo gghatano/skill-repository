@@ -3,7 +3,7 @@
 
 The skills describe what to produce; this script decides whether it was actually
 produced. It validates the JSON artefacts against the bundled schemas and runs
-the Phase 1 lints, so a run cannot be declared shippable on prose alone.
+the design's lints, so a run cannot be declared shippable on prose alone.
 
     python3 research_lint.py research/runs/<run-id>
 
@@ -23,18 +23,54 @@ from typing import Any
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = PLUGIN_ROOT / "schemas"
 
-# Phase 1 lints. The remaining lints in the design (claim-provenance, patch-scope,
-# critical-findings, numeric-traceability, independence-count) need artefacts that
-# later phases produce, so they are not registered yet.
-PHASE1_LINTS = (
+# Every lint in the design, plus gap-fill-scope (see the design's correction table:
+# Phase 3's "Gap Fill は Finding ID に限定される" needs a machine-checkable form).
+ACTIVE_LINTS = (
     "query-preserved",
     "schema-valid",
     "coverage-complete",
     "source-metadata",
     "quote-integrity",
+    "claim-provenance",
+    "numeric-traceability",
+    "independence-count",
+    "gap-fill-scope",
+    "reviewer-coverage",
+    "ship-consistency",
+    "patch-scope",
+    "critical-findings",
     "internal-leak",
     "placeholder-check",
 )
+
+# A number is worth tracing when it carries a unit, a decimal point, or enough
+# magnitude to be a finding rather than an ordinal ("記述1" is not a measurement).
+#
+# This is a heuristic, not a proof: a unit outside this list on a one- or two-digit
+# number is not caught, and matching is by token, so the same figure used for a
+# different quantity still matches. Judging whether a number means what the text
+# claims stays with citation-verify; this lint only catches figures with no
+# grounding at all.
+NUMERIC_UNITS = (
+    "%|％|倍|件|人|名|社|台|回|個|項目|章|節|"
+    "年|か月|ヶ月|カ月|週|週間|日|日間|時間|時|分|秒|"
+    "ms|s|min|h|GB|MB|KB|TB|B|km|m|cm|kg|g|"
+    "円|ドル|万円|億円|USD|JPY|pt|ポイント"
+)
+NUMERIC_RE = re.compile(
+    rf"\d+(?:\.\d+)?\s*(?:{NUMERIC_UNITS})(?![A-Za-z])"
+    r"|\d+\.\d+"
+    r"|\d{3,}"
+)
+CODE_SPAN_RE = re.compile(r"`[^`]*`")
+LINK_TARGET_RE = re.compile(r"\]\([^)]*\)")
+
+# multi-review defines four reviewers; a Standard-or-larger run that ships after
+# only some of them ran has skipped whole classes of failure.
+REQUIRED_REVIEWERS = ("evidence", "coverage", "counterargument", "instruction")
+
+# The default ceiling when a patch plan does not carry its own limit.
+DEFAULT_MAX_TOTAL_CHANGED_RATIO = 0.25
 
 PLACEHOLDER_RE = re.compile(r"\bTODO\b|\bFIXME\b|\bTBD\b|\{\{[^}]*\}\}|<[A-Za-z_]+>")
 INTERNAL_MARKERS = ("research/runs/", "scaffold.md", ".agents/", "coverage-matrix.md")
@@ -158,16 +194,29 @@ def extract_section(text: str, heading: str) -> str:
     return "\n".join(body)
 
 
-def blockquote_lines(text: str) -> list[str]:
-    """Verbatim quotes in a draft are written as markdown blockquotes."""
-    quotes = []
+INLINE_QUOTE_RE = re.compile(r"「([^「」]{10,})」")
+
+
+def verbatim_quotes(text: str) -> list[str]:
+    """Quotes a draft presents as the source's own words.
+
+    Both markdown blockquotes and 「…」 spans count: checking only the former
+    would leave "README には「…」と明記されている" unverified, which is the more
+    natural way to fabricate one.
+    """
+    quotes: list[str] = []
     for line in text.splitlines():
         stripped = line.strip()
         if stripped.startswith(">"):
             quote = stripped.lstrip(">").strip()
             if len(quote) >= 10:
                 quotes.append(quote)
+    quotes.extend(INLINE_QUOTE_RE.findall(text))
     return quotes
+
+
+# Kept as an alias: the blockquote-only view is still useful on its own.
+blockquote_lines = verbatim_quotes
 
 
 def _result(name: str, result: str, detail: str, target: str = "") -> dict[str, str]:
@@ -192,6 +241,15 @@ SCHEMA_TARGETS = (
     ("execution-contract.json", "execution-contract.schema.json", True),
     ("decomposition.json", "decomposition.schema.json", False),
     ("sources.json", "source.schema.json", False),
+    ("claims.json", "claim.schema.json", False),
+    ("reviews/evidence-review.json", "review-finding.schema.json", False),
+    ("reviews/coverage-review.json", "review-finding.schema.json", False),
+    ("reviews/counterargument-review.json", "review-finding.schema.json", False),
+    ("reviews/instruction-review.json", "review-finding.schema.json", False),
+    ("contradictions.json", "contradiction.schema.json", False),
+    ("gap-fill.json", "gap-fill.schema.json", False),
+    ("patches/patch-plan.json", "patch.schema.json", False),
+    ("patches/applied-patches.json", "patch.schema.json", False),
     ("verification/citation-check.json", "verification.schema.json", False),
     ("verification/ship-check.json", "verification.schema.json", False),
 )
@@ -292,7 +350,7 @@ def lint_quote_integrity(run_dir: Path, vault_root: Path) -> list[dict[str, str]
     draft = _draft_path(run_dir)
     if draft is None:
         return [_result("quote-integrity", "skipped", "草稿が未生成", "drafts/")]
-    quotes = blockquote_lines(draft.read_text(encoding="utf-8"))
+    quotes = verbatim_quotes(draft.read_text(encoding="utf-8"))
     if not quotes:
         return [_result("quote-integrity", "pass", "逐語引用なし", str(draft.name))]
 
@@ -338,6 +396,364 @@ def _draft_path(run_dir: Path) -> Path | None:
     return drafts[0] if drafts else None
 
 
+def lint_claim_provenance(run_dir: Path) -> list[dict[str, str]]:
+    """Every claim is either backed by a source or declared as our own inference."""
+    path = run_dir / "claims.json"
+    if not path.is_file():
+        return [_result("claim-provenance", "skipped", "claims.json が未生成", "claims.json")]
+    try:
+        claims = load_json(path).get("claims", [])
+    except json.JSONDecodeError:
+        return [_result("claim-provenance", "skipped", "claims.json を読めない", "claims.json")]
+
+    known_sources = _known_source_ids(run_dir)
+    findings: list[dict[str, str]] = []
+    for claim in claims:
+        claim_id = claim.get("claim_id", "?")
+        supports = claim.get("supports") or []
+        if not supports:
+            if claim.get("claim_type") != "inference":
+                findings.append(_result(
+                    "claim-provenance", "fail",
+                    f"{claim_id}: 根拠が無いのに inference ではない", "claims.json"))
+            continue
+        missing_location = [s for s in supports if not s.get("location")]
+        if missing_location:
+            findings.append(_result(
+                "claim-provenance", "fail", f"{claim_id}: 出典位置が無い根拠がある", "claims.json"))
+        unknown = [s.get("source_id") for s in supports if s.get("source_id") not in known_sources]
+        if known_sources and unknown:
+            findings.append(_result(
+                "claim-provenance", "fail",
+                f"{claim_id}: sources.json に無い情報源を参照している: {', '.join(map(str, unknown))}",
+                "claims.json"))
+    if not findings:
+        findings.append(_result(
+            "claim-provenance", "pass", f"{len(claims)} 件の主張に根拠または推論区分がある", "claims.json"))
+    return findings
+
+
+def _known_source_ids(run_dir: Path) -> set[str]:
+    path = run_dir / "sources.json"
+    if not path.is_file():
+        return set()
+    try:
+        return {s.get("source_id") for s in load_json(path).get("sources", [])}
+    except json.JSONDecodeError:
+        return set()
+
+
+def lint_numeric_traceability(run_dir: Path, vault_root: Path) -> list[dict[str, str]]:
+    """Numbers in the report must come from a claim or a quoted passage."""
+    report = _draft_path(run_dir)
+    if report is None:
+        return [_result("numeric-traceability", "skipped", "草稿が未生成", "drafts/")]
+
+    numbers = _report_numbers(report.read_text(encoding="utf-8"))
+    if not numbers:
+        return [_result("numeric-traceability", "pass", "追跡対象の数値なし", report.name)]
+
+    corpus = _normalize(_claim_corpus(run_dir) + _quotable_corpus(run_dir, vault_root))
+    declared = _declared_unverified(run_dir)
+
+    findings: list[dict[str, str]] = []
+    for number in numbers:
+        if _normalize(number) in corpus:
+            continue
+        if number in declared:
+            findings.append(_result(
+                "numeric-traceability", "warn",
+                f"未確認と明示されている数値: {number}", report.name))
+            continue
+        findings.append(_result(
+            "numeric-traceability", "fail",
+            f"根拠に見当たらない数値: {number}", report.name))
+    if not any(f["result"] == "fail" for f in findings):
+        findings.append(_result(
+            "numeric-traceability", "pass",
+            f"{len(numbers)} 件の数値が根拠に追跡できる", report.name))
+    return findings
+
+
+def _report_numbers(text: str) -> list[str]:
+    """Numbers worth tracing, ignoring headings, code spans and link targets."""
+    body = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+    body = CODE_SPAN_RE.sub(" ", body)
+    body = LINK_TARGET_RE.sub("] ", body)
+    seen: list[str] = []
+    for match in NUMERIC_RE.findall(body):
+        token = match.strip()
+        if token not in seen:
+            seen.append(token)
+    return seen
+
+
+def _claim_corpus(run_dir: Path) -> str:
+    path = run_dir / "claims.json"
+    if not path.is_file():
+        return ""
+    try:
+        claims = load_json(path).get("claims", [])
+    except json.JSONDecodeError:
+        return ""
+    parts: list[str] = []
+    for claim in claims:
+        parts.append(str(claim.get("statement", "")))
+        parts.extend(str(c) for c in claim.get("conditions", []))
+        parts.extend(str(s.get("location", "")) for s in claim.get("supports", []))
+    return "\n".join(parts)
+
+
+def _declared_unverified(run_dir: Path) -> set[str]:
+    path = run_dir / "verification" / "citation-check.json"
+    if not path.is_file():
+        return set()
+    try:
+        return {str(n) for n in load_json(path).get("unverified_numbers", [])}
+    except json.JSONDecodeError:
+        return set()
+
+
+def lint_independence_count(run_dir: Path) -> list[dict[str, str]]:
+    """Reprints of one origin must not be presented as several independent sources."""
+    claims_path = run_dir / "claims.json"
+    sources_path = run_dir / "sources.json"
+    if not claims_path.is_file() or not sources_path.is_file():
+        return [_result("independence-count", "skipped", "claims.json / sources.json が未生成", "claims.json")]
+    try:
+        claims = load_json(claims_path).get("claims", [])
+        sources = load_json(sources_path).get("sources", [])
+    except json.JSONDecodeError:
+        return [_result("independence-count", "skipped", "JSON を読めない", "claims.json")]
+
+    cluster_of = {s.get("source_id"): s.get("independence_cluster") for s in sources}
+    findings: list[dict[str, str]] = []
+    for claim in claims:
+        source_ids = {s.get("source_id") for s in claim.get("supports") or []}
+        if len(source_ids) < 2:
+            continue
+        clusters = {cluster_of.get(sid) for sid in source_ids if cluster_of.get(sid)}
+        if len(clusters) == 1:
+            findings.append(_result(
+                "independence-count", "fail",
+                f"{claim.get('claim_id', '?')}: {len(source_ids)} 件の根拠がすべて同一の"
+                f"転載元（{clusters.pop()}）",
+                "claims.json"))
+        elif clusters and len(clusters) < len(source_ids):
+            findings.append(_result(
+                "independence-count", "warn",
+                f"{claim.get('claim_id', '?')}: 根拠 {len(source_ids)} 件に対し独立は "
+                f"{len(clusters)} 件",
+                "claims.json"))
+    if not any(f["result"] == "fail" for f in findings):
+        findings.append(_result("independence-count", "pass", "転載を独立根拠として数えていない", "claims.json"))
+    return findings
+
+
+def lint_gap_fill_scope(run_dir: Path) -> list[dict[str, str]]:
+    """Additional research is bounded by the findings that asked for it."""
+    path = run_dir / "gap-fill.json"
+    if not path.is_file():
+        return [_result("gap-fill-scope", "skipped", "gap-fill.json が未生成", "gap-fill.json")]
+    try:
+        gaps = load_json(path).get("gaps", [])
+    except json.JSONDecodeError:
+        return [_result("gap-fill-scope", "skipped", "gap-fill.json を読めない", "gap-fill.json")]
+
+    known = _known_finding_ids(run_dir)
+    findings: list[dict[str, str]] = []
+    if gaps and not known:
+        # Bounding gap-fill by findings is meaningless if we skip the check whenever
+        # there are no findings to bound it by: that is exactly the unbounded case.
+        findings.append(_result(
+            "gap-fill-scope", "fail",
+            f"{len(gaps)} 件の追加調査があるが、紐づけ先の Reviewer 指摘が存在しない",
+            "gap-fill.json"))
+    for gap in gaps:
+        finding_id = gap.get("finding_id")
+        if known and finding_id not in known:
+            findings.append(_result(
+                "gap-fill-scope", "fail",
+                f"{gap.get('gap_id', '?')}: 実在しない Finding を参照している（{finding_id}）",
+                "gap-fill.json"))
+    if not findings:
+        findings.append(_result(
+            "gap-fill-scope", "pass", f"{len(gaps)} 件の追加調査が Finding に紐づく", "gap-fill.json"))
+    return findings
+
+
+def _known_finding_ids(run_dir: Path) -> set[str]:
+    reviews = run_dir / "reviews"
+    if not reviews.is_dir():
+        return set()
+    ids: set[str] = set()
+    for path in sorted(reviews.glob("*.json")):
+        try:
+            for finding in load_json(path).get("findings", []):
+                ids.add(finding.get("finding_id"))
+        except json.JSONDecodeError:
+            continue
+    return ids
+
+
+def lint_patch_scope(run_dir: Path) -> list[dict[str, str]]:
+    """Applied patches stay local: within their declared size and the overall ratio."""
+    path = run_dir / "patches" / "applied-patches.json"
+    if not path.is_file():
+        return [_result("patch-scope", "skipped", "applied-patches.json が未生成", "patches/")]
+    try:
+        data = load_json(path)
+    except json.JSONDecodeError:
+        return [_result("patch-scope", "skipped", "applied-patches.json を読めない", "patches/")]
+
+    patches = data.get("patches", [])
+    findings: list[dict[str, str]] = []
+    # The ratio is per patched file: measuring against anything else compares a
+    # patch to a document it never touched.
+    changed_by_file: dict[str, int] = {}
+    for patch in patches:
+        patch_id = patch.get("patch_id", "?")
+        if patch.get("status") == "escalated":
+            # Escalation means the fix did not fit as a local patch. Leaving it
+            # unresolved and shipping is the failure this rule exists to prevent.
+            findings.append(_result(
+                "patch-scope", "fail",
+                f"{patch_id}: 構造問題としてエスカレーションされたまま解消していない"
+                f"（{patch.get('escalation_reason', '理由未記載')}）",
+                "patches/"))
+            continue
+        if patch.get("status") != "applied":
+            continue
+        changed = patch.get("changed_lines")
+        if changed is None:
+            findings.append(_result(
+                "patch-scope", "fail", f"{patch_id}: 適用済みだが changed_lines が無い", "patches/"))
+            continue
+        target = patch.get("target_file", "")
+        changed_by_file[target] = changed_by_file.get(target, 0) + changed
+        limit = patch.get("max_changed_lines", 0)
+        if limit and changed > limit:
+            findings.append(_result(
+                "patch-scope", "fail",
+                f"{patch_id}: {changed} 行変更（上限 {limit} 行）", "patches/"))
+
+    ratio_limit = data.get("max_total_changed_ratio", DEFAULT_MAX_TOTAL_CHANGED_RATIO)
+    for target, changed in sorted(changed_by_file.items()):
+        path = run_dir / target
+        if not path.is_file():
+            findings.append(_result(
+                "patch-scope", "fail", f"Patch 対象が実在しない: {target}", target))
+            continue
+        total_lines = len(path.read_text(encoding="utf-8").splitlines()) or 1
+        ratio = changed / total_lines
+        if ratio > ratio_limit:
+            findings.append(_result(
+                "patch-scope", "fail",
+                f"{target}: 変更総量が全体の {ratio:.0%}（上限 {ratio_limit:.0%}）。構造問題として扱う",
+                target))
+
+    if not findings:
+        findings.append(_result(
+            "patch-scope", "pass", f"{len(patches)} 件の Patch が許容範囲内", "patches/"))
+    return findings
+
+
+def lint_critical_findings(run_dir: Path) -> list[dict[str, str]]:
+    """A critical finding must be resolved, escalated, or explicitly accepted."""
+    reviews_dir = run_dir / "reviews"
+    files = sorted(reviews_dir.glob("*.json")) if reviews_dir.is_dir() else []
+    if not files:
+        return [_result("critical-findings", "skipped", "reviews/ が未生成", "reviews/")]
+
+    findings: list[dict[str, str]] = []
+    open_criticals: list[str] = []
+    for path in files:
+        try:
+            review = load_json(path)
+        except json.JSONDecodeError:
+            findings.append(_result(
+                "critical-findings", "fail", f"{path.name} を読めない", f"reviews/{path.name}"))
+            continue
+        for finding in review.get("findings", []):
+            if finding.get("severity") != "critical":
+                continue
+            status = finding.get("status")
+            if status in {"open", "unresolved"}:
+                open_criticals.append(finding.get("finding_id", "?"))
+            elif status == "accepted" and not finding.get("accepted_reason"):
+                findings.append(_result(
+                    "critical-findings", "fail",
+                    f"{finding.get('finding_id', '?')}: critical を理由なく受容している",
+                    f"reviews/{path.name}"))
+
+    if open_criticals:
+        findings.append(_result(
+            "critical-findings", "fail",
+            f"未解決の Critical Finding: {', '.join(open_criticals)}", "reviews/"))
+    if not findings:
+        findings.append(_result("critical-findings", "pass", "未解決の Critical なし", "reviews/"))
+    return findings
+
+
+def lint_reviewer_coverage(run_dir: Path) -> list[dict[str, str]]:
+    """Standard and Extended runs must have run all four reviewers."""
+    tier = _run_tier(run_dir)
+    reviews_dir = run_dir / "reviews"
+    if not reviews_dir.is_dir() or not any(reviews_dir.glob("*.json")):
+        return [_result("reviewer-coverage", "skipped", "reviews/ が未生成", "reviews/")]
+    if tier == "quick":
+        return [_result("reviewer-coverage", "skipped", "Quick Tier はレビューを省ける", "reviews/")]
+
+    seen: set[str] = set()
+    for path in sorted(reviews_dir.glob("*.json")):
+        try:
+            seen.add(load_json(path).get("reviewer", ""))
+        except json.JSONDecodeError:
+            continue
+    missing = [r for r in REQUIRED_REVIEWERS if r not in seen]
+    if missing:
+        return [_result(
+            "reviewer-coverage", "fail",
+            f"{tier} Tier だが実行されていない Reviewer がある: {', '.join(missing)}", "reviews/")]
+    return [_result("reviewer-coverage", "pass", "4 観点すべてがレビュー済み", "reviews/")]
+
+
+def _run_tier(run_dir: Path) -> str:
+    path = run_dir / "run.json"
+    if not path.is_file():
+        return ""
+    try:
+        return str(load_json(path).get("tier", ""))
+    except json.JSONDecodeError:
+        return ""
+
+
+def lint_ship_consistency(run_dir: Path) -> list[dict[str, str]]:
+    """A blocked run must not leave a shippable artefact behind."""
+    check = run_dir / "verification" / "ship-check.json"
+    report = run_dir / "final-report.md"
+    if not check.is_file():
+        if report.is_file():
+            return [_result(
+                "ship-consistency", "fail",
+                "ship-check.json が無いのに final-report.md が存在する", "final-report.md")]
+        return [_result("ship-consistency", "skipped", "ship-check.json が未生成", "verification/")]
+    try:
+        verdict = str(load_json(check).get("verdict", ""))
+    except json.JSONDecodeError:
+        return [_result("ship-consistency", "skipped", "ship-check.json を読めない", "verification/")]
+
+    if verdict == "block" and report.is_file():
+        return [_result(
+            "ship-consistency", "fail",
+            "Ship 判定が block なのに final-report.md が出力されている", "final-report.md")]
+    if verdict in {"pass", "pass_with_warnings"} and not report.is_file():
+        return [_result(
+            "ship-consistency", "fail",
+            f"Ship 判定が {verdict} なのに final-report.md が無い", "final-report.md")]
+    return [_result("ship-consistency", "pass", f"Ship 判定（{verdict}）と成果物が整合", "final-report.md")]
+
+
 def lint_internal_leak(run_dir: Path) -> list[dict[str, str]]:
     report = run_dir / "final-report.md"
     if not report.is_file():
@@ -380,6 +796,14 @@ def run_lints(run_dir: Path, vault_root: Path | None = None) -> dict[str, Any]:
     findings += lint_coverage_complete(run_dir)
     findings += lint_source_metadata(run_dir, vault)
     findings += lint_quote_integrity(run_dir, vault)
+    findings += lint_claim_provenance(run_dir)
+    findings += lint_numeric_traceability(run_dir, vault)
+    findings += lint_independence_count(run_dir)
+    findings += lint_gap_fill_scope(run_dir)
+    findings += lint_reviewer_coverage(run_dir)
+    findings += lint_ship_consistency(run_dir)
+    findings += lint_patch_scope(run_dir)
+    findings += lint_critical_findings(run_dir)
     findings += lint_internal_leak(run_dir)
     findings += lint_placeholder_check(run_dir)
 

@@ -20,7 +20,8 @@ version: 0.1
 | `decomposition.json` | 反映すべき論点 |
 | `sources.json` | 使える情報源 |
 | `research/notes/<source-id>.md` | 引用元 |
-| `claims.json` | 任意。`evidence-organize` がある場合 |
+| `claims.json` | `evidence-organize` の出力。主張と根拠の構造 |
+| `contradictions.json` | `contradiction-analyze` の出力。未解決の対立と反証 |
 
 # Outputs
 
@@ -83,4 +84,4 @@ version: 0.1
 
 # Next Skill
 
-`citation-verify`
+Quick Tier では `citation-verify`。Standard 以上では `multi-review`。
