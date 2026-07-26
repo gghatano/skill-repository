@@ -1,0 +1,31 @@
+name = "extended"
+
+[source]
+target_min = 40
+target_max = 200
+primary_source_min = 10
+official_source_min = 3
+
+[draft]
+count = 2
+target_words = 12000
+
+[review]
+evidence = true
+coverage = true
+counterargument = true
+instruction = true
+
+[gap_fill]
+enabled = true
+max_queries = 24
+max_new_sources = 40
+
+[patch]
+max_lines_per_patch = 20
+max_total_changed_ratio = 0.25
+
+[verification]
+require_citation_check = true
+require_numeric_check = true
+block_on_critical = true

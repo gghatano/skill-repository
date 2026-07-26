@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Collected Sources",
+  "type": "object",
+  "required": ["run_id", "sources"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "failed_fetches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["url", "reason"],
+        "properties": { "url": { "type": "string" }, "reason": { "type": "string" } }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "title", "url", "source_type", "retrieved_at",
+                     "independence_cluster", "supports", "note_path"],
+        "properties": {
+          "source_id": { "type": "string", "pattern": "^src-[0-9]{3,}$" },
+          "title": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "minLength": 1 },
+          "source_type": { "type": "string",
+            "enum": ["official", "primary-paper", "standard", "law", "public-record",
+                     "official-repo", "official-doc", "secondary", "expert-commentary",
+                     "article", "social-post"] },
+          "publisher": { "type": "string" },
+          "published_at": { "type": "string" },
+          "retrieved_at": { "type": "string", "minLength": 1 },
+          "independence_cluster": { "type": "string", "minLength": 1 },
+          "quality_status": { "type": "string", "enum": ["provisional", "confirmed", "rejected"] },
+          "sensitivity": { "type": "string",
+            "enum": ["public", "internal", "confidential", "restricted"] },
+          "supports": { "type": "array", "items": { "type": "string" } },
+          "note_path": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

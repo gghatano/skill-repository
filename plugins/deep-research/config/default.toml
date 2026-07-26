@@ -1,0 +1,3 @@
+# Deep Research の既定設定。導入先で research/config/default.toml として上書きできる。
+default_profile = "quick"
+vault_root = "research"
