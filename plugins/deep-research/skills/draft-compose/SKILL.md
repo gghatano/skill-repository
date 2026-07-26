@@ -21,6 +21,7 @@ version: 0.1
 | `sources.json` | 使える情報源 |
 | `research/notes/<source-id>.md` | 引用元 |
 | `claims.json` | `evidence-organize` の出力。主張と根拠の構造 |
+| `contradictions.json` | `contradiction-analyze` の出力。未解決の対立と反証 |
 
 # Outputs
 

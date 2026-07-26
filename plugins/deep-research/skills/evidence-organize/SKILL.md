@@ -97,4 +97,4 @@ version: 0.1
 
 # Next Skill
 
-`draft-compose`
+Quick Tier では `draft-compose`。Standard 以上では `contradiction-analyze`。

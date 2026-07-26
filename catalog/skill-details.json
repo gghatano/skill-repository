@@ -26,6 +26,18 @@
       "whenToUse": "実装完了前に必ず使う。差分をレビュー観点で評価し承認可否を判断するとき。",
       "io": "入力は git diff、出力はサマリと深刻度付き指摘。基準は規約と docs/review-checklist.md に従い、修正は実装担当の責務とする。"
     },
+    "contradiction-analyze": {
+      "tagline": "矛盾を整理し、結論を覆す反証を明示的に探す。",
+      "canDo": [
+        "情報源間の食い違いを型で分類する",
+        "見かけ上の矛盾と実質的な矛盾を区別する",
+        "結論を覆す一次情報を能動的に探す",
+        "探していないことを none-found と偽らない",
+        "未解決の対立を隠さず残す"
+      ],
+      "whenToUse": "主張を構造化した後、草稿を書く前。調査が結論の補強に偏るのを防ぎたいとき。",
+      "io": "入力は claims.json と sources.json、出力は contradictions.json と source-tensions.md。反証探索の実施記録も残す。"
+    },
     "doc-cycle": {
       "tagline": "ドキュメント整理・レビュー・公開を一括実行するオーケストレーター。",
       "canDo": [
@@ -97,6 +109,18 @@
       ],
       "whenToUse": "docs/plans/ の計画書がある実験を実行・再実行・シード追加・新スクリプト追加するとき。計画書がなければ先に experiment-plan へ差し戻す。",
       "io": "入力は計画書、出力は生成物（outputs/figures/）・run_meta・レポート反映。1 worktree = 1 issue = 1 エージェントで implementer（下位）へ委譲、解釈は呼び出し元が担う。"
+    },
+    "gap-fill": {
+      "tagline": "レビュー指摘に紐づく範囲だけ、限定的に再調査する。",
+      "canDo": [
+        "追加調査が必要な Finding だけを対象にする",
+        "各調査を Finding ID に紐づけて記録する",
+        "既取得の情報源を再取得しない",
+        "新情報が既存主張に与えた影響を残す",
+        "埋まらなかった不足を unresolved にする"
+      ],
+      "whenToUse": "レビュー後、修正の前。穴を埋めたいが調査全体をやり直したくないとき。",
+      "io": "入力は reviews/*.json と sources.json、出力は gap-fill.json・追加 Source Note・更新した claims.json。範囲外の調査はしない。"
     },
     "generate": {
       "tagline": "設計に基づき generator.py を実装し合成データを生成するスキル。",

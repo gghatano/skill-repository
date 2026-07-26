@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Contradictions and Tensions",
+  "type": "object",
+  "required": ["run_id", "contradictions", "counterargument_search"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "counterargument_search": {
+      "description": "反証探索を実施した記録。実施していない主張を隠さないために必須とする。",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim_id", "searched", "outcome"],
+        "properties": {
+          "claim_id": { "type": "string", "pattern": "^C-[0-9]{3,}$" },
+          "searched": { "type": "boolean" },
+          "queries": { "type": "array", "items": { "type": "string" } },
+          "outcome": { "type": "string",
+            "enum": ["counterevidence-found", "none-found", "not-searched", "inconclusive"] },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "contradictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["contradiction_id", "claim_a", "claim_b", "type", "severity",
+                     "resolution", "additional_evidence_needed"],
+        "properties": {
+          "contradiction_id": { "type": "string", "pattern": "^X-[0-9]{3,}$" },
+          "claim_a": { "type": "string", "pattern": "^C-[0-9]{3,}$" },
+          "claim_b": { "type": "string", "pattern": "^C-[0-9]{3,}$" },
+          "type": { "type": "string",
+            "enum": ["direct-contradiction", "scope-difference", "definition-difference",
+                     "time-difference", "population-difference", "method-difference",
+                     "measurement-difference", "unresolved"] },
+          "severity": { "type": "string", "enum": ["high", "medium", "low"] },
+          "resolution": { "type": "string", "minLength": 1 },
+          "additional_evidence_needed": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

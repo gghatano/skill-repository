@@ -18,7 +18,7 @@ Reviewer 指摘にもとづき、草稿を**局所修正**する。
 | `reviews/*.json` | 直す対象の Finding |
 | `drafts/draft-01.md` | 修正対象 |
 | `claims.json` | 修正の根拠 |
-| `gap-fill-report.md` | 任意。Phase 3 以降 |
+| `gap-fill.json` / `gap-fill-report.md` | `gap-fill` の結果。追加根拠と未解消の不足 |
 
 # Outputs
 

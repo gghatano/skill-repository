@@ -538,6 +538,179 @@ class Phase2LintFailureTest(unittest.TestCase):
         return {f["lint"] for f in report["findings"] if f["result"] == "fail"}
 
 
+def add_phase3_artifacts(run_dir: Path, *, finding_id: str = "F-001") -> None:
+    """Layer contradictions and a gap-fill record onto a Phase 2 run."""
+    (run_dir / "contradictions.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "counterargument_search": [{
+            "claim_id": "C-001",
+            "searched": True,
+            "queries": ["example/repo criticism", "example/repo design tradeoffs"],
+            "outcome": "none-found",
+            "note": "反対する一次情報は見つからなかった",
+        }],
+        "contradictions": [{
+            "contradiction_id": "X-001",
+            "claim_a": "C-001",
+            "claim_b": "C-002",
+            "type": "scope-difference",
+            "severity": "low",
+            "resolution": "C-002 は推論であり、著者の主張と対象が異なる",
+            "additional_evidence_needed": False,
+        }],
+    }, ensure_ascii=False), encoding="utf-8")
+
+    (run_dir / "gap-fill.json").write_text(json.dumps({
+        "run_id": RUN_ID,
+        "gaps": [{
+            "gap_id": "G-001",
+            "finding_id": finding_id,
+            "queries": ["example/repo dependency policy"],
+            "new_source_ids": [],
+            "affected_claim_ids": ["C-002"],
+            "impact": "推論であることを明示する必要が確認された（主張は変わらず）",
+            "status": "resolved",
+        }],
+    }, ensure_ascii=False), encoding="utf-8")
+
+
+class Phase3EndToEndTest(unittest.TestCase):
+    def test_full_pipeline_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            add_phase3_artifacts(run_dir)
+            report = research_lint.run_lints(run_dir)
+            failed = [f for f in report["findings"] if f["result"] == "fail"]
+            self.assertEqual([], failed, failed)
+            passed = {f["lint"] for f in report["findings"] if f["result"] == "pass"}
+            for lint in ("numeric-traceability", "independence-count", "gap-fill-scope"):
+                self.assertIn(lint, passed)
+
+    def test_earlier_phases_skip_phase3_lints(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            report = research_lint.run_lints(build_run(Path(temp)))
+            skipped = {f["lint"] for f in report["findings"] if f["result"] == "skipped"}
+            self.assertIn("independence-count", skipped)
+            self.assertIn("gap-fill-scope", skipped)
+
+
+class NumericTraceabilityTest(unittest.TestCase):
+    def _report_with(self, run_dir: Path, sentence: str) -> None:
+        report = run_dir / "final-report.md"
+        report.write_text(report.read_text(encoding="utf-8") + f"\n\n{sentence}\n", encoding="utf-8")
+
+    def test_number_absent_from_evidence_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            self._report_with(run_dir, "この方針により処理速度は3倍になった。")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("block", report["verdict"])
+            self.assertIn("numeric-traceability",
+                          {f["lint"] for f in report["findings"] if f["result"] == "fail"})
+
+    def test_number_present_in_a_claim_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "claims.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["claims"][0]["statement"] = "README によれば処理速度は3倍になった"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self._report_with(run_dir, "この方針により処理速度は3倍になった。")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+
+    def test_declared_unverified_number_warns_without_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            path = run_dir / "verification" / "citation-check.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["unverified_numbers"] = ["3倍"]
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            self._report_with(run_dir, "この方針により処理速度は3倍になったとされる。")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+            self.assertIn("numeric-traceability",
+                          {f["lint"] for f in report["findings"] if f["result"] == "warn"})
+
+    def test_ordinals_and_urls_are_not_treated_as_measurements(self) -> None:
+        numbers = research_lint._report_numbers(
+            "# 見出し 2024\n\n記述1 と 記述2 を参照（[repo](https://example.com/v2/page7)）。\n"
+            "`--limit 100` を指定する。\n"
+        )
+        self.assertEqual([], numbers)
+
+
+class IndependenceCountTest(unittest.TestCase):
+    def _with_second_source(self, run_dir: Path, cluster: str) -> None:
+        vault = run_dir.parent.parent
+        (vault / "notes" / "src-002.md").write_text(
+            "---\nsource_id: src-002\ntitle: 転載記事\nurl: https://example.com/repost\n"
+            "source_type: article\nretrieved_at: 2026-07-26T15:20:00+09:00\n"
+            f"independence_cluster: {cluster}\n---\n\n# Quotable Passages\n\n-\n",
+            encoding="utf-8")
+        path = run_dir / "sources.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["sources"].append({
+            "source_id": "src-002", "title": "転載記事", "url": "https://example.com/repost",
+            "source_type": "article", "retrieved_at": "2026-07-26T15:20:00+09:00",
+            "independence_cluster": cluster, "quality_status": "provisional",
+            "sensitivity": "public", "supports": ["Q-01"], "note_path": "notes/src-002.md",
+        })
+        path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+        claims = run_dir / "claims.json"
+        cdata = json.loads(claims.read_text(encoding="utf-8"))
+        cdata["claims"][0]["supports"].append(
+            {"source_id": "src-002", "location": "本文", "evidence_type": "document"})
+        claims.write_text(json.dumps(cdata, ensure_ascii=False), encoding="utf-8")
+
+    def test_reprint_counted_as_second_source_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            self._with_second_source(run_dir, "cluster-001")  # same origin as src-001
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("block", report["verdict"])
+            self.assertIn("independence-count",
+                          {f["lint"] for f in report["findings"] if f["result"] == "fail"})
+
+    def test_genuinely_independent_sources_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            self._with_second_source(run_dir, "cluster-002")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("pass", report["verdict"])
+
+
+class GapFillScopeTest(unittest.TestCase):
+    def test_gap_referencing_an_unknown_finding_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            add_phase3_artifacts(run_dir, finding_id="F-999")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("block", report["verdict"])
+            self.assertIn("gap-fill-scope",
+                          {f["lint"] for f in report["findings"] if f["result"] == "fail"})
+
+    def test_contradiction_schema_violation_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = build_run(Path(temp))
+            add_phase2_artifacts(run_dir)
+            add_phase3_artifacts(run_dir)
+            path = run_dir / "contradictions.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["contradictions"][0]["type"] = "vibes-difference"  # not in the enum
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            report = research_lint.run_lints(run_dir)
+            self.assertEqual("block", report["verdict"])
+
+
 class PluginLayoutTest(unittest.TestCase):
     """The design maps skills/rules/schemas onto the plugin layout; keep them in sync."""
 
@@ -547,6 +720,8 @@ class PluginLayoutTest(unittest.TestCase):
         "draft-compose", "citation-verify", "ship-verify",
         # Phase 2
         "evidence-organize", "multi-review", "patch-apply",
+        # Phase 3
+        "contradiction-analyze", "gap-fill",
     )
     REQUIRED_SECTIONS = (
         "# Purpose", "# Inputs", "# Outputs", "# Preconditions", "# Allowed Tools",

@@ -3,7 +3,7 @@
 
 The skills describe what to produce; this script decides whether it was actually
 produced. It validates the JSON artefacts against the bundled schemas and runs
-the Phase 1 lints, so a run cannot be declared shippable on prose alone.
+the design's lints, so a run cannot be declared shippable on prose alone.
 
     python3 research_lint.py research/runs/<run-id>
 
@@ -23,9 +23,8 @@ from typing import Any
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = PLUGIN_ROOT / "schemas"
 
-# Lints active through Phase 2. The remaining design lints (numeric-traceability,
-# independence-count) need artefacts that Phase 3 produces, so they stay unregistered
-# rather than silently passing on absent data.
+# Every lint in the design, plus gap-fill-scope (see the design's correction table:
+# Phase 3's "Gap Fill は Finding ID に限定される" needs a machine-checkable form).
 ACTIVE_LINTS = (
     "query-preserved",
     "schema-valid",
@@ -33,11 +32,24 @@ ACTIVE_LINTS = (
     "source-metadata",
     "quote-integrity",
     "claim-provenance",
+    "numeric-traceability",
+    "independence-count",
+    "gap-fill-scope",
     "patch-scope",
     "critical-findings",
     "internal-leak",
     "placeholder-check",
 )
+
+# A number is worth tracing when it carries a unit, a decimal point, or enough
+# magnitude to be a finding rather than an ordinal ("記述1" is not a measurement).
+NUMERIC_RE = re.compile(
+    r"\d+(?:\.\d+)?\s*(?:%|％|倍|件|人|年|か月|ヶ月|日間|時間|分|秒|ms|GB|MB|KB|円|ドル)"
+    r"|\d+\.\d+"
+    r"|\d{3,}"
+)
+CODE_SPAN_RE = re.compile(r"`[^`]*`")
+LINK_TARGET_RE = re.compile(r"\]\([^)]*\)")
 
 # The default ceiling when a patch plan does not carry its own limit.
 DEFAULT_MAX_TOTAL_CHANGED_RATIO = 0.25
@@ -203,6 +215,8 @@ SCHEMA_TARGETS = (
     ("reviews/coverage-review.json", "review-finding.schema.json", False),
     ("reviews/counterargument-review.json", "review-finding.schema.json", False),
     ("reviews/instruction-review.json", "review-finding.schema.json", False),
+    ("contradictions.json", "contradiction.schema.json", False),
+    ("gap-fill.json", "gap-fill.schema.json", False),
     ("patches/patch-plan.json", "patch.schema.json", False),
     ("patches/applied-patches.json", "patch.schema.json", False),
     ("verification/citation-check.json", "verification.schema.json", False),
@@ -398,6 +412,152 @@ def _known_source_ids(run_dir: Path) -> set[str]:
         return set()
 
 
+def lint_numeric_traceability(run_dir: Path, vault_root: Path) -> list[dict[str, str]]:
+    """Numbers in the report must come from a claim or a quoted passage."""
+    report = _draft_path(run_dir)
+    if report is None:
+        return [_result("numeric-traceability", "skipped", "草稿が未生成", "drafts/")]
+
+    numbers = _report_numbers(report.read_text(encoding="utf-8"))
+    if not numbers:
+        return [_result("numeric-traceability", "pass", "追跡対象の数値なし", report.name)]
+
+    corpus = _normalize(_claim_corpus(run_dir) + _quotable_corpus(run_dir, vault_root))
+    declared = _declared_unverified(run_dir)
+
+    findings: list[dict[str, str]] = []
+    for number in numbers:
+        if _normalize(number) in corpus:
+            continue
+        if number in declared:
+            findings.append(_result(
+                "numeric-traceability", "warn",
+                f"未確認と明示されている数値: {number}", report.name))
+            continue
+        findings.append(_result(
+            "numeric-traceability", "fail",
+            f"根拠に見当たらない数値: {number}", report.name))
+    if not any(f["result"] == "fail" for f in findings):
+        findings.append(_result(
+            "numeric-traceability", "pass",
+            f"{len(numbers)} 件の数値が根拠に追跡できる", report.name))
+    return findings
+
+
+def _report_numbers(text: str) -> list[str]:
+    """Numbers worth tracing, ignoring headings, code spans and link targets."""
+    body = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+    body = CODE_SPAN_RE.sub(" ", body)
+    body = LINK_TARGET_RE.sub("] ", body)
+    seen: list[str] = []
+    for match in NUMERIC_RE.findall(body):
+        token = match.strip()
+        if token not in seen:
+            seen.append(token)
+    return seen
+
+
+def _claim_corpus(run_dir: Path) -> str:
+    path = run_dir / "claims.json"
+    if not path.is_file():
+        return ""
+    try:
+        claims = load_json(path).get("claims", [])
+    except json.JSONDecodeError:
+        return ""
+    parts: list[str] = []
+    for claim in claims:
+        parts.append(str(claim.get("statement", "")))
+        parts.extend(str(c) for c in claim.get("conditions", []))
+        parts.extend(str(s.get("location", "")) for s in claim.get("supports", []))
+    return "\n".join(parts)
+
+
+def _declared_unverified(run_dir: Path) -> set[str]:
+    path = run_dir / "verification" / "citation-check.json"
+    if not path.is_file():
+        return set()
+    try:
+        return {str(n) for n in load_json(path).get("unverified_numbers", [])}
+    except json.JSONDecodeError:
+        return set()
+
+
+def lint_independence_count(run_dir: Path) -> list[dict[str, str]]:
+    """Reprints of one origin must not be presented as several independent sources."""
+    claims_path = run_dir / "claims.json"
+    sources_path = run_dir / "sources.json"
+    if not claims_path.is_file() or not sources_path.is_file():
+        return [_result("independence-count", "skipped", "claims.json / sources.json が未生成", "claims.json")]
+    try:
+        claims = load_json(claims_path).get("claims", [])
+        sources = load_json(sources_path).get("sources", [])
+    except json.JSONDecodeError:
+        return [_result("independence-count", "skipped", "JSON を読めない", "claims.json")]
+
+    cluster_of = {s.get("source_id"): s.get("independence_cluster") for s in sources}
+    findings: list[dict[str, str]] = []
+    for claim in claims:
+        source_ids = {s.get("source_id") for s in claim.get("supports") or []}
+        if len(source_ids) < 2:
+            continue
+        clusters = {cluster_of.get(sid) for sid in source_ids if cluster_of.get(sid)}
+        if len(clusters) == 1:
+            findings.append(_result(
+                "independence-count", "fail",
+                f"{claim.get('claim_id', '?')}: {len(source_ids)} 件の根拠がすべて同一の"
+                f"転載元（{clusters.pop()}）",
+                "claims.json"))
+        elif clusters and len(clusters) < len(source_ids):
+            findings.append(_result(
+                "independence-count", "warn",
+                f"{claim.get('claim_id', '?')}: 根拠 {len(source_ids)} 件に対し独立は "
+                f"{len(clusters)} 件",
+                "claims.json"))
+    if not any(f["result"] == "fail" for f in findings):
+        findings.append(_result("independence-count", "pass", "転載を独立根拠として数えていない", "claims.json"))
+    return findings
+
+
+def lint_gap_fill_scope(run_dir: Path) -> list[dict[str, str]]:
+    """Additional research is bounded by the findings that asked for it."""
+    path = run_dir / "gap-fill.json"
+    if not path.is_file():
+        return [_result("gap-fill-scope", "skipped", "gap-fill.json が未生成", "gap-fill.json")]
+    try:
+        gaps = load_json(path).get("gaps", [])
+    except json.JSONDecodeError:
+        return [_result("gap-fill-scope", "skipped", "gap-fill.json を読めない", "gap-fill.json")]
+
+    known = _known_finding_ids(run_dir)
+    findings: list[dict[str, str]] = []
+    for gap in gaps:
+        finding_id = gap.get("finding_id")
+        if known and finding_id not in known:
+            findings.append(_result(
+                "gap-fill-scope", "fail",
+                f"{gap.get('gap_id', '?')}: 実在しない Finding を参照している（{finding_id}）",
+                "gap-fill.json"))
+    if not findings:
+        findings.append(_result(
+            "gap-fill-scope", "pass", f"{len(gaps)} 件の追加調査が Finding に紐づく", "gap-fill.json"))
+    return findings
+
+
+def _known_finding_ids(run_dir: Path) -> set[str]:
+    reviews = run_dir / "reviews"
+    if not reviews.is_dir():
+        return set()
+    ids: set[str] = set()
+    for path in sorted(reviews.glob("*.json")):
+        try:
+            for finding in load_json(path).get("findings", []):
+                ids.add(finding.get("finding_id"))
+        except json.JSONDecodeError:
+            continue
+    return ids
+
+
 def lint_patch_scope(run_dir: Path) -> list[dict[str, str]]:
     """Applied patches stay local: within their declared size and the overall ratio."""
     path = run_dir / "patches" / "applied-patches.json"
@@ -531,6 +691,9 @@ def run_lints(run_dir: Path, vault_root: Path | None = None) -> dict[str, Any]:
     findings += lint_source_metadata(run_dir, vault)
     findings += lint_quote_integrity(run_dir, vault)
     findings += lint_claim_provenance(run_dir)
+    findings += lint_numeric_traceability(run_dir, vault)
+    findings += lint_independence_count(run_dir)
+    findings += lint_gap_fill_scope(run_dir)
     findings += lint_patch_scope(run_dir)
     findings += lint_critical_findings(run_dir)
     findings += lint_internal_leak(run_dir)

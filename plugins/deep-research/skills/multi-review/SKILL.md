@@ -20,7 +20,7 @@ version: 0.1
 | `decomposition.json` | Coverage Reviewer の基準 |
 | `claims.json` | Evidence Reviewer の照合先 |
 | `drafts/draft-01.md` | レビュー対象 |
-| `contradictions.json` | 任意。Phase 3 以降 |
+| `contradictions.json` | 矛盾と反証探索の記録。Counterargument Reviewer の基準 |
 
 # Outputs
 
@@ -124,4 +124,4 @@ Reviewer を 1 つずつ実行する。`Task` が使えるなら、各 Reviewer 
 
 # Next Skill
 
-追加調査が必要な Finding があれば `gap-fill`（Phase 3）。無ければ `patch-apply`。
+`requires_additional_research: true` の Finding があれば `gap-fill`。無ければ `patch-apply`。

@@ -905,7 +905,10 @@ Domain-specific Reviewer / 法令・標準の版管理 / DOI、撤回情報、�
 | --- | --- |
 | `execution-contract.schema.json` | §7 の schemas 一覧に無いが、S00 の Exit Criteria が「Schema に適合する」ことを要求しているため追加した |
 | Quick Tier の経路 | §6.1 は `S00 → S01 → S02 → S03 → S05 → S09 → S10` と `S03` を含むが、`S03`（evidence-organize）は Phase 2 の実装対象である。Phase 1 の Quick は `S00 → S01 → S02 → S05 → S09 → S10` とし、`claims.json` を任意入力として扱う |
-| Lint の適用時期 | §13 の 12 種のうち、Phase 1 で判定できるのは `query-preserved` / `schema-valid` / `coverage-complete` / `source-metadata` / `quote-integrity` / `internal-leak` / `placeholder-check` の 7 種。Phase 2 で `claim-provenance` / `patch-scope` / `critical-findings` を追加して 10 種。残る `numeric-traceability` / `independence-count` は Phase 3 で有効化する |
+| Lint の適用時期 | §13 の 12 種を、対象ファイルが生成される Phase で順に有効化した。Phase 1 で 7 種、Phase 2 で `claim-provenance` / `patch-scope` / `critical-findings`、Phase 3 で `numeric-traceability` / `independence-count` を追加し、12 種すべてが有効になった |
+| `gap-fill.schema.json` と `gap-fill-scope` Lint | §7 の schemas 一覧にも §13 の Lint 一覧にも無いが、Phase 3 の完了条件「Gap Fill が Finding ID に限定される」を機械的に確認する手段が他に無いため追加した |
+| `numeric-traceability` の対象 | すべての数字を追跡対象にすると、見出しの年号・箇条書き番号・URL 内の数字で誤検出する。単位を伴う数値・小数・3 桁以上の数値に限り、見出し行・コードスパン・リンク先を除外する |
+| 反証探索の記録 | §10.5 は反証探索の実施を求めるが、実施したかどうかを残す形が無い。`contradictions.json` に `counterargument_search` を必須で持たせ、`none-found`（探して見つからない）と `not-searched`（探していない）を区別する |
 | `patch.schema.json` | §7 の schemas 一覧に無いが、§10.9 が `patch-plan.json` と `applied-patches.json` を出力と定め、§13 が `patch-scope` Lint を要求しているため追加した。`verification.schema.json` と同様に `kind`（`plan` / `applied`）で両者を兼ねる |
 | `patch-scope` の分母 | 変更総量の比率は、**Patch が対象としたファイル**の行数に対して測る。最終レポートなど別ファイルを分母にすると、触っていない文書との比較になる |
 | Critical の受容 | §10.9 は Critical を `resolved` または `escalated` にすることを求めるが、ユーザーが明示的に受容する場合の経路が無い。`status: accepted` を認め、その場合は `accepted_reason` を必須とした（理由の無い受容は Lint で落とす） |
