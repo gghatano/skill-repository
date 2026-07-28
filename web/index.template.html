@@ -101,7 +101,7 @@
         <span id="skill-count" class="text-[13px] text-apple-sub dark:text-apple-subd"></span>
       </div>
       <p class="mt-2 max-w-2xl text-[15px] leading-relaxed text-apple-sub dark:text-apple-subd">
-        プラグインごとの汎用スキルを、<span class="font-medium text-apple-ink dark:text-apple-inkd">呼び出しコマンド付き</span>で一覧。各カードの <span class="font-medium text-apple-ink dark:text-apple-inkd">使い方</span> はそのままコピーして Claude Code に貼れます。スキル名または「詳細 →」で、できること・使いどころ・入出力の詳細ページへ移動できます。
+        Claude Code では、会話がスキルの説明に一致すると<span class="font-medium text-apple-ink dark:text-apple-inkd">自動で発火</span>します。各カードは「話しかければ動く」内容を主役に、<code class="rounded bg-black/[0.05] px-1 py-0.5 font-mono text-[0.85em] dark:bg-white/10">/&lt;plugin&gt;:&lt;skill&gt;</code> のスラッシュコマンドは手動で呼ぶ場合の手段として併記しています。スキル名または「詳細 →」で、できること・使いどころ・入出力の詳細ページへ移動できます。
       </p>
       <div class="relative mt-6 max-w-md">
         <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-apple-sub dark:text-apple-subd" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.82l3.14 3.14a.75.75 0 1 0 1.06-1.06l-3.14-3.14A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/></svg>
@@ -154,6 +154,22 @@
         return wrap;
       };
 
+      // A compact copyable command chip — used as the demoted "手動で呼ぶ" option,
+      // since in Claude Code a skill fires from its description, not the slash command.
+      const usageChip = (command) => {
+        const wrap = el("div", "group flex items-stretch overflow-hidden rounded-lg bg-apple-bg2 ring-1 ring-black/[0.05] dark:bg-black/40 dark:ring-white/10");
+        const code = el("code", "min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-2.5 py-1.5 font-mono text-[12px] text-apple-ink dark:text-apple-inkd", command);
+        code.title = command;
+        const button = el("button", "shrink-0 border-l border-black/[0.06] px-2.5 text-[11px] font-medium text-apple-blue transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:text-apple-blued dark:hover:bg-white/10", "Copy");
+        button.type = "button";
+        button.addEventListener("click", async () => {
+          try { await navigator.clipboard.writeText(command); } catch (_) { return; }
+          flashCopied(button, "Copy");
+        });
+        wrap.append(code, button);
+        return wrap;
+      };
+
       // Turn the static install-step placeholders (data-copy-code) into code blocks.
       const mpAdd = document.getElementById("mp-add");
       if (mpAdd && marketplace.add) mpAdd.textContent = marketplace.add;
@@ -176,6 +192,18 @@
           card.append(head);
           card.append(el("p", "mt-0.5 font-mono text-[12px] text-apple-sub dark:text-apple-subd", plugin.name));
           if (plugin.description) card.append(el("p", "mt-3 text-[13.5px] leading-relaxed text-apple-sub dark:text-apple-subd", plugin.description));
+
+          // Natural-language entry point: say this and the plugin's skills fire.
+          if (plugin.usage && plugin.usage.note) {
+            card.append(el("p", "mt-5 text-[11px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "こう言うと発火"));
+            card.append(el("p", "mt-1.5 text-[13.5px] leading-relaxed text-apple-ink dark:text-apple-inkd", plugin.usage.note));
+            if (plugin.usage.command) {
+              const entry = el("div", "mt-2.5");
+              entry.append(el("p", "mb-1 text-[10.5px] font-medium tracking-wide text-apple-sub dark:text-apple-subd", "入口スキル（手動で呼ぶ場合）"));
+              entry.append(usageChip(plugin.usage.command));
+              card.append(entry);
+            }
+          }
 
           card.append(el("p", "mt-5 text-[11px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "含まれるスキル"));
           const skillRow = el("div", "mt-2 flex flex-wrap gap-1.5");
@@ -218,7 +246,7 @@
       const totalSkills = plugins.reduce((sum, p) => sum + p.skills.length, 0);
 
       // Pull up to 3 natural-language trigger phrases (「…」/『…』) out of a description,
-      // shown as "話しかけ例" so the card also answers "how do I say it".
+      // shown as "話しかけ例" so the card answers "how do I say it" at a glance.
       const triggerPhrases = (text) => {
         const out = [];
         const re = /[「『]([^」』]{1,24})[」』]/g;
@@ -227,40 +255,34 @@
         return out;
       };
 
-      // A compact copyable command chip — the 使い方 hero on each skill card.
-      const usageChip = (command) => {
-        const wrap = el("div", "group flex items-stretch overflow-hidden rounded-lg bg-apple-bg2 ring-1 ring-black/[0.05] dark:bg-black/40 dark:ring-white/10");
-        const code = el("code", "min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-2.5 py-1.5 font-mono text-[12px] text-apple-ink dark:text-apple-inkd", command);
-        code.title = command;
-        const button = el("button", "shrink-0 border-l border-black/[0.06] px-2.5 text-[11px] font-medium text-apple-blue transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:text-apple-blued dark:hover:bg-white/10", "Copy");
-        button.type = "button";
-        button.addEventListener("click", async () => {
-          try { await navigator.clipboard.writeText(command); } catch (_) { return; }
-          flashCopied(button, "Copy");
-        });
-        wrap.append(code, button);
-        return wrap;
-      };
-
       const skillCard = (skill, plugin) => {
         const card = el("div", "flex flex-col rounded-2xl bg-white p-5 shadow-apple ring-1 ring-black/[0.04] transition duration-300 hover:-translate-y-0.5 hover:shadow-applehover dark:bg-apple-card dark:ring-white/10");
-        const nameLink = el("a", "block font-mono text-[14px] font-semibold leading-snug hover:text-apple-blue dark:hover:text-apple-blued", skill.name);
+        const top = el("div", "flex items-center justify-between gap-2");
+        const nameLink = el("a", "min-w-0 font-mono text-[14px] font-semibold leading-snug hover:text-apple-blue dark:hover:text-apple-blued", skill.name);
         nameLink.href = `./skills/${skill.name}.html`;
-        card.append(nameLink);
-        if (skill.description) card.append(el("p", "mt-2 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd", skill.description));
+        top.append(nameLink);
+        const auto = el("span", "shrink-0 rounded-full bg-emerald-500/[0.1] px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300", "話しかけで発火");
+        auto.title = "会話が説明に一致すると自動で発火します";
+        top.append(auto);
+        card.append(top);
 
-        const usage = el("div", "mt-4");
-        usage.append(el("p", "mb-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "使い方"));
-        usage.append(usageChip(`/${plugin.name}:${skill.name}`));
+        // The natural-language trigger is the hero: the description states when it fires.
+        if (skill.description) card.append(el("p", "mt-2.5 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd", skill.description));
         const phrases = triggerPhrases(skill.description);
         if (phrases.length) {
-          const row = el("div", "mt-2 flex flex-wrap gap-1.5");
+          card.append(el("p", "mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "話しかけ例"));
+          const row = el("div", "mt-1.5 flex flex-wrap gap-1.5");
           phrases.forEach((phrase) =>
-            row.append(el("span", "rounded-md bg-black/[0.04] px-2 py-0.5 text-[11px] text-apple-sub dark:bg-white/[0.06] dark:text-apple-subd", `「${phrase}」`))
+            row.append(el("span", "rounded-md bg-apple-blue/[0.08] px-2 py-0.5 text-[11.5px] font-medium text-apple-blue dark:bg-apple-blued/15 dark:text-apple-blued", `「${phrase}」`))
           );
-          usage.append(row);
+          card.append(row);
         }
-        card.append(usage);
+
+        // Slash command: demoted secondary, for when you want to invoke it by hand.
+        const manual = el("div", "mt-auto pt-4");
+        manual.append(el("p", "mb-1.5 text-[10.5px] font-medium tracking-wide text-apple-sub dark:text-apple-subd", "手動で呼ぶ場合"));
+        manual.append(usageChip(`/${plugin.name}:${skill.name}`));
+        card.append(manual);
 
         const detailLink = el("a", "mt-3 inline-block text-[12.5px] font-medium text-apple-blue hover:underline dark:text-apple-blued", "詳細 →");
         detailLink.href = `./skills/${skill.name}.html`;
