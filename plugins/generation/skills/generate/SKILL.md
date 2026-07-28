@@ -16,7 +16,8 @@ description: タスクディレクトリ ($ARGUMENTS) の generation_plan.md に
 
 ## 入力
 
-- `$ARGUMENTS/work/generation_plan.md`
+- `$ARGUMENTS/work/generation_plan.md`（線形設計の場合）
+  または `$ARGUMENTS/work/dependency_graph.json`（DAG 設計＝`dependency-graph` を使った場合。companion の `dependency_params.json` があればそれも）
 - `$ARGUMENTS/work/inferred_schema.json`
 - `$ARGUMENTS/work/constraint_plan.md`
 - `$ARGUMENTS/input/*sample_data*`（単一: `sample_data.csv` / 複数: `<table>_sample_data.csv`）
@@ -68,6 +69,10 @@ description: タスクディレクトリ ($ARGUMENTS) の generation_plan.md に
 7. **生成後の検証**:
    - 実行して `output/<table>.csv` を生成し、件数・スキーマを確認。
    - 制約違反が 0 件であることを uv run python で確認。
+
+## DAG 条件付き生成（任意）
+
+`$ARGUMENTS/work/dependency_graph.json` が存在する場合（`dependency-graph` を実行した場合）は、`generation_plan.md` の代わりにこれを入力とし、graph（＋ companion の `dependency_params.json` があればそれも）をコンパイルして、トポロジカル順に親の確定値へ条件づけて各列を生成する条件付き生成器を実装する。ファイルが存在しない場合は従来どおり `generation_plan.md` に基づいて実装する。この場合も上記の CLI・出力仕様・post sampling・必須要件は変わらない。スキーマの詳細は `dependency-graph` の SKILL.md「dependency_graph.json のスキーマ」節を参照。
 
 ## ルール
 

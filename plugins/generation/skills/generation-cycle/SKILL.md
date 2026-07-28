@@ -60,8 +60,10 @@ PM 自身は **実装も評価も行わず**、各ステップをサブエージ
 |---|-------|-----------|
 | 0 | `input-prepare` | `input/*table_definition*`, `input/*sample_data*`, `input/data_spec.md`, `input/constraints.md` |
 | 1 | `spec-ingest` | `work/inferred_schema.json`, `work/constraint_plan.md` |
-| 2 | `generation-design` | `work/generation_plan.md` |
+| 2 | `generation-design` **または** `dependency-graph` | `work/generation_plan.md`（線形）/ `work/dependency_graph.json`（DAG） |
 | 3 | `generate` | `src/generator.py`, `output/synthetic_data.csv`（単一）/ `output/<table>.csv`（複数） |
+
+ステップ 2 は 2 系統から**排他的に選ぶ**。既定は線形設計の `generation-design`。列間の条件付き依存が強く、DAG（有向非巡回グラフ）としてモデル化したい場合は `dependency-graph` を使い、`generate` は `work/dependency_graph.json` を読んでトポロジカル順の条件付き生成器にコンパイルする。
 | 4 | `evaluate-refine` | `src/evaluate.py`, `output/evaluation_report.md`, `output/constraints_check.csv`, `output/quality_gate.json` |
 
 ### サブエージェント起動テンプレ
