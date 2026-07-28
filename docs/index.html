@@ -170,6 +170,21 @@
         return wrap;
       };
 
+      // Click-to-copy chip for a natural-language trigger phrase. Copies the bare
+      // utterance (no 「」) so it can be pasted straight into Claude Code to fire.
+      const copyPhraseChip = (phrase, className) => {
+        const original = `「${phrase}」`;
+        const btn = el("button", `${className} cursor-pointer`, original);
+        btn.type = "button";
+        btn.title = "クリックでコピー";
+        btn.addEventListener("click", async () => {
+          try { await navigator.clipboard.writeText(phrase); } catch (_) { return; }
+          btn.textContent = "コピーしました";
+          window.setTimeout(() => { btn.textContent = original; }, 1000);
+        });
+        return btn;
+      };
+
       // Turn the static install-step placeholders (data-copy-code) into code blocks.
       const mpAdd = document.getElementById("mp-add");
       if (mpAdd && marketplace.add) mpAdd.textContent = marketplace.add;
@@ -196,7 +211,16 @@
           // Natural-language entry point: say this and the plugin's skills fire.
           if (plugin.usage && plugin.usage.note) {
             card.append(el("p", "mt-5 text-[11px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "こう言うと発火"));
-            card.append(el("p", "mt-1.5 text-[13.5px] leading-relaxed text-apple-ink dark:text-apple-inkd", plugin.usage.note));
+            const noteBox = el("div", "group mt-1.5 flex items-start gap-2 rounded-lg bg-apple-bg2 px-3 py-2 ring-1 ring-black/[0.05] dark:bg-black/40 dark:ring-white/10");
+            noteBox.append(el("p", "min-w-0 flex-1 text-[13.5px] leading-relaxed text-apple-ink dark:text-apple-inkd", plugin.usage.note));
+            const noteCopy = el("button", "shrink-0 self-start rounded-md px-2 py-0.5 text-[11px] font-medium text-apple-blue transition-colors hover:bg-black/[0.04] dark:text-apple-blued dark:hover:bg-white/10", "Copy");
+            noteCopy.type = "button";
+            noteCopy.addEventListener("click", async () => {
+              try { await navigator.clipboard.writeText(plugin.usage.note); } catch (_) { return; }
+              flashCopied(noteCopy, "Copy");
+            });
+            noteBox.append(noteCopy);
+            card.append(noteBox);
             if (plugin.usage.command) {
               const entry = el("div", "mt-2.5");
               entry.append(el("p", "mb-1 text-[10.5px] font-medium tracking-wide text-apple-sub dark:text-apple-subd", "入口スキル（手動で呼ぶ場合）"));
@@ -272,10 +296,10 @@
         if (displayDesc) card.append(el("p", "mt-2.5 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd", displayDesc));
         const phrases = triggerPhrases(skill.description);
         if (phrases.length) {
-          card.append(el("p", "mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "話しかけ例"));
+          card.append(el("p", "mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "話しかけ例（クリックでコピー）"));
           const row = el("div", "mt-1.5 flex flex-wrap gap-1.5");
           phrases.forEach((phrase) =>
-            row.append(el("span", "rounded-md bg-apple-blue/[0.08] px-2 py-0.5 text-[11.5px] font-medium text-apple-blue dark:bg-apple-blued/15 dark:text-apple-blued", `「${phrase}」`))
+            row.append(copyPhraseChip(phrase, "rounded-md bg-apple-blue/[0.08] px-2 py-0.5 text-[11.5px] font-medium text-apple-blue transition-colors hover:bg-apple-blue/[0.16] dark:bg-apple-blued/15 dark:text-apple-blued dark:hover:bg-apple-blued/25"))
           );
           card.append(row);
         }
