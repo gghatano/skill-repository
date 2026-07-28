@@ -11,6 +11,7 @@ generation-cycle（オーケストレーター）
  ├ input-prepare    入力整備   原資料 → 後続が読める入力を整える
  ├ spec-ingest      仕様化     入力 → 機械可読な仕様（schema・制約）
  ├ generation-design 生成設計  仕様 → 生成方式の設計（方式は領域プロファイルで選ぶ）
+ │  └ 代替: dependency-graph  列間の条件付き依存を DAG として設計（線形版と排他選択）
  ├ generate         生成実装   設計 → 生成器の実装・実行
  └ evaluate-refine  評価・改善 成果物 → 仕様・サンプルに照らして評価し、必要なら再生成
 ```
@@ -37,7 +38,7 @@ generation-cycle（オーケストレーター）
 | --- | --- |
 | input-prepare | 原データ・仕様書から table_definition / sample_data / data_spec / constraints を整える |
 | spec-ingest | 列型・分布・列間関係・制約を推定して schema・constraint を機械可読化 |
-| generation-design | 生成方式を選ぶ（**ルール・統計分布・モデル(CTGAN 等)・差分プライバシー**） |
+| generation-design | 生成方式を選ぶ（**ルール・統計分布・モデル(CTGAN 等)・差分プライバシー**）。代替の `dependency-graph` は列間の条件付き依存を DAG として設計する |
 | generate | 生成器を実装・実行し、合成データを出力 |
 | evaluate-refine | 忠実性（分布の一致）・有用性（下流タスク=TSTR）・プライバシー（MIA 等）で評価 |
 

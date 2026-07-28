@@ -17,4 +17,6 @@
 
 ## 含まれるスキル
 
-generation-cycle / input-prepare / spec-ingest / generation-design / generate / evaluate-refine
+generation-cycle / input-prepare / spec-ingest / generation-design / dependency-graph / generate / evaluate-refine
+
+ステップ 2（生成設計）は、線形設計の `generation-design` と、列間の条件付き依存を DAG（有向非巡回グラフ）としてモデル化する `dependency-graph` の 2 系統を**排他的に選べます**。既定は `generation-design`。依存が強いデータを扱うときは `dependency-graph` を使うと、`generate` が `work/dependency_graph.json` を読んでトポロジカル順の条件付き生成器にコンパイルします。

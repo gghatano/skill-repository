@@ -38,7 +38,7 @@
     },
     "generation": {
       "input": "生成対象の仕様とサンプル（タスクディレクトリ `$ARGUMENTS` 配下の `input/`）。",
-      "process": "input-prepare → spec-ingest → generation-design → generate → evaluate-refine を回し、作って評価して直す。",
+      "process": "input-prepare → spec-ingest → generation-design（または dependency-graph）→ generate → evaluate-refine を回し、作って評価して直す。",
       "output": "仕様を満たす生成物（`output/`）と、忠実性・有用性・プライバシーの評価結果。",
       "usage": {
         "command": "/generation:generation-cycle",
@@ -47,7 +47,7 @@
       "example": [
         "`/generation:input-prepare` — `input/` に仕様とサンプルを揃える",
         "`/generation:spec-ingest` — 仕様を取り込んで生成要件に落とす",
-        "`/generation:generation-design` — 生成方式（ルール／統計／モデル／差分プライバシー）を設計する",
+        "`/generation:generation-design` — 生成方式（ルール／統計／モデル／差分プライバシー）を設計する（`/generation:dependency-graph` で列間依存を DAG として設計する代替も選べる）",
         "`/generation:generate` — 生成物を `output/` に作る",
         "`/generation:evaluate-refine` — 忠実性・有用性・プライバシーで評価して直す（`/generation:generation-cycle` で全体を自動運転も可）"
       ]
