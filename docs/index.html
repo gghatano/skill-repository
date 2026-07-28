@@ -97,18 +97,18 @@
     <!-- Skills -->
     <section id="skills" class="scroll-mt-20 py-12">
       <div class="flex items-baseline justify-between gap-4">
-        <h2 class="text-2xl font-semibold tracking-tight sm:text-3xl">スキル一覧</h2>
+        <h2 class="text-2xl font-semibold tracking-tight sm:text-3xl">スキルと使い方</h2>
         <span id="skill-count" class="text-[13px] text-apple-sub dark:text-apple-subd"></span>
       </div>
       <p class="mt-2 max-w-2xl text-[15px] leading-relaxed text-apple-sub dark:text-apple-subd">
-        各プラグインに含まれる汎用スキル。スキル名または「できることを見る →」から、各スキルの詳細ページ（できること・使いどころ・入出力）へ移動できます。
+        プラグインごとの汎用スキルを、<span class="font-medium text-apple-ink dark:text-apple-inkd">呼び出しコマンド付き</span>で一覧。各カードの <span class="font-medium text-apple-ink dark:text-apple-inkd">使い方</span> はそのままコピーして Claude Code に貼れます。スキル名または「詳細 →」で、できること・使いどころ・入出力の詳細ページへ移動できます。
       </p>
       <div class="relative mt-6 max-w-md">
         <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-apple-sub dark:text-apple-subd" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.82l3.14 3.14a.75.75 0 1 0 1.06-1.06l-3.14-3.14A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/></svg>
         <input id="search" type="search" autocomplete="off" placeholder="スキル名・説明・プラグインで検索"
           class="w-full rounded-full border-0 bg-white py-3 pl-11 pr-4 text-[15px] ring-1 ring-black/[0.08] transition placeholder:text-apple-sub focus:outline-none focus:ring-2 focus:ring-apple-blue dark:bg-apple-card dark:ring-white/10 dark:placeholder:text-apple-subd">
       </div>
-      <div id="skill-list" class="mt-6 grid gap-3"></div>
+      <div id="skill-list" class="mt-8"></div>
       <div id="empty" class="hidden py-16 text-center text-[15px] text-apple-sub dark:text-apple-subd">該当するスキルがありません。</div>
     </section>
   </main>
@@ -210,56 +210,98 @@
         document.getElementById("plugin-count").textContent = `${plugins.length} 件`;
       }
 
-      // --- Skills (flattened across plugins) ---
-      const skillIndex = plugins.flatMap((plugin) =>
-        plugin.skills.map((skill) => ({
-          name: skill.name,
-          description: skill.description,
-          plugin: plugin.name,
-          pluginTitle: plugin.displayName,
-        }))
-      );
-
+      // --- Skills (grouped by plugin, usage-forward) ---
       const list = document.getElementById("skill-list");
       const empty = document.getElementById("empty");
       const search = document.getElementById("search");
       const skillCount = document.getElementById("skill-count");
+      const totalSkills = plugins.reduce((sum, p) => sum + p.skills.length, 0);
+
+      // Pull up to 3 natural-language trigger phrases (「…」/『…』) out of a description,
+      // shown as "話しかけ例" so the card also answers "how do I say it".
+      const triggerPhrases = (text) => {
+        const out = [];
+        const re = /[「『]([^」』]{1,24})[」』]/g;
+        let match;
+        while ((match = re.exec(text || "")) && out.length < 3) out.push(match[1]);
+        return out;
+      };
+
+      // A compact copyable command chip — the 使い方 hero on each skill card.
+      const usageChip = (command) => {
+        const wrap = el("div", "group flex items-stretch overflow-hidden rounded-lg bg-apple-bg2 ring-1 ring-black/[0.05] dark:bg-black/40 dark:ring-white/10");
+        const code = el("code", "min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-2.5 py-1.5 font-mono text-[12px] text-apple-ink dark:text-apple-inkd", command);
+        code.title = command;
+        const button = el("button", "shrink-0 border-l border-black/[0.06] px-2.5 text-[11px] font-medium text-apple-blue transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:text-apple-blued dark:hover:bg-white/10", "Copy");
+        button.type = "button";
+        button.addEventListener("click", async () => {
+          try { await navigator.clipboard.writeText(command); } catch (_) { return; }
+          flashCopied(button, "Copy");
+        });
+        wrap.append(code, button);
+        return wrap;
+      };
+
+      const skillCard = (skill, plugin) => {
+        const card = el("div", "flex flex-col rounded-2xl bg-white p-5 shadow-apple ring-1 ring-black/[0.04] transition duration-300 hover:-translate-y-0.5 hover:shadow-applehover dark:bg-apple-card dark:ring-white/10");
+        const nameLink = el("a", "block font-mono text-[14px] font-semibold leading-snug hover:text-apple-blue dark:hover:text-apple-blued", skill.name);
+        nameLink.href = `./skills/${skill.name}.html`;
+        card.append(nameLink);
+        if (skill.description) card.append(el("p", "mt-2 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd", skill.description));
+
+        const usage = el("div", "mt-4");
+        usage.append(el("p", "mb-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "使い方"));
+        usage.append(usageChip(`/${plugin.name}:${skill.name}`));
+        const phrases = triggerPhrases(skill.description);
+        if (phrases.length) {
+          const row = el("div", "mt-2 flex flex-wrap gap-1.5");
+          phrases.forEach((phrase) =>
+            row.append(el("span", "rounded-md bg-black/[0.04] px-2 py-0.5 text-[11px] text-apple-sub dark:bg-white/[0.06] dark:text-apple-subd", `「${phrase}」`))
+          );
+          usage.append(row);
+        }
+        card.append(usage);
+
+        const detailLink = el("a", "mt-3 inline-block text-[12.5px] font-medium text-apple-blue hover:underline dark:text-apple-blued", "詳細 →");
+        detailLink.href = `./skills/${skill.name}.html`;
+        card.append(detailLink);
+        return card;
+      };
 
       const renderSkills = () => {
         const query = search.value.trim().toLocaleLowerCase();
-        const filtered = skillIndex.filter((skill) => {
-          if (!query) return true;
-          return `${skill.name} ${skill.description} ${skill.plugin} ${skill.pluginTitle}`
-            .toLocaleLowerCase().includes(query);
-        });
-
         list.replaceChildren();
-        filtered.forEach((skill) => {
-          const card = el("div", "rounded-2xl bg-white p-5 shadow-apple ring-1 ring-black/[0.04] transition duration-300 hover:-translate-y-0.5 hover:shadow-applehover dark:bg-apple-card dark:ring-white/10");
-          const top = el("div", "flex flex-wrap items-center gap-2.5");
-          const nameLink = el("a", "font-mono text-[14px] font-semibold hover:text-apple-blue dark:hover:text-apple-blued", skill.name);
-          nameLink.href = `./skills/${skill.name}.html`;
-          top.append(nameLink);
-          const tag = el("span", "rounded-full bg-apple-blue/[0.1] px-2.5 py-0.5 text-[11.5px] font-medium text-apple-blue dark:bg-apple-blued/15 dark:text-apple-blued", skill.pluginTitle);
-          tag.title = `plugin: ${skill.plugin}`;
-          top.append(tag);
-          card.append(top);
-          if (skill.description) card.append(el("p", "mt-2.5 text-[13.5px] leading-relaxed text-apple-sub dark:text-apple-subd", skill.description));
-          const invoke = el("div", "mt-3.5 max-w-md");
-          invoke.append(codeBlock(`/${skill.plugin}:${skill.name}`));
-          card.append(invoke);
-          const detail = el("div", "mt-3");
-          const detailLink = el("a", "text-[13px] font-medium text-apple-blue hover:underline dark:text-apple-blued", "できることを見る →");
-          detailLink.href = `./skills/${skill.name}.html`;
-          detail.append(detailLink);
-          card.append(detail);
-          list.append(card);
+        let shown = 0;
+        plugins.forEach((plugin) => {
+          const matched = plugin.skills.filter((skill) => {
+            if (!query) return true;
+            return `${skill.name} ${skill.description} ${plugin.name} ${plugin.displayName}`
+              .toLocaleLowerCase().includes(query);
+          });
+          if (!matched.length) return;
+          shown += matched.length;
+
+          const group = el("section", "mt-10 first:mt-0");
+          const head = el("div", "flex items-baseline justify-between gap-3 border-b border-black/[0.06] pb-2.5 dark:border-white/10");
+          const heading = el("div", "flex min-w-0 items-baseline gap-2.5");
+          const titleLink = el("a", "text-[17px] font-semibold tracking-tight hover:text-apple-blue dark:hover:text-apple-blued", plugin.displayName);
+          titleLink.href = `./plugins/${plugin.name}.html`;
+          heading.append(titleLink);
+          heading.append(el("span", "truncate font-mono text-[12px] text-apple-sub dark:text-apple-subd", plugin.name));
+          head.append(heading);
+          head.append(el("span", "shrink-0 text-[12px] text-apple-sub dark:text-apple-subd", `${matched.length} skills`));
+          group.append(head);
+
+          const grid = el("div", "mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3");
+          matched.forEach((skill) => grid.append(skillCard(skill, plugin)));
+          group.append(grid);
+          list.append(group);
         });
 
-        empty.hidden = filtered.length !== 0;
+        empty.hidden = shown !== 0;
         skillCount.textContent = query
-          ? `${filtered.length} / ${skillIndex.length} 件`
-          : `${skillIndex.length} 件`;
+          ? `${shown} / ${totalSkills} 件`
+          : `${totalSkills} 件`;
       };
 
       search.addEventListener("input", renderSkills);
@@ -268,7 +310,7 @@
       // --- Metrics ---
       const companionTotal = plugins.reduce((sum, p) => sum + p.agents.length + p.docs.length, 0);
       document.getElementById("plugin-total").textContent = plugins.length;
-      document.getElementById("skill-total").textContent = skillIndex.length;
+      document.getElementById("skill-total").textContent = totalSkills;
       document.getElementById("companion-total").textContent = companionTotal;
     })();
   </script>
