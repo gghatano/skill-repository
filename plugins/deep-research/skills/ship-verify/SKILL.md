@@ -1,6 +1,6 @@
 ---
 name: ship-verify
-description: 調査レポートを提出してよいか最終判定し、合格したら final-report.md を出力する。citation-verify の後に実行する。論点の網羅・根拠・引用検証・内部メモの混入・出力契約の充足を Ship Gate として検査し、block なら最終成果物を出さない。
+description: 調査レポートを提出してよいか最終判定し、合格したら final-report.md を出力する。citation-verify の後に実行する。論点の網羅・根拠・引用検証・内部メモの混入・出力契約の充足を Ship Gate として検査し、block なら最終成果物を出さない。 例:「出してよいか最終判定して」「Ship Gate を通して」
 version: 0.1
 ---
 

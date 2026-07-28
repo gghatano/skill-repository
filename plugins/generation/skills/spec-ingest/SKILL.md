@@ -1,6 +1,6 @@
 ---
 name: spec-ingest
-description: タスクディレクトリ ($ARGUMENTS) の input/ を読み取り、合成データ生成に必要な仕様を機械可読化する。work/inferred_schema.json と work/constraint_plan.md を作成する。
+description: タスクディレクトリ ($ARGUMENTS) の input/ を読み取り、合成データ生成に必要な仕様を機械可読化する。work/inferred_schema.json と work/constraint_plan.md を作成する。 例:「仕様を機械可読化して」「スキーマを推定して」
 ---
 
 # spec-ingest

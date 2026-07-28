@@ -1,6 +1,6 @@
 ---
 name: query-decompose
-description: 固定した調査依頼（Canonical Query）を、個別に調査できる原子論点へ分解し、Coverage Matrix と情報源計画を作る。research-router の次に実行する。何を調べれば依頼に答えたことになるかを先に決め、後工程の漏れと逸脱を防ぐ。
+description: 固定した調査依頼（Canonical Query）を、個別に調査できる原子論点へ分解し、Coverage Matrix と情報源計画を作る。research-router の次に実行する。何を調べれば依頼に答えたことになるかを先に決め、後工程の漏れと逸脱を防ぐ。 例:「論点に分解して」「何を調べればいいか整理して」
 version: 0.1
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: issue-driven-development
-description: GitHub Issue を作業単位として branch/worktree/PR/検証記録を一貫管理する。実装作業を始めるときに必ず使う。
+description: GitHub Issue を作業単位として branch/worktree/PR/検証記録を一貫管理する。実装作業を始めるときに必ず使う。 例:「この Issue に着手して」「Issue から実装を始めて」
 ---
 
 # Issue Driven Development

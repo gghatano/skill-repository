@@ -1,6 +1,6 @@
 ---
 name: gap-fill
-description: レビュー指摘のうち追加情報が必要なものだけを対象に、限定的な再調査を行う。multi-review の後、patch-apply の前に実行する。Finding ID に紐づく調査だけを行い、調査範囲を無制限に広げない。解消できなかった不足は unresolved として残す。
+description: レビュー指摘のうち追加情報が必要なものだけを対象に、限定的な再調査を行う。multi-review の後、patch-apply の前に実行する。Finding ID に紐づく調査だけを行い、調査範囲を無制限に広げない。解消できなかった不足は unresolved として残す。 例:「指摘の不足だけ追加で調べて」「Finding の穴を埋めて」
 version: 0.1
 ---
 

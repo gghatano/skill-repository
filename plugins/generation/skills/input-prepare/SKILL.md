@@ -1,6 +1,6 @@
 ---
 name: input-prepare
-description: タスクディレクトリ ($ARGUMENTS) の原データ・仕様書・業務ドキュメントを読み取り、合成データ生成パイプラインが参照する input/ 配下の table_definition、sample_data、data_spec.md、constraints.md を作成・更新する。
+description: タスクディレクトリ ($ARGUMENTS) の原データ・仕様書・業務ドキュメントを読み取り、合成データ生成パイプラインが参照する input/ 配下の table_definition、sample_data、data_spec.md、constraints.md を作成・更新する。 例:「input を用意して」「原データから仕様を取り込んで」
 ---
 
 # input-prepare

@@ -1,6 +1,6 @@
 ---
 name: repro-engineering-review
-description: 再現手順とエンジニアリングノートのレビュー。setup/usage/reproduce/engineering-notes とスクリプト・依存固定・パッチの整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。
+description: 再現手順とエンジニアリングノートのレビュー。setup/usage/reproduce/engineering-notes とスクリプト・依存固定・パッチの整合を点検し、clone-and-run で再現が成立するかを確認する。環境構築手順の変更、依存更新、スクリプト追加時にも使う。 例:「再現手順をレビューして」「clone-and-run で再現するか確認して」
 ---
 
 # 再現手順・エンジニアリングノートのレビュー

@@ -1,6 +1,6 @@
 ---
 name: pr-prep
-description: PR 作成前の最終確認手順。コミット／PR を出す直前に必ず使う。
+description: PR 作成前の最終確認手順。コミット／PR を出す直前に必ず使う。 例:「PR 前の最終チェックして」「コミット前に確認して」
 ---
 
 # PR Preparation

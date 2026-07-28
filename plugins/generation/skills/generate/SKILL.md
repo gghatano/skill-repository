@@ -1,6 +1,6 @@
 ---
 name: generate
-description: タスクディレクトリ ($ARGUMENTS) の generation_plan.md に基づき、src/generator.py を実装し、output/ に合成データを生成する。
+description: タスクディレクトリ ($ARGUMENTS) の generation_plan.md に基づき、src/generator.py を実装し、output/ に合成データを生成する。 例:「合成データを生成して」「generator を実装して回して」
 ---
 
 # generate

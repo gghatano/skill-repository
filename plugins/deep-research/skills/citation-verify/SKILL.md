@@ -1,6 +1,6 @@
 ---
 name: citation-verify
-description: 草稿の引用・数値・出典の対応を検査する。draft-compose の後に実行する。引用文が情報源に実在するか、数値の単位や対象が一致するか、推論を情報源の主張として書いていないかを確認し、citation-check.json に結果を残す。Critical な引用エラーがあれば ship-verify を通さない。
+description: 草稿の引用・数値・出典の対応を検査する。draft-compose の後に実行する。引用文が情報源に実在するか、数値の単位や対象が一致するか、推論を情報源の主張として書いていないかを確認し、citation-check.json に結果を残す。Critical な引用エラーがあれば ship-verify を通さない。 例:「引用を検証して」「出典が正しいか確認して」
 version: 0.1
 ---
 

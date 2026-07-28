@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: 実装差分を docs/review-checklist.md に沿ってレビューする手順。実装完了前に必ず使う。
+description: 実装差分を docs/review-checklist.md に沿ってレビューする手順。実装完了前に必ず使う。 例:「差分をレビューして」「コードレビューして」
 ---
 
 # Code Review Workflow

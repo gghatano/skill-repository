@@ -1186,6 +1186,16 @@ def _render_generated_files(
     except OSError as exc:
         raise SyncError(f"cannot read HTML template: {args.html_template}") from exc
     marketplace, plugins = load_plugins(args.plugins_dir, args.marketplace, args.repo_slug)
+    plugin_details = load_plugin_details(args.plugin_details)
+    # Surface each plugin's natural-language usage note on the index cards, so a
+    # plugin reads as "say this and its skills fire" rather than only an install line.
+    for plugin in plugins:
+        usage = plugin_details.get(plugin["name"], {}).get("usage")
+        if isinstance(usage, dict):
+            plugin["usage"] = {
+                "command": usage.get("command", ""),
+                "note": usage.get("note", ""),
+            }
     rendered = {
         args.catalog: render_catalog(args.owner, entries),
         args.purpose_catalog: render_purpose_catalog(args.owner, entries, categories),

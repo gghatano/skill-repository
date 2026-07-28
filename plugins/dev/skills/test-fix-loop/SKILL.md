@@ -1,6 +1,6 @@
 ---
 name: test-fix-loop
-description: テスト・lint・型チェックの失敗を分析し、修正し、再実行して緑にする手順。検証が落ちたとき使う。
+description: テスト・lint・型チェックの失敗を分析し、修正し、再実行して緑にする手順。検証が落ちたとき使う。 例:「テストを直して」「lint を緑にして」
 ---
 
 # Test / Fix Loop

@@ -1,6 +1,6 @@
 ---
 name: evaluate-refine
-description: タスクディレクトリ ($ARGUMENTS) の合成データを、仕様・サンプル・制約に照らして評価し、必要に応じて generator.py を修正する。evaluation_report.md と constraints_check.csv を出力する。
+description: タスクディレクトリ ($ARGUMENTS) の合成データを、仕様・サンプル・制約に照らして評価し、必要に応じて generator.py を修正する。evaluation_report.md と constraints_check.csv を出力する。 例:「生成データを評価して」「制約に照らして直して」
 ---
 
 # evaluate-refine

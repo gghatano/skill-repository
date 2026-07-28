@@ -1,6 +1,6 @@
 ---
 name: publish-check
-description: 公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/03_build_html.py）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。
+description: 公開サイトの整合確認。content/ の Markdown と htmls/ のビルド成果物、ビルダー（scripts/03_build_html.py）の PAGES テーブル、ナビ、README のリンクの整合を点検し、ビルドを実行して検証する。ページの追加・改名・公開前の最終確認に使う。 例:「公開前の整合を確認して」「リンク切れを点検して」
 ---
 
 # 公開（ビルド & Pages）の整合確認
