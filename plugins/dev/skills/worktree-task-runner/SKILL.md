@@ -1,6 +1,6 @@
 ---
 name: worktree-task-runner
-description: Issue ごとに専用 branch と git worktree を作成し、分離した作業ディレクトリで実装する手順。Issue 着手時に使う。
+description: Issue ごとに専用 branch と git worktree を作成し、分離した作業ディレクトリで実装する手順。Issue 着手時に使う。 例:「worktree で作業を始めて」「この Issue 用の作業環境を作って」
 ---
 
 # Worktree Task Runner

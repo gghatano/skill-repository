@@ -1,6 +1,6 @@
 ---
 name: issue-triage
-description: 仕様や発見事項から Issue 候補を抽出し、適切な粒度・依存・ラベルに整理する手順。Issue を作る前の計画時に使う。
+description: 仕様や発見事項から Issue 候補を抽出し、適切な粒度・依存・ラベルに整理する手順。Issue を作る前の計画時に使う。 例:「Issue 候補を整理して」「これ Issue にして」
 ---
 
 # Issue Triage

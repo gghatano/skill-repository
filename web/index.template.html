@@ -267,7 +267,9 @@
         card.append(top);
 
         // The natural-language trigger is the hero: the description states when it fires.
-        if (skill.description) card.append(el("p", "mt-2.5 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd", skill.description));
+        // The trailing "例:「…」" clause is surfaced as pills below, so drop it from the prose.
+        const displayDesc = (skill.description || "").replace(/\s*例[:：]「[\s\S]*$/, "");
+        if (displayDesc) card.append(el("p", "mt-2.5 text-[13px] leading-relaxed text-apple-sub dark:text-apple-subd", displayDesc));
         const phrases = triggerPhrases(skill.description);
         if (phrases.length) {
           card.append(el("p", "mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-apple-sub dark:text-apple-subd", "話しかけ例"));

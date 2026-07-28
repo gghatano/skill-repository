@@ -1,6 +1,6 @@
 ---
 name: contradiction-analyze
-description: 情報源間の矛盾・条件差・定義差を整理し、結論を覆す反証を明示的に探す。evidence-organize の後、draft-compose の前に実行する。見かけ上の矛盾と実質的な矛盾を区別し、未解決の対立を成果物から隠さない。
+description: 情報源間の矛盾・条件差・定義差を整理し、結論を覆す反証を明示的に探す。evidence-organize の後、draft-compose の前に実行する。見かけ上の矛盾と実質的な矛盾を区別し、未解決の対立を成果物から隠さない。 例:「矛盾を洗い出して」「反証を探して」
 version: 0.1
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: spec-implementation
-description: docs/SPEC.md に基づき、実装タスクを小さく切り出して実装・検証する手順。仕様から1単位を実装するとき必ず使う。
+description: docs/SPEC.md に基づき、実装タスクを小さく切り出して実装・検証する手順。仕様から1単位を実装するとき必ず使う。 例:「SPEC から実装して」「仕様を1単位実装して」
 ---
 
 # Spec Implementation Workflow

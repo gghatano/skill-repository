@@ -1,6 +1,6 @@
 ---
 name: generation-cycle
-description: 合成データ生成パイプラインの PM (project manager) エージェントとして起動する。必要に応じて原資料から input/ を作成し、5 つの SKILL (input-prepare → spec-ingest → generation-design → generate → evaluate-refine) を順次サブエージェントに委譲し、各ステップの Acceptance Criteria 充足を確認しながら end-to-end で実行する。
+description: 合成データ生成パイプラインの PM (project manager) エージェントとして起動する。必要に応じて原資料から input/ を作成し、5 つの SKILL (input-prepare → spec-ingest → generation-design → generate → evaluate-refine) を順次サブエージェントに委譲し、各ステップの Acceptance Criteria 充足を確認しながら end-to-end で実行する。 例:「合成データ生成を一気通貫で回して」「このデータを合成して」
 ---
 
 # generation-cycle（PM エージェント）

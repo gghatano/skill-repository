@@ -1,6 +1,6 @@
 ---
 name: evidence-organize
-description: 収集した情報源から、主張・根拠・引用位置・条件・限界を claims.json として構造化する。source-collect の後、draft-compose の前に実行する。情報源が述べている主張と、こちらが導いた推論を型で区別し、根拠のない主張を確定事項にしない。
+description: 収集した情報源から、主張・根拠・引用位置・条件・限界を claims.json として構造化する。source-collect の後、draft-compose の前に実行する。情報源が述べている主張と、こちらが導いた推論を型で区別し、根拠のない主張を確定事項にしない。 例:「主張と根拠を整理して」「claims にまとめて」
 version: 0.1
 ---
 

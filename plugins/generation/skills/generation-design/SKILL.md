@@ -1,6 +1,6 @@
 ---
 name: generation-design
-description: タスクディレクトリ ($ARGUMENTS) の inferred_schema.json と constraint_plan.md をもとに、各列の生成方式を設計し work/generation_plan.md を作成する。
+description: タスクディレクトリ ($ARGUMENTS) の inferred_schema.json と constraint_plan.md をもとに、各列の生成方式を設計し work/generation_plan.md を作成する。 例:「各列の生成方式を設計して」「生成プランを作って」
 ---
 
 # generation-design

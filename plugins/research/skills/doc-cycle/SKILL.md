@@ -1,6 +1,6 @@
 ---
 name: doc-cycle
-description: ドキュメント全体の整理・レビュー・対応サイクルを一括実行するオーケストレーター。report-review → repro-engineering-review → related-info-review → publish-check を順次呼び出し、横断的な指摘をまとめて報告する。実験の追記後・公開前・定期点検に使う。
+description: ドキュメント全体の整理・レビュー・対応サイクルを一括実行するオーケストレーター。report-review → repro-engineering-review → related-info-review → publish-check を順次呼び出し、横断的な指摘をまとめて報告する。実験の追記後・公開前・定期点検に使う。 例:「ドキュメントを一括で整理して」「公開前に点検して」
 ---
 
 # ドキュメント整理・レビューサイクル（オーケストレーター)

@@ -1,6 +1,6 @@
 ---
 name: pr-from-issue
-description: Issue に紐づく PR を作成し、Issue へ進捗・検証結果をコメントして相互リンクする手順。作業完了時に使う。
+description: Issue に紐づく PR を作成し、Issue へ進捗・検証結果をコメントして相互リンクする手順。作業完了時に使う。 例:「PR を作って」「Issue から PR を出して」
 ---
 
 # PR from Issue
