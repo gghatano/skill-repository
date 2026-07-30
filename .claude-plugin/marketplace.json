@@ -2,11 +2,10 @@
   "name": "gghatano-skills",
   "owner": { "name": "gghatano", "url": "https://github.com/gghatano" },
   "description": "gghatano の汎用 Claude Skills を目的別プラグインとして配布するマーケットプレイス。",
-  "metadata": { "pluginRoot": "./plugins" },
   "plugins": [
     {
       "name": "deep-research",
-      "source": "./deep-research",
+      "source": "./plugins/deep-research",
       "displayName": "調査ワークフロー（Deep Research）",
       "description": "調査を再現可能で検査可能な工程として実行するスキル群。依頼の固定、論点分解、情報源収集、引用検証、出荷判定までをファイル受け渡しで進める。規約・スキーマ・Lint 同梱。",
       "version": "0.1.0",
@@ -14,7 +13,7 @@
     },
     {
       "name": "dev",
-      "source": "./dev",
+      "source": "./plugins/dev",
       "displayName": "開発ワークフロー（Git / Issue / PR）",
       "description": "GitHub Issue を作業単位に、branch / worktree / 実装 / 検証 / レビュー / PR を一貫管理する開発フローのスキル群。",
       "version": "0.1.0",
@@ -22,7 +21,7 @@
     },
     {
       "name": "generation",
-      "source": "./generation",
+      "source": "./plugins/generation",
       "displayName": "仕様駆動 生成・評価サイクル",
       "description": "仕様から成果物を作り、評価して直す汎用サイクル。骨格は領域非依存で、現在の中身は合成データ生成プロファイル。生成設計は線形版に加え、列間依存を DAG で設計する dependency-graph を選べる。",
       "version": "0.2.0",
@@ -30,7 +29,7 @@
     },
     {
       "name": "research",
-      "source": "./research",
+      "source": "./plugins/research",
       "displayName": "研究レポート作成ライフサイクル",
       "description": "実験レポートの骨子設計から計画・実行・レビュー・公開までを一式で進めるスキル群。規約・サブエージェント同梱。",
       "version": "0.1.0",
@@ -38,7 +37,7 @@
     },
     {
       "name": "writing",
-      "source": "./writing",
+      "source": "./plugins/writing",
       "displayName": "文章・日本語ライティング",
       "description": "AI が書いた日本語を人間が書いた文章に近づける横断的なライティング支援。自己完結スキル。",
       "version": "0.1.0",
