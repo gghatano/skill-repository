@@ -692,5 +692,50 @@ class RealArtifactSmokeTest(unittest.TestCase):
         self.assertEqual(1, page.count("LEAKED"))
 
 
+class MarketplaceManifestTest(unittest.TestCase):
+    """Guard the shipped ``.claude-plugin/marketplace.json`` against the install
+    failure in issue #25: the Claude Code CLI resolves each plugin ``source``
+    from the marketplace root and does NOT apply ``metadata.pluginRoot`` as a
+    prefix, so every ``source`` must itself point at a real plugin directory.
+    """
+
+    def setUp(self) -> None:
+        self.manifest_path = REPO_ROOT / ".claude-plugin" / "marketplace.json"
+        self.manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+
+    def test_every_source_resolves_to_a_real_plugin_dir(self) -> None:
+        plugins = self.manifest["plugins"]
+        self.assertTrue(plugins)
+        for entry in plugins:
+            source = entry["source"]
+            with self.subTest(plugin=entry["name"]):
+                # Resolve exactly as the CLI does: relative to the marketplace
+                # root (the repo root), with no pluginRoot prefixing.
+                resolved = (REPO_ROOT / source).resolve()
+                self.assertTrue(
+                    resolved.is_dir(),
+                    f"source {source!r} does not resolve to a directory",
+                )
+                self.assertTrue(
+                    (resolved / ".claude-plugin" / "plugin.json").is_file(),
+                    f"{source!r} has no .claude-plugin/plugin.json",
+                )
+
+    def test_manifest_does_not_rely_on_plugin_root(self) -> None:
+        # pluginRoot is unsupported by the CLI; relying on it silently breaks
+        # install. If it is ever reintroduced, sources must still resolve on
+        # their own, so its presence alone is the regression signal.
+        self.assertNotIn(
+            "pluginRoot",
+            self.manifest.get("metadata", {}),
+            "metadata.pluginRoot is not honored by the CLI; bake the path into each source",
+        )
+
+    def test_source_names_match_plugin_entries(self) -> None:
+        for entry in self.manifest["plugins"]:
+            with self.subTest(plugin=entry["name"]):
+                self.assertEqual(entry["name"], Path(entry["source"]).name)
+
+
 if __name__ == "__main__":
     unittest.main()
