@@ -433,6 +433,19 @@
       ],
       "whenToUse": "Issue 着手時に使う。1 worktree = 1 Issue = 1 branch で分離した作業ディレクトリを用意する。",
       "io": "入力は Issue 番号、出力は分離された作業用 worktree。規約 §2 のブランチ・worktree 方針に従い、issue-driven-development の手順で実装する。"
+    },
+    "codex-imagegen": {
+      "tagline": "Codex に画像を生成させ、Claude が目でレビューして再依頼するループ。",
+      "canDo": [
+        "作業ディレクトリをテンプレート（AGENTS.md / STYLE.md / gen.sh / make_prompts.py）から scaffold する",
+        "make_prompts.py にエッセンスと数値だけを書き、図解の実相は Codex に委ねる",
+        "gen.sh で Codex に PNG を 1 枚ずつ生成させ、バッチで回す",
+        "PNG を開いて改行崩れ・文字化け・重複・宙に浮いた線を見つける",
+        "画面の文字列を引用し「それ以外は変えない」で締める指摘を書いて再依頼する",
+        "2 枚以上で再発した粗を STYLE.md / AGENTS.md の恒久ルールへ昇格させる"
+      ],
+      "whenToUse": "Codex で画像（スライドの図・インフォグラフィック・図解の PNG）を作りたい／作り直したいとき、文言・文体・レイアウトの粗を直したいときに使う。生成そのものより「出来上がった画像をどう見て何を指摘し直すか」が本体。",
+      "io": "入力は題材（ラベル・ヘッドライン・素材・数値）と手本画像・配色/文字の規約、出力は 1920×1080 の PNG 群。scripts/（gen.sh・make_prompts.py）、templates/（AGENTS.md・STYLE.md・preview.html）、references/（review-checklist.md・feedback-patterns.md）を同梱する。"
     }
   }
 }

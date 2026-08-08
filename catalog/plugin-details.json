@@ -79,6 +79,22 @@
         "`/writing:stop-ai-slop-jp` — 下書きを渡し、AI 臭い箇所を検出して直す",
         "指摘を反映し、必要なら再度かけて仕上げる"
       ]
+    },
+    "codex-imagegen": {
+      "input": "作りたい画像の題材（ラベル・ヘッドライン・素材・数値）と、手本にしたい 1 枚（reference.png）・配色/文字の規約。",
+      "process": "作業ディレクトリをテンプレートから scaffold し、make_prompts.py で依頼ファイルを作り、gen.sh で Codex に 1 枚ずつ生成させ、出来上がった PNG を Claude が目でレビューして、画面の文字列を引用した具体的な指摘で再依頼する。3 巡で収束させ、恒久ルールは STYLE.md / AGENTS.md に、個別指摘は gen.sh の引数に切り分ける。",
+      "output": "1920×1080 の PNG 群（out/*.png）と、Claude Code 側で成果物（デッキ・ドキュメント・Artifact）へ取り込むための素材。",
+      "usage": {
+        "command": "/codex-imagegen:codex-imagegen",
+        "note": "Codex で画像を作りたい・スライドの図を作り直したい、と伝えるだけ。生成とレビュー・再依頼のループを回します。"
+      },
+      "example": [
+        "作業ディレクトリを scaffold し、AGENTS.md / STYLE.md の配色・文字規約と reference.png を埋める",
+        "`make_prompts.py` の SLIDES に題材を書き、`uv run python make_prompts.py` で prompts/ を作る",
+        "`./gen.sh` で生成し、PNG を 1 枚ずつ開いて review-checklist.md の順で見る",
+        "`./gen.sh <stem> \"画面の文字列を引用した指摘。それ以外は良いので大きく変えないこと。\"` で再依頼する",
+        "3 巡で打ち切り、そろった PNG を Claude Code 側で成果物へ取り込む"
+      ]
     }
   }
 }
