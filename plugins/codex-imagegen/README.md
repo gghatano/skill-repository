@@ -44,7 +44,7 @@ codex-imagegen/
     AGENTS.md                     Codex が毎回読む恒久ルール（役割・出力規約・文体）
     STYLE.md                      デザイン規約（配色・文字サイズ下限・日本語組版・出力チェック）
     preview.html                  out/*.png を一覧してレビューするページ
-    reference.png                 サンプル手本画像（元リポジトリのデザイン語彙を示す 1 枚、1920×1080）
+    reference.png                 サンプル手本画像（design vocabulary を示す 16:9 の 1 枚）
 ```
 
 ## 導入後の調整
@@ -52,5 +52,5 @@ codex-imagegen/
 このパイプラインは**作業ディレクトリを scaffold してから**使います（手順は `slide-skeleton` の「0. 作業ディレクトリを scaffold する」）。`scripts/` と `templates/` を作業用ディレクトリ（例 `viz/`）へコピーし、次を自分のプロジェクトに合わせて埋めてください。
 
 - **`AGENTS.md` / `STYLE.md` の `＜…＞`** — 配色とタイポグラフィだけがプロジェクト固有です。日本語組版・文字化け対策・レイアウト作法・出力チェックは領域非依存なのでそのまま使えます。
-- **`reference.png`** — 手本にしたい 1 枚に差し替えます。Codex はこれに寄せて作ります。同梱サンプルは元リポジトリ（pwscup2026 deck-viz）のデザイン語彙を示す 1 枚です。
+- **`reference.png`** — 手本にしたい 1 枚に差し替えます。Codex はこれに寄せて作ります。同梱サンプルは design vocabulary（白地・角丸カード・2 段組の比較・ラインアイコン・強調 1 色）を示す手本画像です。
 - **`outline.md` の audience / house-style / 各スライドの骨子** — 想定読者・文体・題材を書きます。ここが正本で、`prompts/*.md` は `prompt-build` が生成します（手で編集しません）。
