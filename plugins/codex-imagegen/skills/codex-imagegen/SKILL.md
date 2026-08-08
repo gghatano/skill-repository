@@ -47,6 +47,7 @@ out/<stem>.png    ← 成果物（1920×1080）
 mkdir -p viz/prompts viz/out
 cp <plugin>/scripts/gen.sh <plugin>/scripts/make_prompts.py viz/
 cp <plugin>/templates/AGENTS.md <plugin>/templates/STYLE.md <plugin>/templates/preview.html viz/
+cp <plugin>/templates/reference.png viz/            # 差し替え用のサンプル手本画像
 chmod +x viz/gen.sh
 ```
 
@@ -55,7 +56,10 @@ chmod +x viz/gen.sh
 
 - `AGENTS.md` / `STYLE.md` の `＜…＞` を埋める。**配色とタイポグラフィだけがプロジェクト固有**で、
   日本語組版・文字化け対策・レイアウト作法・出力チェックはそのまま使える。
-- **手本にしたい 1 枚を `viz/reference.png` として置く。** Codex はこれに寄せて作る。
+- **手本にしたい 1 枚を `viz/reference.png` に置く。** Codex はこれに寄せて作る。
+  同梱の `templates/reference.png` は design vocabulary（白地・角丸カード・細い線・強調 1 箇所）を示す
+  **サンプル**なので、自分の狙う見た目の 1 枚に差し替える。作り方の実例は `templates/reference.src.html`
+  にある（HTML/CSS をヘッドレスで撮る＝この skill が推す方式そのもの）。
 - `make_prompts.py` の `AUDIENCE` / `HOUSE_STYLE` / `SLIDES` を自分の題材にする。
 
 ## 1. 文言を作る／変えるなら make_prompts.py

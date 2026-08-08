@@ -29,6 +29,8 @@ codex-imagegen/
     AGENTS.md                    ← Codex が毎回読む恒久ルール（役割・出力規約・文体）テンプレート
     STYLE.md                     ← デザイン規約（配色・文字サイズ下限・日本語組版・出力チェック）テンプレート
     preview.html                 ← out/*.png を一覧してレビューするページ
+    reference.png                ← 差し替え用のサンプル手本画像（design vocabulary の例、1920×1080）
+    reference.src.html           ← reference.png を生成した HTML（手本画像の作り方の実例）
 ```
 
 ## 含まれるスキル
@@ -40,7 +42,7 @@ codex-imagegen
 このスキルは**作業ディレクトリを scaffold してから**使います。`scripts/` と `templates/` を作業用ディレクトリ（例 `viz/`）へコピーし、次を自分のプロジェクトに合わせて埋めてください。
 
 - **`AGENTS.md` / `STYLE.md` の `＜…＞`** — 配色とタイポグラフィだけがプロジェクト固有です。日本語組版・文字化け対策・レイアウト作法・出力チェックは領域非依存なのでそのまま使えます。
-- **`reference.png`** — 手本にしたい 1 枚を作業ディレクトリに置きます。Codex はこれに寄せて作ります。
+- **`reference.png`** — 手本にしたい 1 枚を作業ディレクトリに置きます。Codex はこれに寄せて作ります。同梱のサンプル（design vocabulary の例）は自分の狙う見た目に差し替えてください。作り方の実例は `reference.src.html`（HTML/CSS をヘッドレスで撮る方式）にあります。
 - **`make_prompts.py` の `AUDIENCE` / `HOUSE_STYLE` / `SLIDES`** — 想定読者・文体・題材を書きます。`prompts/*.md` は生成物なので手で編集しません。
 
 手順の詳細は `SKILL.md` の「0. 作業ディレクトリを scaffold する」を参照してください。

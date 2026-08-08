@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+  reference.png のサンプルを生成した HTML。手本画像はこの skill が推す「HTML/CSS を
+  ヘッドレスで撮る」方式そのもので作れる、という実例を兼ねる。
+
+  レンダリング例（Chromium）:
+    chromium --headless --no-sandbox --hide-scrollbars \
+      --force-device-scale-factor=1 --window-size=1920,1080 \
+      --screenshot=reference.png "file://$PWD/reference.src.html"
+
+  自分の手本画像を作るときは、このファイルを叩き台に配色・文言・カードを差し替えて撮り直す。
+  配色は STYLE.md の色表と対応させる（下の :root 変数）。
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --canvas:#FFFFFF; --card:#FFFFFF; --line:#DCE3E0;
+    --ink:#16302C; --body:#3A4A46; --muted:#6E7A75;
+    --teal:#0E5E5C; --teal-soft:#EAF2F1; --orange:#E1741F;
+  }
+  html,body{ width:1920px; height:1080px; }
+  body{
+    background:var(--canvas); color:var(--body);
+    font-family:"IPAGothic","IPAPGothic","Noto Sans JP",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:62px 82px 70px;
+    display:flex; flex-direction:column;
+  }
+  .kicker{ color:var(--teal); font-weight:700; font-size:26px; letter-spacing:.32em; }
+  h1{ color:var(--ink); font-size:56px; line-height:1.32; font-weight:700; margin-top:16px; letter-spacing:.01em; }
+  .rule{ height:3px; width:280px; background:var(--teal); border-radius:2px; margin:26px 0 0; }
+
+  .cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:34px; margin-top:52px; }
+  .card{
+    background:var(--card); border:2px solid var(--line); border-radius:22px;
+    padding:34px 34px 30px; display:flex; flex-direction:column;
+  }
+  .ic{ width:52px; height:52px; }
+  .card h2{ color:var(--teal); font-size:36px; font-weight:700; margin-top:18px; }
+  .card ul{ list-style:none; margin-top:16px; display:flex; flex-direction:column; gap:12px; }
+  .card li{ position:relative; padding-left:26px; font-size:28px; line-height:1.4; color:var(--body); }
+  .card li::before{ content:""; position:absolute; left:2px; top:14px; width:10px; height:10px;
+    border:2px solid var(--teal); border-radius:50%; }
+
+  .strip{ margin-top:auto; display:flex; align-items:center; gap:40px;
+    border:2px solid var(--line); border-radius:22px; padding:30px 40px; }
+  .strip .lead{ font-size:30px; color:var(--ink); font-weight:700; }
+  .strip .lead span{ color:var(--muted); font-weight:400; font-size:26px; display:block; margin-top:6px; }
+  .stat{ margin-left:auto; display:flex; align-items:baseline; gap:14px; }
+  .stat .num{ font-size:120px; line-height:1; color:var(--ink); font-weight:700;
+    font-variant-numeric:tabular-nums; }
+  .stat .unit{ font-size:34px; color:var(--body); }
+  .badge{ display:inline-block; border:2px solid var(--orange); color:var(--orange);
+    border-radius:999px; padding:8px 20px; font-size:24px; font-weight:700; }
+</style>
+</head>
+<body>
+  <div class="kicker">サンプル ・ SAMPLE</div>
+  <h1>手本画像はこのような 1 枚です。白地・広い余白・角丸カード・<br>細いティールの線で、一目で構造が伝わる図にします。</h1>
+  <div class="rule"></div>
+
+  <div class="cards">
+    <div class="card">
+      <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#0E5E5C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="7" y="9" width="34" height="30" rx="4"/><path d="M7 18h34"/><path d="M13 27h14"/><path d="M13 33h9"/>
+      </svg>
+      <h2>白地と余白</h2>
+      <ul>
+        <li>詰め込まず、軽く抜けた作り</li>
+        <li>外周に広い余白をとる</li>
+        <li>1 枚 1 メッセージに絞る</li>
+      </ul>
+    </div>
+    <div class="card">
+      <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#0E5E5C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="8" y="8" width="14" height="14" rx="3"/><rect x="26" y="8" width="14" height="14" rx="3"/>
+        <rect x="8" y="26" width="14" height="14" rx="3"/><rect x="26" y="26" width="14" height="14" rx="3"/>
+      </svg>
+      <h2>角丸カード</h2>
+      <ul>
+        <li>白い角丸カードに細い罫</li>
+        <li>アイコン 1・見出し・要点 2〜4</li>
+        <li>長い文章を入れない</li>
+      </ul>
+    </div>
+    <div class="card">
+      <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#0E5E5C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="14" r="5"/><circle cx="12" cy="34" r="5"/><circle cx="36" cy="24" r="5"/>
+        <path d="M17 14h9l5 8"/><path d="M17 34h9l5-8"/>
+      </svg>
+      <h2>細いラインで結ぶ</h2>
+      <ul>
+        <li>流れ・比較・対立を線で軽く結ぶ</li>
+        <li>装飾に線を使わない</li>
+        <li>端点はカードの縁に接続</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="lead">
+      強調はオレンジ 1 箇所だけ。
+      <span>数値は大きく、tabular-nums で置きます。</span>
+    </div>
+    <span class="badge">最重要ポイント</span>
+    <div class="stat"><span class="num">4</span><span class="unit">項目まで／カード</span></div>
+  </div>
+</body>
+</html>
