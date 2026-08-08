@@ -13,9 +13,9 @@ GitHub account `gghatano` のスキルを別プロジェクトへ持ち運ぶと
 | --- | --- |
 | そのまま (portable) | 16 |
 | 同梱前提 (companions) | 18 |
-| 要調整 (rework) | 57 |
+| 要調整 (rework) | 58 |
 
-## 要調整（57）
+## 要調整（58）
 
 コピー先の構成に合わせて、以下のパスを読み替える必要があります。
 
@@ -102,6 +102,14 @@ GitHub account `gghatano` のスキルを別プロジェクトへ持ち運ぶと
 - **要読み替え（外部プロジェクトのパス）**: `output/consistency_review.md`
 - **一緒にコピー（ハーネス同梱物）**: `.agents/skills/consistency-reviewer/SKILL.md`
 - **必要ツール**: Claude Code
+
+### `deck-viz` — `pwscup2026`
+
+[SKILL.md](https://github.com/gghatano/pwscup2026/blob/main/.claude/skills/deck-viz/SKILL.md)
+
+- **要読み替え（外部プロジェクトのパス）**: `deck-viz/AGENTS.md`, `deck-viz/STYLE.md`, `./gen.sh`
+- **必要ツール**: Python, uv
+- 参考（パラメータ化済み・調整不要）: `prompts/*.md`
 
 ### `experiment-issue` — `202604-syntheticdata-survey`
 
