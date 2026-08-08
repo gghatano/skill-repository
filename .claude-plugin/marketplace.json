@@ -47,9 +47,9 @@
     {
       "name": "codex-imagegen",
       "source": "./codex-imagegen",
-      "displayName": "Codex 画像生成ループ",
-      "description": "Codex に画像（スライドの図・インフォグラフィック）を 1 枚ずつ生成させ、出来上がった PNG を Claude が目でレビューして具体的な指摘で再依頼する生成ループ。プロンプトの作り方・フォルダ構成・恒久ルール・デザイン規約のテンプレートを同梱し、題材やデザインは差し替えて使う。",
-      "version": "0.1.0",
+      "displayName": "Codex 画像生成パイプライン",
+      "description": "Codex に画像（スライドの図・インフォグラフィック）を作らせる 3 工程。骨子を整える（slide-skeleton）→ 生成用プロンプト構造へ変換（prompt-build）→ 生成して目でレビューし再依頼（generate-review）。プロンプトのフォーマット・フォルダ構成・恒久ルール・デザイン規約のテンプレートを同梱し、題材やデザインは差し替えて使う。",
+      "version": "0.2.0",
       "keywords": ["codex", "image-generation", "infographic", "slides", "review-loop", "claude-code"]
     }
   ]

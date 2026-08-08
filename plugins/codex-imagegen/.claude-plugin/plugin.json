@@ -1,8 +1,8 @@
 {
   "name": "codex-imagegen",
   "displayName": "Codex 画像生成ループ",
-  "description": "Codex に画像（スライドの図・インフォグラフィック等）を 1 枚ずつ生成させ、出来上がった PNG を Claude が目でレビューして具体的な指摘で再依頼する生成ループ。プロンプトの作り方・フォルダ構成・恒久ルール（AGENTS.md）・デザイン規約（STYLE.md）のテンプレートを同梱し、領域非依存で使える。中身のデザインや題材は差し替え前提。",
-  "version": "0.1.0",
+  "description": "Codex に画像（スライドの図・インフォグラフィック等）を作らせる 3 工程のパイプライン。骨子を整える（slide-skeleton）→ 生成用プロンプト構造へ変換する（prompt-build）→ 生成して目でレビューし再依頼する（generate-review）。プロンプトのフォーマット・フォルダ構成・恒久ルール（AGENTS.md）・デザイン規約（STYLE.md）のテンプレートを同梱し、領域非依存で使える。中身のデザインや題材は差し替え前提。",
+  "version": "0.2.0",
   "author": { "name": "gghatano", "url": "https://github.com/gghatano" },
   "homepage": "https://github.com/gghatano/skill-repository",
   "repository": "https://github.com/gghatano/skill-repository",

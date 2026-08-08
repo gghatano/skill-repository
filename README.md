@@ -34,7 +34,7 @@ Claude Code のプロンプトで、マーケットプレイスを追加し、�
 | `generation` | 仕様駆動 生成・評価サイクル | `/plugin install generation@gghatano-skills` |
 | `research` | 研究レポート作成ライフサイクル（規約・サブエージェント同梱） | `/plugin install research@gghatano-skills` |
 | `writing` | 文章・日本語ライティング（自己完結） | `/plugin install writing@gghatano-skills` |
-| `codex-imagegen` | Codex で画像生成 → Claude が目でレビューして再依頼するループ（テンプレート同梱） | `/plugin install codex-imagegen@gghatano-skills` |
+| `codex-imagegen` | Codex 画像生成の 3 工程（骨子 → 生成用へ変換 → 生成・レビュー、テンプレート同梱） | `/plugin install codex-imagegen@gghatano-skills` |
 
 各プラグインの詳細は `plugins/<name>/README.md` を参照してください。
 
