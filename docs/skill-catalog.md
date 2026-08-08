@@ -3,7 +3,7 @@
 GitHub account `gghatano` のリポジトリから自動生成した Claude Skills の一覧です。
 このファイルは直接編集せず、`python3 scripts/sync_skills.py` で更新してください。
 
-スキル数: **91**
+スキル数: **92**
 
 | Repository | Skill | Description | Source |
 | --- | --- | --- | --- |
@@ -46,6 +46,7 @@ GitHub account `gghatano` のリポジトリから自動生成した Claude Skil
 | `privacy-incident-catalog` | `case-enrich` | 追加文献で既存事例の case.json を補完・改善 | [SKILL.md](https://github.com/gghatano/privacy-incident-catalog/blob/main/.claude/skills/case-enrich/SKILL.md) |
 | `privacy-incident-catalog` | `case-review` | case.json の公開情報整合性レビュー（新規追加・更新時に使用） | [SKILL.md](https://github.com/gghatano/privacy-incident-catalog/blob/main/.claude/skills/case-review/SKILL.md) |
 | `pseudonymize-webapp` | `review-prs` | openなPRを並列サブエージェントでレビューし、結果をGitHubコメントとして投稿する。 `/review-prs` で起動。引数なしで全open PR、PR番号指定で個別レビュー可。 | [SKILL.md](https://github.com/gghatano/pseudonymize-webapp/blob/main/.claude/skills/review-prs/SKILL.md) |
+| `pwscup2026` | `deck-viz` | deck-viz/ の社内スライド用インフォグラフィック（out/*.png 14 枚）を、Codex で生成してレビューし、 具体的な指摘を付けて再依頼するループの回し方。生成そのものより「出来上がった PNG をどう見て、 何をどう指摘し直すか」が本体。スライドの図・インフォグラフィック・デッキの画像を作り直したい、 文言や文体を変えたい、文字を大きくしたい、レイアウトの粗を直したい、といった話が出たら必ず使う。 「deck-viz」「インフォグラフィック」「スライドの図」「デッキの画像」「PNG を作り直して」 「プロンプトを直して」などの言い方でも、明示的に skill 名を呼ばれなくても使う。 | [SKILL.md](https://github.com/gghatano/pwscup2026/blob/main/.claude/skills/deck-viz/SKILL.md) |
 | `sxtf-mock` | `add-mock-screen` | sxtf-mock（鉄骨サプライチェーン真正性証明モック）に画面を1枚追加/実装するときの標準手順。Next.js App Router + TS + Tailwind + shadcn/ui で、共有の型・mock-store・provenance 契約を壊さず規約準拠で画面を作る。screen-inventory.md の T2〜T7 のいずれかの画面を担当する/モック画面を追加・実装するときは、明示的に "skill" と言われなくても必ずこのスキルを使うこと。 | [SKILL.md](https://github.com/gghatano/sxtf-mock/blob/develop/.claude/skills/add-mock-screen/SKILL.md) |
 | `sxtf-mock` | `pm-orchestrate` | sxtf-mock を無人で前進させる PM オーケストレーション手順。未決Issueを仮置きで解決しつつ、サブエージェントを束ねて基盤〜画面〜検証まで実装し、develop まで自動マージする。サブエージェントを定期監視し、スタックしたら自動リトライ→再割当→skip で前進する。ユーザーが「自律的に動いてほしい」「PMとしてissueを順次解決」「10時間自律」「サブエージェントを監視して進めて」等を述べたら、明示的に "skill" と言われなくても必ずこのスキルを使うこと。 | [SKILL.md](https://github.com/gghatano/sxtf-mock/blob/develop/.claude/skills/pm-orchestrate/SKILL.md) |
 | `sxtf-mock` | `ui-value-design` | sxtf-mock の画面を「機能の説明」でなく「ユーザに提供する価値」で語るUIに設計・レビューするための、プロのUX/UIライティング手順。画面の見出し・導入文・セクション名・空状態・マイクロコピー・情報設計(IA)を value-first に整え、専門用語を平場の日本語へ翻訳し、PoCの限界と矛盾しない誠実さを保つ。画面のコピー/UX/見せ方を作る・直す・レビューするとき、「価値で語るUIにしたい」「分かりやすくしたい」「UIをレビューして」等のとき、明示的に "skill" と言われなくても必ずこのスキルを使うこと。 | [SKILL.md](https://github.com/gghatano/sxtf-mock/blob/develop/.claude/skills/ui-value-design/SKILL.md) |

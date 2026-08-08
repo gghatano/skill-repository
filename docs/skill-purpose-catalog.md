@@ -3,7 +3,7 @@
 GitHub account `gghatano` のリポジトリから集約した Claude Skills を、出典リポジトリではなく **目的** で整理した一覧です。
 このファイルは直接編集せず、`catalog/categories.json` を更新してから `python3 scripts/sync_skills.py` で再生成してください。
 
-スキル数: **91** ／ カテゴリ数: **9**
+スキル数: **92** ／ カテゴリ数: **10**
 
 ## カテゴリ一覧
 
@@ -14,6 +14,7 @@ GitHub account `gghatano` のリポジトリから集約した Claude Skills を
 - [文章・UI/UX ライティング](#writing-ux)（3）
 - [プライバシー事例カタログ](#privacy-incident-catalog)（3）
 - [シミュレーション・数値検証](#simulation)（3）
+- [スライド・インフォグラフィック生成](#slide-infographic)（1）
 - [配布・パッケージング](#packaging-distribution)（1）
 - [ドメイン固有ツール](#domain-specific)（1）
 
@@ -168,6 +169,16 @@ GitHub account `gghatano` のリポジトリから集約した Claude Skills を
 | `calibrate-params` | `sxtf-simulation` | config/levels/*.yaml のパラメータレンジを文献・統計で裏付けるキャリブレーション作業の手順。パラメータの値を変更・追加するときに使う。 | [SKILL.md](https://github.com/gghatano/sxtf-simulation/blob/master/.claude/skills/calibrate-params/SKILL.md) |
 | `make-report` | `sxtf-simulation` | 経営層向けレポート(L0/L1/L2 比較、規制シナリオのコスト曲線、感度分析)を生成する手順と表現規約。レポート・図表・比較資料を作るときに使う。 | [SKILL.md](https://github.com/gghatano/sxtf-simulation/blob/master/.claude/skills/make-report/SKILL.md) |
 | `verify-sim` | `sxtf-simulation` | モデル・KPI・config を変更した後の検証手順。シミュレーションコードを触ったら必ずこの手順で確認する。 | [SKILL.md](https://github.com/gghatano/sxtf-simulation/blob/master/.claude/skills/verify-sim/SKILL.md) |
+
+<a id="slide-infographic"></a>
+
+## スライド・インフォグラフィック生成
+
+スライド用インフォグラフィックの PNG を Codex に生成させ、出来上がった画像を人の目でレビューして具体的な指摘で再依頼する生成・レビューループを回すスキル。
+
+| Skill | Repository | Description | Source |
+| --- | --- | --- | --- |
+| `deck-viz` | `pwscup2026` | deck-viz/ の社内スライド用インフォグラフィック（out/*.png 14 枚）を、Codex で生成してレビューし、 具体的な指摘を付けて再依頼するループの回し方。生成そのものより「出来上がった PNG をどう見て、 何をどう指摘し直すか」が本体。スライドの図・インフォグラフィック・デッキの画像を作り直したい、 文言や文体を変えたい、文字を大きくしたい、レイアウトの粗を直したい、といった話が出たら必ず使う。 「deck-viz」「インフォグラフィック」「スライドの図」「デッキの画像」「PNG を作り直して」 「プロンプトを直して」などの言い方でも、明示的に skill 名を呼ばれなくても使う。 | [SKILL.md](https://github.com/gghatano/pwscup2026/blob/main/.claude/skills/deck-viz/SKILL.md) |
 
 <a id="packaging-distribution"></a>
 

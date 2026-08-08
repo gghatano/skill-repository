@@ -1618,6 +1618,65 @@
       ]
     },
     {
+      "category": "slide-infographic",
+      "components": [
+        "references"
+      ],
+      "description": "deck-viz/ の社内スライド用インフォグラフィック（out/*.png 14 枚）を、Codex で生成してレビューし、 具体的な指摘を付けて再依頼するループの回し方。生成そのものより「出来上がった PNG をどう見て、 何をどう指摘し直すか」が本体。スライドの図・インフォグラフィック・デッキの画像を作り直したい、 文言や文体を変えたい、文字を大きくしたい、レイアウトの粗を直したい、といった話が出たら必ず使う。 「deck-viz」「インフォグラフィック」「スライドの図」「デッキの画像」「PNG を作り直して」 「プロンプトを直して」などの言い方でも、明示的に skill 名を呼ばれなくても使う。",
+      "destination": "pwscup2026/deck-viz",
+      "files": [
+        {
+          "mode": "100644",
+          "path": "SKILL.md",
+          "sha": "2bd1e3e59f3a76b9679a25391dc6e1b2ec92b6c6"
+        },
+        {
+          "mode": "100644",
+          "path": "references/feedback-patterns.md",
+          "sha": "51c8b9d5cbfecc5dfd2a022eb0e9f8aef4447b22"
+        },
+        {
+          "mode": "100644",
+          "path": "references/review-checklist.md",
+          "sha": "c9ff2fc543fc8e52ec55cef0f9a4ed8211a42422"
+        }
+      ],
+      "name": "deck-viz",
+      "portability": {
+        "bundled": [
+          "references/review-checklist.md",
+          "references/feedback-patterns.md"
+        ],
+        "companions": [],
+        "external": [
+          "deck-viz/AGENTS.md",
+          "deck-viz/STYLE.md",
+          "./gen.sh"
+        ],
+        "parameterized": [
+          "prompts/*.md"
+        ],
+        "tier": "rework"
+      },
+      "portability_review": "required",
+      "project_paths": [
+        "deck-viz/AGENTS.md",
+        "deck-viz/STYLE.md",
+        "prompts/*.md",
+        "references/review-checklist.md",
+        "references/feedback-patterns.md",
+        "./gen.sh"
+      ],
+      "repository": "gghatano/pwscup2026",
+      "skill_md_sha": "2bd1e3e59f3a76b9679a25391dc6e1b2ec92b6c6",
+      "source_path": ".claude/skills/deck-viz/SKILL.md",
+      "source_url": "https://github.com/gghatano/pwscup2026/blob/main/.claude/skills/deck-viz/SKILL.md",
+      "tools": [
+        "Python",
+        "uv"
+      ]
+    },
+    {
       "category": "dev-workflow",
       "components": [],
       "description": "sxtf-mock（鉄骨サプライチェーン真正性証明モック）に画面を1枚追加/実装するときの標準手順。Next.js App Router + TS + Tailwind + shadcn/ui で、共有の型・mock-store・provenance 契約を壊さず規約準拠で画面を作る。screen-inventory.md の T2〜T7 のいずれかの画面を担当する/モック画面を追加・実装するときは、明示的に \"skill\" と言われなくても必ずこのスキルを使うこと。",

@@ -99,6 +99,14 @@
       ]
     },
     {
+      "id": "slide-infographic",
+      "title": "スライド・インフォグラフィック生成",
+      "summary": "スライド用インフォグラフィックの PNG を Codex に生成させ、出来上がった画像を人の目でレビューして具体的な指摘で再依頼する生成・レビューループを回すスキル。",
+      "skills": [
+        "deck-viz"
+      ]
+    },
+    {
       "id": "packaging-distribution",
       "title": "配布・パッケージング",
       "summary": "成果物を配布用にビルド・パッケージングするスキル。",

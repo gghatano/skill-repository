@@ -433,6 +433,43 @@
       ],
       "whenToUse": "Issue 着手時に使う。1 worktree = 1 Issue = 1 branch で分離した作業ディレクトリを用意する。",
       "io": "入力は Issue 番号、出力は分離された作業用 worktree。規約 §2 のブランチ・worktree 方針に従い、issue-driven-development の手順で実装する。"
+    },
+    "slide-skeleton": {
+      "tagline": "Codex に渡す前に、各画像の骨子とデッキ設定を outline.md に整える。",
+      "canDo": [
+        "作業ディレクトリをテンプレートから scaffold する",
+        "デッキ全体の想定読者と文体（敬体/常体・禁止語調・専門用語の言い換え）を決める",
+        "画像 1 枚ごとにキッカー・ヘッドライン・最重要・構造・強調・素材・数値を書く",
+        "素材をカードに載る短句で書き、数値は facts に集約する",
+        "レイアウト・配色は書かず内容に徹する"
+      ],
+      "whenToUse": "スライドの図・インフォグラフィックを作りたいとき最初に使う。Codex に渡す前に内容を骨子として固める。codex-imagegen パイプラインの入口。",
+      "io": "入力は題材と想定読者・文体、出力は outline.md（文言の正本）。この後 prompt-build で生成用プロンプトへ変換する。"
+    },
+    "prompt-build": {
+      "tagline": "骨子（outline.md）を生成用プロンプト prompts/<stem>.md へ変換する。",
+      "canDo": [
+        "骨子ごとの内容を prompt.md のフォーマットへ差し込む",
+        "固定部（AGENTS.md 参照・文体・組版・出力仕様）を毎回添える",
+        "素材の短句をそのまま入れ、要約や創作をしない",
+        "facts の数値と本文素材の食い違いを確認する",
+        "1 骨子 = 1 ファイル = 1 画像で書き出す"
+      ],
+      "whenToUse": "slide-skeleton の後、generate-review の前に使う。骨子を生成用へ変換したい・prompts を作り直したいとき。大事なのはフォーマットで、手で書くかスクリプトかは問わない。",
+      "io": "入力は outline.md、出力は prompts/*.md（生成物）。フォーマットは templates/prompt.md。文言を変えるときは outline.md を直して変換し直す。"
+    },
+    "generate-review": {
+      "tagline": "Codex に生成させ、PNG を目でレビューして具体的な指摘で再依頼するループ。",
+      "canDo": [
+        "gen.sh で Codex に PNG を 1 枚ずつ生成させ、バッチで回す",
+        "PNG を開いて改行崩れ・文字化け・重複・宙に浮いた線を見つける",
+        "画面の文字列を引用し「それ以外は変えない」で締める指摘を書いて再依頼する",
+        "3 巡で収束させ、残った粗は骨子・変換側を疑う",
+        "2 枚以上で再発した粗を STYLE.md / AGENTS.md の恒久ルールへ昇格させる",
+        "そろった PNG を Claude Code 側で成果物へ取り込む"
+      ],
+      "whenToUse": "prompts が揃った後の最終工程。Codex で画像を生成・作り直したいとき、文言・文字サイズ・レイアウトの粗を直したいとき。生成そのものより「出来上がった画像をどう見て何を指摘し直すか」が本体。",
+      "io": "入力は prompts/*.md、出力は 1920×1080 の PNG 群（out/*.png）。scripts/gen.sh と references/（review-checklist.md・feedback-patterns.md）を使う。"
     }
   }
 }

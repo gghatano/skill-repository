@@ -79,6 +79,22 @@
         "`/writing:stop-ai-slop-jp` — 下書きを渡し、AI 臭い箇所を検出して直す",
         "指摘を反映し、必要なら再度かけて仕上げる"
       ]
+    },
+    "codex-imagegen": {
+      "input": "作りたい画像の題材（各スライドのキッカー・ヘッドライン・最重要・構造・素材・数値）と、デッキ全体の想定読者・文体、手本にしたい 1 枚（reference.png）・配色/文字の規約。",
+      "process": "3 工程で進める。slide-skeleton で各画像の骨子とデッキ設定を outline.md に整え、prompt-build で骨子を固定の生成ルール（AGENTS.md 参照・組版・出力仕様）を添えた生成用プロンプト prompts/<stem>.md へ変換し、generate-review で gen.sh により Codex に 1 枚ずつ生成させて PNG を目でレビューし、画面の文字列を引用した指摘で 3 巡ほど再依頼する。恒久ルールは STYLE.md / AGENTS.md に、個別指摘は gen.sh の引数に切り分ける。",
+      "output": "1920×1080 の PNG 群（out/*.png）と、それを再現・再依頼できる outline.md / prompts/*.md、Claude Code 側で成果物（デッキ・ドキュメント・Artifact）へ取り込むための素材。",
+      "usage": {
+        "command": "/codex-imagegen:slide-skeleton",
+        "note": "Codex で画像を作りたい・スライドの図を作り直したい、と伝えるだけ。骨子づくり → 生成用への変換 → 生成とレビュー・再依頼まで進めます。"
+      },
+      "example": [
+        "`/codex-imagegen:slide-skeleton` — 作業ディレクトリを scaffold し、outline.md に各スライドの骨子とデッキ設定を書く",
+        "`/codex-imagegen:prompt-build` — 骨子を prompt.md のフォーマットで prompts/<stem>.md に変換する",
+        "`/codex-imagegen:generate-review` — `./gen.sh` で生成し、PNG を review-checklist.md の順で 1 枚ずつ見る",
+        "`./gen.sh <stem> \"画面の文字列を引用した指摘。それ以外は良いので大きく変えないこと。\"` で再依頼する",
+        "3 巡で打ち切り、そろった PNG を Claude Code 側で成果物へ取り込む"
+      ]
     }
   }
 }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>画像プレビュー</title>
+<style>
+  :root{ color-scheme:light dark; --bg:#f5f7f3; --card:#fff; --ink:#151d18; --muted:#6c766e; --line:#e1e6dd; }
+  @media (prefers-color-scheme:dark){ :root{ --bg:#0f1512; --card:#161d19; --ink:#e9eeea; --muted:#808a81; --line:#28302b; } }
+  body{ margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif; }
+  header{ padding:24px 28px; border-bottom:1px solid var(--line); }
+  h1{ margin:0; font-size:18px; } p.note{ margin:6px 0 0; color:var(--muted); font-size:13px; }
+  .grid{ display:flex; flex-direction:column; gap:28px; padding:28px; align-items:center; }
+  figure{ margin:0; width:100%; max-width:900px; }
+  figcaption{ font-size:13px; color:var(--muted); margin:0 0 8px; font-variant-numeric:tabular-nums; }
+  .frame{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px;
+    min-height:120px; display:flex; align-items:center; justify-content:center; }
+  .frame img{ width:100%; height:auto; display:block; }
+  .missing{ color:var(--muted); font-size:13px; padding:32px; text-align:center;
+    border:1px dashed var(--line); border-radius:8px; width:100%; }
+</style>
+</head>
+<body>
+<header>
+  <h1>画像プレビュー（幅 900px）</h1>
+  <p class="note">out/&lt;stem&gt;.png を表示。まだ無いものは点線枠。file:// で開いて可（表示されないときは簡易サーバで）。</p>
+</header>
+<div class="grid" id="grid"></div>
+<script>
+  // prompts/ に合わせて [stem, 見出し] を並べる。outline.md のスライドと対応させる。
+  var slides = [
+    ["01-overview","01 概要"],
+    ["02-detail","02 詳細"]
+  ];
+  var grid = document.getElementById("grid");
+  slides.forEach(function(s){
+    var fig = document.createElement("figure");
+    var cap = document.createElement("figcaption"); cap.textContent = s[1];
+    var frame = document.createElement("div"); frame.className = "frame";
+    var img = document.createElement("img");
+    var base = "out/" + s[0], t = Date.now();
+    img.alt = s[1]; img.src = base + ".png?" + t;
+    img.onerror = function(){
+      frame.innerHTML = '<div class="missing">未生成: ' + base + '.png</div>';
+    };
+    frame.appendChild(img); fig.appendChild(cap); fig.appendChild(frame); grid.appendChild(fig);
+  });
+</script>
+</body>
+</html>
