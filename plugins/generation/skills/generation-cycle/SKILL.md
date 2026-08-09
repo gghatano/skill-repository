@@ -48,11 +48,12 @@ PM 自身は **実装も評価も行わず**、各ステップをサブエージ
 
 各ステップで PM は以下を行う：
 
-1. **サブエージェントを起動**: 利用環境のサブエージェント / タスク委譲機構を使う（例: Claude Code では `Agent` ツールに `subagent_type=general-purpose` を指定、Codex 等では各環境のタスク委譲機構）。固有のツール名・パラメータ名はあくまで例示であり、環境に合わせて読み替える。
+1. **サブエージェントを背景起動**: 利用環境のサブエージェント / タスク委譲機構を使う（例: Claude Code では `Agent` ツールに `subagent_type=general-purpose` と `run_in_background: true` を指定、Codex 等では各環境のタスク委譲機構）。固有のツール名・パラメータ名はあくまで例示であり、環境に合わせて読み替える。**ブロッキングで待たない**（理由と手順は規約 `.claude/docs/subagent-monitoring.md`）。
 2. **委譲内容**を簡潔に伝える（次の節「サブエージェント起動テンプレ」参照）。
-3. **完了報告**を受け取り、SKILL.md の Acceptance Criteria を満たしたか PM 自身で確認する。確認手段は、**成果物ファイルの存在を確認**し、step4 完了後は **`output/quality_gate.json` を read して `status` / `requires_refinement` の値を確認**する（サブエージェントの自己申告だけに頼らない）。
-4. **未達** なら、その旨を報告して停止（必要なら同サブエージェントを再起動して修正を依頼）。
-5. **OK** なら次のステップへ。
+3. **実行中は一定間隔で状態を見る**: タスクの状態・成果物の更新時刻・`work/progress.json` の 3 点を見る。停滞（15 分更新なし）を検知したら、途中成果物を退避してから停止し、**同じステップを 1 回だけ**再起動する。詳細は規約 `.claude/docs/subagent-monitoring.md`。
+4. **完了報告**を受け取り、SKILL.md の Acceptance Criteria を満たしたか PM 自身で確認する。確認手段は、**成果物ファイルの存在を確認**し、step4 完了後は **`output/quality_gate.json` を read して `status` / `requires_refinement` の値を確認**する（サブエージェントの自己申告だけに頼らない）。
+5. **未達** なら、その旨を報告して停止（必要なら同サブエージェントを再起動して修正を依頼）。
+6. **OK** なら次のステップへ。
 
 ### ステップ一覧
 
@@ -79,6 +80,11 @@ PM 自身は **実装も評価も行わず**、各ステップをサブエージ
 あなたが生成すべき成果物: <list>
 
 SKILL.md の Tasks / Rules / Acceptance Criteria に厳密に従ってください。
+
+作業中は <task_dir>/work/progress.json を更新し続けてください。大きな作業単位ごと、
+少なくとも 5 分に 1 回、step / phase / updated_at / artifacts を書き直します。
+PM はこのファイルで進捗を見ており、15 分更新が無いと停滞と判定して打ち切ります。
+
 完了したら、生成したファイルのパス・件数・Acceptance Criteria を満たしているかどうかを
 200 字以内で報告してください。
 ```
