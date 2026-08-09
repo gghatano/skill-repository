@@ -8,7 +8,7 @@
       "source": "./plugins/deep-research",
       "displayName": "調査ワークフロー（Deep Research）",
       "description": "調査を再現可能で検査可能な工程として実行するスキル群。依頼の固定、論点分解、情報源収集、引用検証、出荷判定までをファイル受け渡しで進める。規約・スキーマ・Lint 同梱。",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "keywords": ["research", "investigation", "citation", "evidence", "provenance", "workflow"]
     },
     {
@@ -24,7 +24,7 @@
       "source": "./plugins/generation",
       "displayName": "仕様駆動 生成・評価サイクル",
       "description": "仕様から成果物を作り、評価して直す汎用サイクル。骨格は領域非依存で、現在の中身は合成データ生成プロファイル。生成設計は線形版に加え、列間依存を DAG で設計する dependency-graph を選べる。",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "keywords": ["generation", "evaluation", "spec-driven", "synthetic-data", "dependency-graph", "dag"]
     },
     {
@@ -32,7 +32,7 @@
       "source": "./plugins/research",
       "displayName": "研究レポート作成ライフサイクル",
       "description": "実験レポートの骨子設計から計画・実行・レビュー・公開までを一式で進めるスキル群。規約・サブエージェント同梱。",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "keywords": ["research", "report", "experiment", "reproducibility", "review"]
     },
     {
