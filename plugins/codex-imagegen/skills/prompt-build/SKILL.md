@@ -41,6 +41,8 @@ outline.md（骨子・正本）  ──prompt-build──▶  prompts/<stem>.md�
 ## 手順
 
 1. `outline.md` を読み、デッキ設定（audience / house-style）と各スライドの骨子を取り出す。
+   - **必須項目（audience・各スライドの headline / key / material）が `＜…＞` のまま／空なら、
+     変換に進まず slide-skeleton に戻して聞き取る。** 欠けたまま生成すると Codex が推測で埋め、剥がれる。
 2. スライドごとに `prompt.md` の構造で `prompts/<stem>.md` を書き出す。
    - 固定部は house-style だけ差し替え、あとはそのまま。
    - 骨子部は各フィールドを対応する節へ。**素材の短句をそのまま**入れ、要約や創作をしない。
