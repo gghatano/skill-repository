@@ -6,10 +6,13 @@ description: 実験計画の作成とレビュー。レポート骨子から抽�
 # 実験計画（公平な比較と業務シナリオの設計）
 
 本プロセスは判断が中心のため、サブエージェントに委譲する場合は
-`planner`（上位ティア、`.claude/agents/planner.md`）を使う。
+`planner`（上位ティア、`.claude/agents/planner.md`）を使う（同梱エージェントが無い
+環境では通常のサブエージェントで代替してよい）。
 
 `report-skeleton` が出力した「必要な実験一覧」を入力に、実行可能な計画書を作る。
-計画は `docs/plans/<ID>-<slug>.md` に置き、実行（`experiment-run`）と結果整理（`report-review`）から参照する。
+計画は **実験計画**（規約 §1「パスの読み替え」。既定は `docs/plans/<ID>-<slug>.md`）に
+置き、実行（`experiment-run`）と結果整理（`report-review`）から参照する。別プロジェクト
+では該当する役割のパスへ読み替える。
 
 ## 計画書テンプレート
 
