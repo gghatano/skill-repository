@@ -5,8 +5,13 @@ description: 実験レポート（前提・結果・考察・課題）の整理�
 
 # 実験レポートのレビュー（前提・結果・考察・課題）
 
-`.claude/docs/documentation-conventions.md` の第 2 節「記述の分離原則」を前提に、
-レポート系 Markdown（このリポジトリでは `content/REPORT.md`・`content/EXPERIMENTS.md`・`content/method-*.md`）を点検する。
+記述の分離原則（規約 `.claude/docs/documentation-conventions.md` 第 2 節。規約が無い
+プロジェクトでは同等の文書規約）を前提に、**レポート系 Markdown**を点検する。
+
+対象ファイルは規約 §1「パスの読み替え」の役割に従う。既定レイアウトでは
+**レポート本体** `content/REPORT.md`・**追加実験** `content/EXPERIMENTS.md`・
+**手法解説** `content/method-*.md`。別プロジェクトでは各役割に対応するファイルへ
+読み替え、存在しない役割は対象外とする。
 
 ## 手順
 
