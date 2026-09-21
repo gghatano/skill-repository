@@ -9,7 +9,8 @@ description: ドキュメント全体の整理・レビュー・対応サイク�
 `report-skeleton`（骨子）→ `experiment-plan`（計画）→ `experiment-run`（実行）→ **doc-cycle（整理・レビュー・公開）**。
 本スキルは最後の「整理」を担う。骨子や計画の段階で呼ばれた場合は、先行スキルへ誘導する。
 
-`.claude/docs/documentation-conventions.md` の規約に基づき、以下のスキルを**この順で**実行する。
+規約 `.claude/docs/documentation-conventions.md`（無ければ同等の文書規約）に基づき、
+以下のスキルを**この順で**実行する。
 順序に意味がある: 内容（レポート）→ 実体との整合（再現・エンジニアリング）→ 外部情報 → 公開、
 の順に確定させると手戻りが少ない。
 
@@ -30,7 +31,8 @@ description: ドキュメント全体の整理・レビュー・対応サイク�
 **順次実行**を優先する（前段の修正が後段の点検対象になるため）。
 サブエージェントに委譲する場合は、指摘の洗い出し・軽微修正は `reviewer`（中位ティア）、
 ビルド実行や確定済み修正の適用は `implementer`（下位ティア）に分ける
-（ティア規則は `.claude/docs/documentation-conventions.md`、定義は `.claude/agents/`）。
+（ティア規則は `.claude/docs/documentation-conventions.md`、定義は `.claude/agents/`。
+同梱エージェントが無い環境では通常のサブエージェントで代替してよい）。
 
 ## 統合レポートの形式
 

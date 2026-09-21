@@ -5,9 +5,11 @@ description: 再現手順とエンジニアリングノートのレビュー。s
 
 # 再現手順・エンジニアリングノートのレビュー
 
-`.claude/docs/documentation-conventions.md` の第 1・4 節を前提に、
-エンジニアリング系ドキュメント（`content/setup.md`・`content/usage.md`・`content/reproduce.md`・
-`content/engineering-notes.md`）と、その実体である `scripts/`・`requirements.txt`・`patches/` の整合を点検する。
+規約 `.claude/docs/documentation-conventions.md` 第 1・4 節（無ければ同等の再現性規約）を
+前提に、**再現ページ**・**エンジニアリングノート**（既定 `content/setup.md`・
+`content/usage.md`・`content/reproduce.md`・`content/engineering-notes.md`）と、その実体である
+**実行スクリプト**（既定 `scripts/`）・`requirements.txt`・`patches/` の整合を点検する。
+パスは規約 §1「パスの読み替え」の役割に対する既定値で、別プロジェクトでは読み替える。
 
 ## 手順
 

@@ -5,11 +5,15 @@ description: 実験の実行と結果の記録。計画書（docs/plans/）に�
 
 # 実験の実行と結果の記録（再現性ファースト）
 
-`experiment-plan` の計画書（`docs/plans/<ID>-<slug>.md`）に基づいて実行する。
+`experiment-plan` の計画書（**実験計画**。規約 `.claude/docs/documentation-conventions.md`
+§1「パスの読み替え」。既定は `docs/plans/<ID>-<slug>.md`）に基づいて実行する。
 計画書がない実験は、先に `experiment-plan` で計画を作る（場当たり実行をしない）。
+以下に現れるスクリプト・生成物のパス（`scripts/` `outputs/` `figures/` 等）も同 §1 の
+役割に対する既定値であり、別プロジェクトでは読み替える。
 
 本プロセスは手を動かす作業が中心のため、サブエージェントに委譲する場合は
-`implementer`（下位ティア、`.claude/agents/implementer.md`）を使う。
+`implementer`（下位ティア、`.claude/agents/implementer.md`）を使う（同梱エージェントが
+無い環境では通常のサブエージェントで代替してよい）。
 ただし結果の解釈・レポートの考察執筆は implementer に任せず、本スキルの呼び出し元
 （または `planner`）が行う。
 
