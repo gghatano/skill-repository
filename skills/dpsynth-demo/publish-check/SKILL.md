@@ -5,8 +5,10 @@ description: 公開サイトの整合確認。content/ の Markdown と htmls/ �
 
 # 公開（ビルド & Pages）の整合確認
 
-`.claude/docs/documentation-conventions.md` の第 3 節を前提に、
-「`content/*.md`（ソース）→ ビルダー → `htmls/*.html`（成果物）→ GitHub Pages」の経路全体を点検する。
+規約 `.claude/docs/documentation-conventions.md` 第 3 節（無ければ同等の公開規約）を前提に、
+「ソース → ビルダー → 成果物 → GitHub Pages」の経路全体を点検する。既定レイアウトでは
+`content/*.md`（ソース）→ `scripts/03_build_html.py`（ビルダー）→ `htmls/*.html`（成果物）。
+パスは規約 §1「パスの読み替え」の役割に対する既定値で、別プロジェクトでは読み替える。
 
 ## 手順
 
